@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 
 from fastapi import APIRouter, Request, Response
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.core import commands, desktop_control, feature_requests, remote_auth
 from backend.websocket.manager import manager
@@ -250,6 +250,7 @@ class FeatureRequest(BaseModel):
     attempted: str = ""
     device: str = ""
     at: str = ""
+    detail: str = Field(default="", max_length=1500)
 
 
 @router.post("/requests")
@@ -267,6 +268,7 @@ async def add_feature_request(body: FeatureRequest) -> dict:
             body.attempted,
             body.device,
             at,
+            body.detail,
         )
     except ValueError as error:
         return {"success": False, "message": str(error), "data": {}}
@@ -275,6 +277,13 @@ async def add_feature_request(body: FeatureRequest) -> dict:
         "message": f"İstek listeye eklendi ({result['number']}).",
         "data": result,
     }
+
+
+@router.get("/requests/list")
+async def list_feature_requests() -> dict:
+    """PC'deki istek listesinin özetini döndürür."""
+    items = await asyncio.to_thread(feature_requests.list_items)
+    return {"success": True, "message": "istek listesi", "data": {"items": items}}
 
 
 @router.get("/requests/done")

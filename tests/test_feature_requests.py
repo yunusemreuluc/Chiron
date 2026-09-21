@@ -123,6 +123,7 @@ def test_remote_request_endpoints(monkeypatch, tmp_path):
                 "title": "Takvim hatırlatıcısı",
                 "said": "yarın beni uyar",
                 "device": "Redmi",
+                "detail": "Takvim açıktı; Aıron hatırlatıcı oluşturmayı denedi.",
             },
         ).json()
         assert added == {
@@ -133,6 +134,25 @@ def test_remote_request_endpoints(monkeypatch, tmp_path):
                 "count": 1,
                 "merged": False,
                 "duplicate": False,
+            },
+        }
+        listed = client.get("/api/remote/requests/list").json()
+        assert listed == {
+            "success": True,
+            "message": "istek listesi",
+            "data": {
+                "items": [
+                    {
+                        "number": "İ-001",
+                        "title": "Takvim hatırlatıcısı",
+                        "status": "yeni",
+                        "count": 1,
+                        "last_said": "yarın beni uyar",
+                        "last_detail": (
+                            "Takvim açıktı; Aıron hatırlatıcı oluşturmayı denedi."
+                        ),
+                    }
+                ]
             },
         }
 
@@ -160,6 +180,85 @@ def test_remote_request_endpoints(monkeypatch, tmp_path):
         ).json()
         assert invalid["success"] is False
     assert invalid["data"] == {}
+
+
+def test_detail_merge_count_and_list_items_are_read_only(monkeypatch, tmp_path):
+    store = _use_temporary_store(monkeypatch, tmp_path)
+    feature_requests.add(
+        "id-1",
+        "Arabada müzik başlatma",
+        "favorilerimi aç",
+        "Spotify'ı açtı",
+        "Android Auto",
+        "şimdi",
+        "Kullanıcı arabadaydı.\nSpotify açıktı; liste başlamadı.",
+    )
+    first_text = store.read_text(encoding="utf-8")
+    assert (
+        "  - Ayrıntı: Kullanıcı arabadaydı. Spotify açıktı; liste başlamadı."
+        in first_text
+    )
+    first_section = first_text[
+        feature_requests._sections(first_text)[0][0] : feature_requests._sections(first_text)[0][1]
+    ]
+    assert feature_requests._count(first_section.replace(" · **Sayı:** 1", "")) == 1
+
+    feature_requests.add(
+        "id-2",
+        "ARABADA MÜZİK BAŞLATMA",
+        "",
+        "uygulamayı öne getirdi",
+        "Android Auto",
+        "sonra",
+        "Aıron uygulamayı açtı.\nİdeal davranış listeyi oynatmak.",
+    )
+    merged_text = store.read_text(encoding="utf-8")
+    _, first_end, _, _ = feature_requests._sections(merged_text)[0]
+    merged_section = merged_text[:first_end]
+    assert (
+        "  - Ayrıntı: Aıron uygulamayı açtı. İdeal davranış listeyi oynatmak."
+        in merged_section
+    )
+    assert feature_requests._count(merged_section.replace(" · **Sayı:** 2", "")) == 2
+    assert merged_section.rstrip().splitlines()[-1] == "<!-- ids: id-1,id-2 -->"
+
+    feature_requests.add(
+        "id-3",
+        "Boş ayrıntılı istek",
+        "bir şey yap",
+        "",
+        "telefon",
+        "daha sonra",
+        "",
+    )
+    text = store.read_text(encoding="utf-8").replace(
+        "**Durum:** yeni", "**Durum:** Bakıldı", 1
+    )
+    store.write_text(text, encoding="utf-8")
+    sections = feature_requests._sections(text)
+    empty_detail_section = text[sections[1][0] : sections[1][1]]
+    assert "Ayrıntı:" not in empty_detail_section
+
+    before = store.read_bytes()
+    assert feature_requests.list_items() == [
+        {
+            "number": "İ-001",
+            "title": "Arabada müzik başlatma",
+            "status": "Bakıldı",
+            "count": 2,
+            "last_said": "",
+            "last_detail": "Aıron uygulamayı açtı. İdeal davranış listeyi oynatmak.",
+        },
+        {
+            "number": "İ-002",
+            "title": "Boş ayrıntılı istek",
+            "status": "yeni",
+            "count": 1,
+            "last_said": "bir şey yap",
+            "last_detail": "",
+        },
+    ]
+    assert store.read_bytes() == before
 
 
 def test_sections_survive_renamed_or_deleted_list_heading(monkeypatch, tmp_path):
@@ -282,8 +381,9 @@ def _run_directly(test):
 if __name__ == "__main__":
     _run_directly(test_request_store_workflow)
     _run_directly(test_remote_request_endpoints)
+    _run_directly(test_detail_merge_count_and_list_items_are_read_only)
     _run_directly(test_sections_survive_renamed_or_deleted_list_heading)
     _run_directly(test_state_prevents_duplicate_when_ids_comment_is_deleted)
     _run_directly(test_metadata_is_read_only_from_status_line_and_user_text_is_escaped)
     _run_directly(test_deleted_number_is_not_reused)
-    print("6 test geçti")
+    print("7 test geçti")

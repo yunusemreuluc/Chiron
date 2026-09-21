@@ -9,6 +9,12 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 
 ## Açık
 
+### Arabada ses yolu — SCO yerine A2DP
+**Durum:** Kod yazıldı ve telefona kuruldu (2026-09-21), gerçek arabada denenmedi
+Toyota C-HR eller serbest hattından sonra müziğe dönmüyordu; varsayılan artık SCO'suz
+(ses medya akışından, mikrofon telefonda). Ayrıntı ve ölçülecekler: [[Airon-Mobil]]
+§ 2026-09-21. Ölçüm kötüyse Ayarlar → Araba → "Telefon hattı kullan".
+
 ### Aıron Mobil — Android uygulaması
 **Durum:** Faz 1 derlendi (2026-09-15) — telefona kurulup gerçek cihazda denenmedi; Faz 2 "Hey Aıron" bekliyor
 Ayrıntı: [[Airon-Mobil]]. Kullanıcı web arayüzünü istemedi; Siri gibi sesle konuşup

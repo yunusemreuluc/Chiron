@@ -7,6 +7,23 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-09-21
+
+**Ne yapıldı:** PC'deki Aıron açıldı, telefonda bekleyen 3 istek kasaya düştü (İ-002,
+İ-003, İ-004). Dördü de yazıldı: arabada ses yolu SCO'dan A2DP'ye çevrildi (Toyota
+görüşme kaynağından müziğe dönmüyordu), `go_home`, iki aşamalı mesaj gönderme,
+telefondan istek listesini okuma + isteklere kapsamlı `detail`. Ayrıntı: [[Airon-Mobil]]
+§ 2026-09-21. Codex Sol istek listesi lane'lerini, Claude ses yolu ve gönderim akışını
+yazdı; Astra 5 bulgu verdi, hepsi doğrulanıp düzeltildi (kritik: model taslağı okumadan
+gönderebiliyordu). APK kuruldu, PC yeniden başlatıldı, PC testleri 7/7.
+
+**Nerede kalındı:** Hiçbiri gerçek kullanımda denenmedi. Araba denemesi İ-003'ün
+gerçekten çözülüp çözülmediğini gösterecek — İ-003 bu yüzden `bakıldı`, diğer üçü
+`yapıldı` (telefon bir sonraki konuşmada haber verecek).
+
+**Sıradaki:** Arabada ölçüm (yankı, mikrofon menzili, kaynak dönüşü). `Notes/Istek-Listesi.md`
+public depoda takip ediliyor — gizli tutulacaksa `.gitignore`'a alınmalı, kullanıcı karar verecek.
+
 ## Oturum: 2026-09-17
 
 **Ne yapıldı:** Telefonda "Aıron" artık kullanıcının sesiyle eğitilmiş openWakeWord

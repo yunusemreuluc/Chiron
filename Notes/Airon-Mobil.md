@@ -148,10 +148,45 @@ varsayılanı olarak derlemeye koyuyor; uygulama Ayarlar'ından değişir.
 - Gemini'ye metin turu (`clientContent`) ses modelinde çalışıyor — mesaj okuma ve
   "yapıldı" haberi bu yoldan.
 
+## 2026-09-21 — araba ses yolu ve istek listesinden gelen işler
+
+- **Arabada SCO kaldırıldı (varsayılan).** Toyota C-HR, eller serbest (SCO) hattını
+  telefon görüşmesi sayıp kaynağı "Bluetooth telefon"a çeviriyor ve hat kapanınca
+  müziğe DÖNMÜYOR; gerçek aramada dönmesinin sebebi telefon yığınının gönderdiği HFP
+  `+CIEV: call,0` göstergesi — uygulamalar bunu gönderemez, yani hattı "kapattık"
+  diyemiyoruz. Artık `CarAudio.Route`: PHONE / BT_MEDIA (varsayılan; ses A2DP medya
+  akışından, mikrofon telefonun kendisi — araba görüşme durumuna hiç girmiyor) /
+  HANDS_FREE (Ayarlar → Araba → "Telefon hattı kullan", eski yol). Bedeli: telefon
+  mikrofonu ve araba hoparlöründen dönen yankı — A2DP gecikmesi için yankı kuyruğu
+  900 ms. Gerçek arabada denenmedi.
+- **Kapanış sırası düzeltildi (İ-003).** `AudioIO.stop()` önce hattı bırakıyordu ama
+  mikrofon/hoparlör iş parçacıkları hâlâ açıktı; açık bir görüşme kaydı dururken SCO
+  temizlenince Android hattı ayakta tutuyor. Şimdi: `AudioRecord.stop()` +
+  `AudioTrack.pause()` → iş parçacıklarını bekle → hat → 600 ms → odak → müzik
+  çalıyorduysa `KEYCODE_MEDIA_PLAY`. `CarAudio` tekil, `acquire`/`release` nesil
+  belirteciyle korunuyor (eski oturumun geç release'i yeni oturumun odağını bırakmasın).
+- **Bluetooth'ta boşta kapanma 45 → 15 sn**, ama Aıron konuşuyorsa süre yenileniyor.
+- **`go_home` (İ-001).** Erişilebilirlik servisi bağlıysa `performGlobalAction(HOME)` —
+  arka plan açılış kısıtına ve MIUI 10021 kapısına takılmıyor; değilse ana ekran niyeti.
+- **Mesaj gönderme iki aşamalı (İ-002).** `send_message` `draft_id` olmadan GÖNDERMİYOR,
+  taslak dönüyor; Aıron okuyup onay istiyor, "şunu değiştir" denince yeni taslak. Gönderim
+  için üç şart: son taslağın kimliği + numara/kanal/metin birebir aynı + **taslak
+  okunduktan sonra kullanıcının sesinin duyulmuş olması** (`AudioIO.lastUserVoiceAt`;
+  Astra bu üçüncüsü olmadan modelin okumadan gönderebileceğini gösterdi). Taslak tek
+  kullanımlık, 3 dk, oturum kapanınca düşüyor.
+- **İstek listesi telefondan okunuyor (İ-004):** `list_feature_requests` →
+  `GET /api/remote/requests/list`; PC'ye ulaşılamazsa telefonda bekleyenler dönüyor.
+  `add_feature_request` artık `detail` alanı yazıyor (geliştirici için 2-5 cümle;
+  kişi adı/mesaj metni/numara YASAK — [[Istek-Listesi]] public depoda takip ediliyor).
+- Astra incelemesi: 5 bulgu, hepsi doğrulandı ve düzeltildi (biri kritik: onaysız gönderim).
+
 ## Sıradaki
 
 - Gerçek kullanımda uyandırma geri bildirimi; arabada 2 ortam kaydı → yeniden eğitim;
   gerekirse Ayarlar'a eşik kaydırıcısı. Pil tüketimi ölçümü.
-- Arabada Bluetooth sesi, mesaj okuma ve kilitli ekranda navigasyonu doğrula.
+- **Arabada ölç:** araba telefon kaynağına geçiyor mu, müzik konuşma sonrası geri
+  geliyor mu, Aıron kendi sesini duyup sözünü kesiyor mu, seyir hâlinde telefon
+  mikrofonu seni duyuyor mu. Kötüyse Ayarlar'dan "Telefon hattı kullan" ile eski yol.
+- Arabada mesaj okuma ve kilitli ekranda navigasyonu doğrula.
 - WhatsApp otomatik gönderme erişilebilirlik servisi güncellemede kapanmış — kullanıcı açacak.
 - **Faz 3 — ortak hafıza:** telefon ve PC aynı `memory.json`'u görsün.

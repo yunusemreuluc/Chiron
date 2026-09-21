@@ -138,7 +138,9 @@ def _clean(value: str, limit: int, *, title: bool = False) -> str:
     value = re.sub(r"^#+", "", value, flags=re.MULTILINE)
     while "**" in value:
         value = value.replace("**", "*")
-    value = re.sub(r"[\r\n]+", " ", value).strip()
+    # U+2028/U+2029 ve dikey sekme re ile satır sonu sayılmıyor ama splitlines() bölüyor:
+    # okuyucu sahte bir örnek satırı görmesin diye burada da boşluğa çevriliyor.
+    value = re.sub(r"[\r\n\u2028\u2029\x0b\x0c\x85]+", " ", value).strip()
     if title:
         value = value.replace("·", "-")
     return value[:limit]
@@ -165,6 +167,12 @@ def _status(section: str) -> str:
     return _normalise(match.group(1)) if match else ""
 
 
+def _raw_status(section: str) -> str:
+    metadata = _metadata_line.search(section)
+    match = _status_field.search(metadata.group(0)) if metadata else None
+    return match.group(1).strip() if match else ""
+
+
 def _count(section: str) -> int:
     metadata = _metadata_line.search(section)
     match = _count_field.search(metadata.group(0)) if metadata else None
@@ -184,7 +192,13 @@ def _bullet(at: str, said: str, attempted: str, device: str) -> str:
     return f'- {at} · "{said}" · denenen: {attempted or "—"} · {device}'
 
 
-def _merge_section(section: str, request_id: str, bullet: str, new_count: int) -> str:
+def _entry(bullet: str, detail: str) -> str:
+    if not detail:
+        return bullet
+    return f"{bullet}\n  - Ayrıntı: {detail}"
+
+
+def _merge_section(section: str, request_id: str, entry: str, new_count: int) -> str:
     metadata = _metadata_line.search(section)
     if metadata:
         changed_line = _count_field.sub(
@@ -195,14 +209,15 @@ def _merge_section(section: str, request_id: str, bullet: str, new_count: int) -
     if ids_match:
         ids = _ids(section)
         ids.append(request_id)
-        replacement = f"{bullet}\n<!-- ids: {','.join(ids)} -->"
-        return section[: ids_match.start()] + replacement + section[ids_match.end() :]
+        section = section[: ids_match.start()] + section[ids_match.end() :]
+    else:
+        ids = [request_id]
 
     trailing_newlines = len(section) - len(section.rstrip("\n"))
     core = section[:-trailing_newlines] if trailing_newlines else section
     ending = section[-trailing_newlines:] if trailing_newlines else ""
     separator = "" if core.endswith("\n") else "\n"
-    return f"{core}{separator}{bullet}\n<!-- ids: {request_id} -->\n{ending}"
+    return f"{core}{separator}{entry}\n<!-- ids: {','.join(ids)} -->{ending}"
 
 
 def _insert_section(text: str, section: str) -> str:
@@ -227,6 +242,7 @@ def add(
     attempted: str,
     device: str,
     at: str,
+    detail: str = "",
 ) -> dict:
     """Yeni istek açar veya aynı başlıklı açık isteğe bir örnek ekler."""
     title = _clean(title, 120, title=True)
@@ -235,9 +251,11 @@ def add(
     said = _clean(said, 300).replace('"', "'")
     attempted = _clean(attempted, 300)
     device = _clean(device, 80)
+    detail = _clean(detail, 1200)
     request_id = re.sub(r"[\r\n]+", " ", request_id).strip()
     at = re.sub(r"[\r\n]+", " ", at).strip()
     bullet = _bullet(at, said, attempted, device)
+    entry = _entry(bullet, detail)
 
     with _store_lock:
         text = _read_store()
@@ -287,7 +305,7 @@ def add(
                 and _status(section) not in {"yapildi", "yapilmayacak"}
             ):
                 new_count = _count(section) + 1
-                updated = _merge_section(section, request_id, bullet, new_count)
+                updated = _merge_section(section, request_id, entry, new_count)
                 _atomic_write(text[:start] + updated + text[end:])
                 state["ids"][request_id] = number
                 _atomic_write_state(state)
@@ -303,7 +321,7 @@ def add(
         new_section = (
             f"### {number} · {title}\n"
             "**Durum:** yeni · **Sayı:** 1 · **Bildirildi:** hayır\n"
-            f"{bullet}\n"
+            f"{entry}\n"
             f"<!-- ids: {request_id} -->\n"
         )
         _atomic_write(_insert_section(text, new_section))
@@ -311,6 +329,38 @@ def add(
         state["last_number"] = largest_number + 1
         _atomic_write_state(state)
         return {"number": number, "count": 1, "merged": False, "duplicate": False}
+
+
+def list_items() -> list[dict]:
+    """İstek listesini dosyayı değiştirmeden özetler."""
+    with _store_lock:
+        if not STORE_PATH.exists():
+            return []
+        text = STORE_PATH.read_text(encoding="utf-8")
+        items: list[dict] = []
+        for start, end, number, title in _sections(text):
+            section = text[start:end]
+            last_said = ""
+            last_detail = ""
+            for line in section.splitlines():
+                said_start = line.find(' · "') if line.startswith("- ") else -1
+                said_end = line.find('" · denenen:', said_start + 4) if said_start >= 0 else -1
+                if said_end >= 0:
+                    last_said = line[said_start + 4 : said_end]
+                    last_detail = ""  # ayrıntı, altında durduğu örneğe ait
+                elif line.startswith("  - Ayrıntı: "):
+                    last_detail = line.removeprefix("  - Ayrıntı: ")
+            items.append(
+                {
+                    "number": number,
+                    "title": title,
+                    "status": _raw_status(section),
+                    "count": _count(section),
+                    "last_said": last_said,
+                    "last_detail": last_detail,
+                }
+            )
+        return items
 
 
 def pending_done() -> list[dict]:
