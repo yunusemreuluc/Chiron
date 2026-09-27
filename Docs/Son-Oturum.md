@@ -10,9 +10,9 @@ salt-okunur aracı (ekran OCR, aktif pencere, hafıza arama, bildirimler) MCP (m
 çağrıldı. Astra 8 bulgu verdi, 7'si düzeltildi (UNC/NTLM, telefon maskeleme, indirmesiz OCR,
 piksel sınırı, yutulan ağ denemesi…), biri Aıron'un kendi kodunda. → [[MCP-Server]]
 
-**Nerede kalındı:** Dal push edilmedi — kullanıcı onayı bekleniyor.
+**Nerede kalındı:** Dal `origin/feature/mcp-server`'a push edildi; main'e birleştirilmedi.
 
-**Sıradaki:** Push; istenirse Claude Desktop kaydı; `screen_vision` geçici dosya sızıntısı.
+**Sıradaki:** main'e birleştirme (PR); istenirse Claude Desktop kaydı; `screen_vision` geçici dosya sızıntısı.
 
 ## Oturum:` bloğunu okuyup context'e enjekte
 ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
