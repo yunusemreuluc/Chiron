@@ -1,7 +1,20 @@
 # Son Oturum
 
 Claude Code oturumları arasındaki köprü. `.claude/hooks/session_start.py` her
-açılışta buradaki **en üstteki** `## Oturum:` bloğunu okuyup context'e enjekte
+açılışta buradaki **en üstteki** `## Oturum: 2026-09-28
+
+**Ne yapıldı:** `feature/mcp-server` dalında `mcp_server/` yazıldı — Aıron'un dört
+salt-okunur aracı (ekran OCR, aktif pencere, hafıza arama, bildirimler) MCP (mcp==2.2.0)
+üzerinden açık, Aıron'un kodu değişmedi. 42 pytest geçti, Inspector CLI ile listelendi ve
+çağrıldı, `claude mcp add --scope user airon` ile kaydedildi ve headless Claude'dan
+çağrıldı. Astra 8 bulgu verdi, 7'si düzeltildi (UNC/NTLM, telefon maskeleme, indirmesiz OCR,
+piksel sınırı, yutulan ağ denemesi…), biri Aıron'un kendi kodunda. → [[MCP-Server]]
+
+**Nerede kalındı:** Dal push edilmedi — kullanıcı onayı bekleniyor.
+
+**Sıradaki:** Push; istenirse Claude Desktop kaydı; `screen_vision` geçici dosya sızıntısı.
+
+## Oturum:` bloğunu okuyup context'e enjekte
 ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına

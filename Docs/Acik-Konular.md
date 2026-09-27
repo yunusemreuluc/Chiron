@@ -9,6 +9,10 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 
 ## Açık
 
+### MCP server — Aıron araçları Claude'a açık
+**Durum:** `feature/mcp-server` dalında 3 commit, testler 42/42 (2026-09-28); push kullanıcı onayı bekliyor
+Ayrıntı: [[MCP-Server]]. Claude Code'a user scope ile kayıtlı (`claude mcp get airon`).
+
 ### Arabada ses yolu — SCO yerine A2DP
 **Durum:** Kod yazıldı ve telefona kuruldu (2026-09-21), gerçek arabada denenmedi
 Toyota C-HR eller serbest hattından sonra müziğe dönmüyordu; varsayılan artık SCO'suz
