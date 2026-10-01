@@ -170,6 +170,54 @@ Amaç: Claude işleri arka planda çalışırken Aıron makineyi yormasın.
 - Ayrı konu: `C:\Users\yunus\Aıron` bir **Unity projesi**, bu repo değil. Karışmasın;
   silinmesi istenirse ayrıca sorulur.
 
+### Faz 0 sonuçları (2026-10-02)
+
+**Ölçüm.** Yöntem: `psutil` süreç ağacı + Windows `GPU Engine(*engtype_3D)` sayacı (pid'e göre).
+Sesli asistan ölçümü kullanıcının kendi açtığı tam Aıron'u (pasif, dokunmadan) okuyarak.
+
+| Durum | CPU (makine %) | GPU 3D | RAM |
+|---|---|---|---|
+| Tam Aıron, **tepside**, boşta (ses döngüsü açık) | %0,5 | %0 | 1,7 GB (1,1 GB'ı WebView2 GPU süreci — gizliyken de bırakmıyor) |
+| Arayüz, pencere açık, boşta — **önce** (111 FPS, 144 Hz ekran) | %5,7 | **%69,5** | — |
+| Arayüz, pencere açık, boşta — **sonra** (uyarlanır FPS, ~30) | %2,7 | **%22,5** | — |
+
+"Önce/sonra" görünür Edge'de (gerçek GPU), çalışan Aıron'un sunduğu arayüzle, 45 sn
+boşta, fare hareketsiz. WebView2 aynı Chromium motoru; gerçek pencerede de doğrulanmalı
+(`window.__aironGovernor()`).
+
+- **Yapılan:** `three/FrameGovernor.tsx` — aktif/girdi 60, boşta 30, odak dışı 20, uyku 15 FPS
+  (ayrıntı [[Arayuz]] § Kare hızı). Ofis açıkken ana sahne zaten duruyor ([[Ajan-Ofisi]]).
+- **Yapılan:** `main.py` webcam önizleme döngüsü kamera kapalıyken saniyede 24 → 4 uyanış.
+- **Temiz çıkanlar:** MCP server — kapanan oturumdan süreç kalmıyor (şu an tek çift, ~25 MB,
+  sahibi canlı oturum). Arka plan bekçileri 20/45/60/90 sn aralıklı — sorun yok. Tepside
+  WebView2 render'ı tamamen duruyor (GPU %0).
+- **Karar bekleyen:** YOLO-World ve EasyOCR ilk kullanımda yükleniyor (açılışta bedel yok) ama
+  **hiç boşaltılmıyor**. Boşta ~10 dk sonra boşaltmak belleği geri verir, bedeli sonraki ilk
+  OCR/tespitte birkaç sn yükleme. Kullanıcıya soruldu.
+- **Karar bekleyen (görsel):** boşta 30 FPS'te bile GPU %22,5 — kare başına maliyet yüksek.
+  Sonraki kaldıraç `PostProcessing.tsx`: EffectComposer varsayılan 8× MSAA + bloom + vignette +
+  noise. MSAA'yı 4'e indirmek görünümü değiştirebilir — tasarım kararı, kullanıcının gözüyle.
+
+**Testler.** `tests/test_remote_auth.py` (Codex Sol yazdı, Claude doğruladı: config bellekte
+taklit, gerçek dosyaya dokunmuyor) — 32 test. Toplam pytest **112/112** (ofis 31 +
+uzak kapı 32 + istek listesi + MCP 42). Açılış duman testi yerine çalışan Aıron'a GET:
+`/api/health` 1,5 ms, `/api/system/telemetry` 18 ms, `/api/office/state` 2 ms.
+
+**Temizlik envanteri** (silinmedi — kullanıcı onayı bekliyor):
+
+| Aday | Boyut | Durum |
+|---|---|---|
+| 13 × `__pycache__/` | 1,1 MB | yeniden üretilir, güvenle silinir |
+| `frontend/.next/` (build önbelleği) | 17 MB | yeniden üretilir, güvenle silinir |
+| `logs/airon.log`, `logs/desktop.log` | 0,8 MB | küçük; silinebilir ya da döndürülebilir |
+| `weights/ViT-B-32.pt` | 338 MB | **KULLANILIYOR** (YOLO-World'ün CLIP metin kodlayıcısı) — kalır |
+| `yolov8s-worldv2.pt` (kök) | 25 MB | **KULLANILIYOR** (`object_recognition.py`) — kalır |
+| ölü `actions/*.py` | — | yok: 85 py dosyası tarandı, her modül bir yerden çağrılıyor |
+
+`.gitignore` doğru: `config/api_keys.json`, `__pycache__`, `logs/*.log`, `*.pt`, `weights/`
+izlenmiyor. Asıl yük silinecek dosyalar değil, **OneDrive senkronu**: `frontend/node_modules`
+713 MB + `venv` OneDrive içinde. Projeyi OneDrive dışına taşımak ayrı karar (soruldu).
+
 ---
 
 ## Faz 1 — PC ucu: telefondan Claude'a iş

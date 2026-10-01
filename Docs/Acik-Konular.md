@@ -10,10 +10,10 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 ## Açık
 
 ### Ajan Ofisi — kim ne yapıyor (Faz A)
-**Durum:** Yazıldı ve doğrulandı (2026-10-02), `feature/ajan-ofisi` dalında commit'siz; kullanıcı gerçek pencerede görüp geri bildirim verecek → [[Ajan-Ofisi]]
+**Durum:** Commit'lendi (`0506718`, `feature/ajan-ofisi`); kullanıcı "güzel, görseli sonra ayarlarız" dedi → [[Ajan-Ofisi]]
 
 ### Claude Code entegrasyonu — telefondan Claude'a iş
-**Durum:** Faz A bitti (2026-10-02); sıradaki Faz 0: performans ölçümü (ofis dahil), testler, temizlik (silme onayla)
+**Durum:** Faz A + Faz 0 bitti (2026-10-02, `833aa89`); 4 karar kullanıcıda (temizlik onayı, model boşaltma, MSAA, OneDrive), sonra Faz 1
 Ayrıntı: [[Plan-Claude-Entegrasyonu]].
 
 ### MCP server — Aıron araçları Claude'a açık

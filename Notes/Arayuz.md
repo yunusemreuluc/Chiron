@@ -489,6 +489,33 @@ sıfırlanıyor.
 Yani gerçek iş süresi 7-14 ms arasında bir yerde; vsync kuantalaması yüzünden
 daha kesin söylenemez.
 
+### Uyarlanır kare hızı (2026-10-02)
+
+Yukarıdaki ölçüm "60'ı tutuyor mu" sorusuydu. Faz 0'ın sorusu tersi: **gerekmediğinde
+ne kadar çiziyor?** Cevap: boşta bile ekran tazeleme hızında — 144 Hz ekranda 111 FPS,
+WebView2 GPU süreci 3D motoru %69,5. Kimse bakmazken ve hiçbir şey olmazken.
+
+`three/FrameGovernor.tsx` + `Canvas frameloop="demand"`:
+
+| Durum | FPS |
+|---|---|
+| Açılış sahnelemesi (ilk 9 sn), Aıron dinliyor/düşünüyor/konuşuyor, fare/klavye girdisi (2,5 sn tutar) | 60 |
+| Boşta, pencere odakta | 30 |
+| Pencere odakta değil | 20 |
+| Uyku perdesi | 15 |
+
+Sonuç (görünür Edge, gerçek GPU, 45 sn boşta): GPU %69,5 → **%22,5**, tarayıcı CPU %5,7 → %2,7.
+
+- **Birikimli zamanlama şart.** İlk sürüm "son kareden beri ≥ 1000/hedef" diyordu; 144 Hz'de
+  vsync aralığı 6,94 ms olduğu için 60 hedefi üç vsync'e (20,8 ms) yuvarlanıp **48 FPS**
+  oluyordu. Şimdi bir sonraki kare zamanı `son + aralık`, uzun vadede ortalama tam hedef.
+- **Bütün useFrame'ler zamana bağlı olmalı** (`delta` / `elapsedTime`). 2026-10-02'de hepsi
+  kontrol edildi. Kare başına sabit artış yapan yeni bir animasyon, düşük FPS'te yavaşlar.
+- Tanı: `window.__aironGovernor()` → `{rule, target, ticks, requested}`. FrameProbe artık
+  gerçek çizim hızını ölçüyor — boşta ~30 görmek beklenen, hata değil.
+- İlk denemede bir kez boşta 0,5 FPS görüldü; kök nedeni kesinleşmedi, birikimli zamanlama +
+  tanıdan sonra tekrar etmedi. Gerçek pencerede `__aironGovernor()` ile doğrulanmalı.
+
 ## Küçük parçalar
 
 - **Ses dalga formu** — veri tarayıcıdan değil backend'den (`mic_level`, ~12 FPS).

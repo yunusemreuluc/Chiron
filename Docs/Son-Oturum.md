@@ -7,7 +7,22 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
-## Oturum: 2026-10-02
+## Oturum: 2026-10-02 (2) — Faz 0
+
+**Ne yapıldı:** Ajan Ofisi commit'lendi (`0506718`, kullanıcı "güzel, sonra ayarlarız" dedi).
+Faz 0: ölçüm → çekirdek sahnesi boşta 111 FPS / GPU %69,5 çiziyordu; `FrameGovernor`
+(uyarlanır FPS) ile %22,5. Webcam önizleme döngüsü kamera kapalıyken 24→4 uyanış/sn.
+`tests/test_remote_auth.py` 32 test (Codex Sol yazdı, doğrulandı). pytest 112/112. Commit `833aa89`.
+Temizlik envanteri çıkarıldı, **hiçbir şey silinmedi**. → [[Plan-Claude-Entegrasyonu]] § Faz 0 sonuçları
+
+**Nerede kalındı:** Ölçerken kullanıcının açık Aıron'u yanlışlıkla tepsiye indirildi (ölçüm
+betiğinin `/api/settings/tray` isteği ona gitti) — kullanıcıya söylendi. Yeni arayüz build'i
+diskte; açık pencere yeniden yüklenince/Aıron yeniden başlayınca devreye girer.
+
+**Sıradaki (kullanıcı kararı):** temizlik listesi onayı · YOLO/EasyOCR boşta boşaltma ·
+MSAA 8→4 (görsel) · OneDrive dışına taşıma. Sonra Faz 1.
+
+## Oturum: 2026-10-02 (1) — Ajan Ofisi
 
 **Ne yapıldı:** Ajan Ofisi (plan Faz A) yazıldı — `feature/ajan-ofisi` dalı. Claude Code
 hook'u (`~/.claude/hooks/ofis-olay.py`, settings.json'da 11 olay, async) + Codex oturum
