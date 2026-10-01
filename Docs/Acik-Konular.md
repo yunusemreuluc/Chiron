@@ -9,6 +9,13 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 
 ## Açık
 
+### Ajan Ofisi — kim ne yapıyor (Faz A)
+**Durum:** Yazıldı ve doğrulandı (2026-10-02), `feature/ajan-ofisi` dalında commit'siz; kullanıcı gerçek pencerede görüp geri bildirim verecek → [[Ajan-Ofisi]]
+
+### Claude Code entegrasyonu — telefondan Claude'a iş
+**Durum:** Faz A bitti (2026-10-02); sıradaki Faz 0: performans ölçümü (ofis dahil), testler, temizlik (silme onayla)
+Ayrıntı: [[Plan-Claude-Entegrasyonu]].
+
 ### MCP server — Aıron araçları Claude'a açık
 **Durum:** `feature/mcp-server` dalında 3 commit, testler 42/42 (2026-09-28); dal push edildi, main'e birleştirilmedi
 Ayrıntı: [[MCP-Server]]. Claude Code'a user scope ile kayıtlı (`claude mcp get airon`).

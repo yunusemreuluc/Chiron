@@ -1,0 +1,737 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Ajan Ofisi (2026-10-02) — components/office/*, three/office/*.
+   Aynı cam/ışık dili; masanın kimlik rengi `--desk` değişkeniyle gelir.
+   Durum renkleri: çalışıyor = masanın rengi, onay = kehribar, hata = mercan,
+   bitti = nane. Bunlar dikkat istediği için paletteki tek sıcak tonlar.
+   ══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --office-wait: #ffb020;
+  --office-err: #ff5d6c;
+  --office-ok: #7ee0b5;
+}
+
+.office-view {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: var(--background);
+  overflow: hidden;
+}
+.office-view__stage {
+  position: absolute;
+  inset: 0;
+  /* Kendi istifleme bağlamı: drei <Html> etiketleri (z-index 0–20) pano, kart
+     ve üst şeridin ÜSTÜNE çıkmasın — pano açıkken etiketler panonun üstünde
+     görünüyordu. */
+  z-index: 0;
+  isolation: isolate;
+}
+/* Sahnenin kenarları karanlığa erisin — cam paneller boşlukta yüzsün */
+.office-view__stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 55%, transparent 55%, rgba(5, 7, 12, 0.85) 100%),
+    linear-gradient(180deg, rgba(5, 7, 12, 0.55) 0%, transparent 18%);
+}
+
+/* ── Üst şerit ── */
+.office-top {
+  position: absolute;
+  top: 22px;
+  left: 24px;
+  right: 24px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  pointer-events: none;
+}
+.office-top > * {
+  pointer-events: auto;
+}
+.office-top__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 16px;
+}
+.office-top__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.office-live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--foreground-secondary);
+}
+.office-live__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--foreground-disabled);
+}
+.office-live__dot.is-live {
+  background: var(--office-ok);
+  box-shadow: 0 0 10px var(--office-ok);
+  animation: office-pulse 1.8s var(--ease-standard) infinite;
+}
+
+.office-tabs {
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 14px;
+}
+.office-tabs__tab {
+  position: relative;
+  padding: 7px 18px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: var(--foreground-secondary);
+  transition: color var(--duration-base) var(--ease-out-quint);
+}
+.office-tabs__tab.is-on {
+  color: var(--foreground);
+}
+.office-tabs__glow {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: rgba(127, 178, 255, 0.14);
+  box-shadow: inset 0 0 0 1px rgba(127, 178, 255, 0.28), var(--glow-primary-sm);
+}
+
+.office-kpis {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 16px;
+  border-radius: 16px;
+}
+.office-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 42px;
+}
+.office-kpi strong {
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+.office-kpi.is-warn strong {
+  color: var(--office-wait);
+  text-shadow: 0 0 12px rgba(255, 176, 32, 0.5);
+}
+.office-quota {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding-left: 16px;
+  border-left: 1px solid var(--border-subtle);
+}
+.office-quota__row {
+  display: grid;
+  grid-template-columns: 34px 84px 30px;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  color: var(--foreground-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.office-quota__track {
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+.office-quota__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #6fd3ff, #b59cff);
+  box-shadow: 0 0 8px rgba(127, 178, 255, 0.6);
+  transition: width 600ms var(--ease-out-quint);
+}
+.office-quota__fill.is-hot {
+  background: linear-gradient(90deg, var(--office-wait), var(--office-err));
+}
+.office-close {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  color: var(--foreground-secondary);
+  transition: color var(--duration-fast), background var(--duration-fast);
+}
+.office-close:hover {
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── 3D sahnedeki masa etiketleri (drei <Html>) ── */
+.office-tag {
+  min-width: 112px;
+  max-width: 210px;
+  padding: 7px 10px 8px;
+  border-radius: 12px;
+  background: rgba(8, 12, 20, 0.72);
+  border: 1px solid color-mix(in srgb, var(--desk) 30%, transparent);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45), 0 0 18px color-mix(in srgb, var(--desk) 14%, transparent);
+  backdrop-filter: blur(10px);
+  transition:
+    border-color var(--duration-base) var(--ease-out-quint),
+    transform var(--duration-base) var(--ease-out-quint);
+  white-space: nowrap;
+}
+.office-tag--selected {
+  border-color: color-mix(in srgb, var(--desk) 75%, transparent);
+  transform: translateY(-3px);
+}
+.office-tag__row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.office-tag__name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+.office-tag__count {
+  margin-left: auto;
+  font-family: var(--font-mono-ui);
+  font-size: 10px;
+  color: var(--desk);
+}
+.office-tag__status {
+  margin-top: 3px;
+  padding-left: 14px;
+  font-size: 10.5px;
+  color: var(--foreground-secondary);
+}
+.office-tag__bubble {
+  margin-top: 6px;
+  padding: 5px 8px;
+  border-radius: 8px;
+  max-width: 190px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--font-mono-ui);
+  font-size: 10px;
+  color: color-mix(in srgb, var(--desk) 70%, white);
+  background: color-mix(in srgb, var(--desk) 9%, transparent);
+}
+
+/* ── Durum noktaları ── */
+.office-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--foreground-disabled);
+}
+.office-dot--calisiyor {
+  background: var(--desk, var(--color-primary));
+  box-shadow: 0 0 8px var(--desk, var(--color-primary));
+  animation: office-pulse 1.2s var(--ease-standard) infinite;
+}
+.office-dot--onay_bekliyor {
+  background: var(--office-wait);
+  box-shadow: 0 0 10px var(--office-wait);
+  animation: office-pulse 0.8s var(--ease-standard) infinite;
+}
+.office-dot--hata {
+  background: var(--office-err);
+}
+.office-dot--bitti {
+  background: var(--office-ok);
+}
+.office-dot--bosta {
+  background: color-mix(in srgb, var(--desk, white) 45%, transparent);
+}
+@keyframes office-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ── Ajan kartı ── */
+.office-card {
+  position: absolute;
+  top: 96px;
+  right: 24px;
+  bottom: 24px;
+  z-index: 6;
+  width: 372px;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  overflow: hidden;
+}
+.office-card::before {
+  /* masanın renginde ince bir üst ışık — kartın kime ait olduğu ilk bakışta */
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--desk), transparent);
+  opacity: 0.8;
+}
+.office-avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 50% 35%, color-mix(in srgb, var(--desk) 90%, white) 0 18%, transparent 19%),
+    radial-gradient(ellipse 60% 45% at 50% 95%, var(--desk) 0 60%, transparent 62%),
+    color-mix(in srgb, var(--desk) 12%, rgba(8, 12, 20, 0.9));
+  box-shadow: 0 0 22px color-mix(in srgb, var(--desk) 35%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--desk) 40%, transparent);
+}
+.office-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+.office-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+}
+.office-stats strong {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+}
+.office-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.office-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--foreground-secondary);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--border-subtle);
+  transition: all var(--duration-fast) var(--ease-out-quint);
+}
+.office-chip--on {
+  color: var(--foreground);
+  border-color: color-mix(in srgb, var(--desk) 55%, transparent);
+  background: color-mix(in srgb, var(--desk) 10%, transparent);
+}
+.office-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-right: -4px;
+}
+.office-status {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  border: 1px solid var(--border-subtle);
+  color: var(--foreground-secondary);
+}
+.office-status--calisiyor {
+  color: var(--desk);
+  border-color: color-mix(in srgb, var(--desk) 45%, transparent);
+}
+.office-status--onay_bekliyor {
+  color: var(--office-wait);
+  border-color: rgba(255, 176, 32, 0.45);
+}
+.office-status--hata {
+  color: var(--office-err);
+  border-color: rgba(255, 93, 108, 0.45);
+}
+.office-status--bitti {
+  color: var(--office-ok);
+  border-color: rgba(126, 224, 181, 0.4);
+}
+.office-meta {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  gap: 6px 10px;
+  margin-top: 12px;
+  font-size: 11.5px;
+}
+.office-meta dt {
+  color: var(--foreground-disabled);
+}
+.office-meta dd {
+  color: var(--foreground-secondary);
+  overflow-wrap: anywhere;
+}
+.office-warn {
+  display: flex;
+  gap: 7px;
+  margin-top: 12px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #ffd27a;
+  background: rgba(255, 176, 32, 0.07);
+  border: 1px solid rgba(255, 176, 32, 0.2);
+}
+.office-warn svg {
+  flex: none;
+  margin-top: 2px;
+}
+.office-brief {
+  margin-top: 12px;
+  font-size: 11.5px;
+  color: var(--foreground-secondary);
+}
+.office-brief summary {
+  cursor: pointer;
+  color: var(--color-primary);
+  list-style: none;
+}
+.office-brief summary::-webkit-details-marker {
+  display: none;
+}
+.office-brief pre {
+  margin-top: 8px;
+  max-height: 180px;
+  overflow: auto;
+  padding: 10px;
+  border-radius: 10px;
+  white-space: pre-wrap;
+  font-family: var(--font-mono-ui);
+  font-size: 10.5px;
+  line-height: 1.5;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-subtle);
+}
+.office-result {
+  margin-top: 8px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--foreground-secondary);
+  white-space: pre-wrap;
+  max-height: 160px;
+  overflow: auto;
+}
+.office-feed {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-family: var(--font-mono-ui);
+  font-size: 10.5px;
+}
+.office-feed__item {
+  display: grid;
+  grid-template-columns: 56px 12px 1fr;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  color: var(--foreground-secondary);
+}
+.office-feed__item:first-child {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--desk) 8%, transparent);
+}
+.office-feed__time {
+  color: var(--foreground-disabled);
+  font-variant-numeric: tabular-nums;
+}
+.office-feed__icon {
+  color: var(--desk);
+}
+.office-feed__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.office-feed__item--hata .office-feed__icon,
+.office-feed__item--hata .office-feed__text {
+  color: var(--office-err);
+}
+.office-feed__item--onay .office-feed__icon {
+  color: var(--office-wait);
+}
+.office-feed__item--bitti .office-feed__icon,
+.office-feed__item--test .office-feed__icon {
+  color: var(--office-ok);
+}
+.office-files,
+.office-delegated {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--foreground-secondary);
+}
+.office-files li,
+.office-delegated li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.office-proof {
+  padding: 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(126, 224, 181, 0.05), transparent);
+  border: 1px solid rgba(126, 224, 181, 0.14);
+}
+.office-proof__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 9px;
+  font-size: 11px;
+}
+.office-proof__grid span,
+.office-task__chips span {
+  padding: 3px 8px;
+  border-radius: 999px;
+  color: var(--foreground-secondary);
+  background: rgba(255, 255, 255, 0.04);
+}
+.is-green {
+  color: var(--office-ok) !important;
+}
+.is-red {
+  color: var(--office-err) !important;
+}
+.office-proof__test {
+  margin-top: 6px;
+  font-family: var(--font-mono-ui);
+  font-size: 10px;
+  color: var(--foreground-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.office-proof__test.is-yesil {
+  color: var(--office-ok);
+}
+.office-proof__test.is-kirmizi {
+  color: var(--office-err);
+}
+
+/* ── Onay kuyruğu ve ipucu ── */
+.office-approvals {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 5;
+  max-width: 420px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--foreground);
+  background: rgba(30, 20, 5, 0.6);
+  border: 1px solid rgba(255, 176, 32, 0.35);
+  box-shadow: 0 0 30px rgba(255, 176, 32, 0.12);
+  backdrop-filter: blur(16px);
+}
+.office-approvals .label-micro {
+  color: var(--office-wait);
+}
+.office-approvals p {
+  margin-top: 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.office-approvals strong {
+  font-family: var(--font-mono-ui);
+  font-weight: 500;
+  color: var(--office-wait);
+  margin-right: 6px;
+}
+.office-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  z-index: 5;
+  transform: translateX(-50%);
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--foreground-secondary);
+  background: rgba(8, 12, 20, 0.7);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(12px);
+}
+
+/* ── Pano ── */
+.office-board-layer {
+  position: absolute;
+  inset: 96px 24px 24px;
+  z-index: 4;
+}
+.office-board {
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  gap: 14px;
+  overflow-x: auto;
+}
+.office-board__col {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 14px 12px 12px;
+  border-radius: 18px;
+  background: rgba(8, 12, 20, 0.62);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(18px);
+}
+.office-board__col header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px 12px;
+}
+.office-board__count {
+  font-family: var(--font-mono-ui);
+  font-size: 11px;
+  color: var(--foreground-disabled);
+}
+.office-board__list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-height: 0;
+  overflow-y: auto;
+}
+.office-task {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 11px 12px 11px 14px;
+  border-radius: 13px;
+  text-align: left;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border-subtle);
+  transition:
+    border-color var(--duration-base) var(--ease-out-quint),
+    transform var(--duration-base) var(--ease-out-quint),
+    box-shadow var(--duration-base) var(--ease-out-quint);
+}
+.office-task::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--desk);
+  box-shadow: 0 0 8px var(--desk);
+}
+.office-task:hover {
+  border-color: color-mix(in srgb, var(--desk) 40%, transparent);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.office-task__id {
+  font-family: var(--font-mono-ui);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: var(--foreground-disabled);
+}
+.office-task__title {
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--foreground);
+}
+.office-task__meta {
+  font-size: 10.5px;
+  color: var(--foreground-disabled);
+}
+.office-task__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  font-size: 10px;
+}
+.office-task__children {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 7px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 10.5px;
+  color: var(--foreground-secondary);
+}
+.office-task__children li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.office-col-dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--desk);
+}
+.office-col-dot--bitti {
+  background: var(--office-ok);
+}
+.office-col-dot--hata,
+.office-col-dot--durdu {
+  background: var(--office-err);
+}
+.office-col-dot--onay {
+  background: var(--office-wait);
+}
+.office-empty {
+  display: grid;
+  place-content: center;
+  height: 100%;
+  gap: 6px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--foreground-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .office-dot--calisiyor,
+  .office-dot--onay_bekliyor,
+  .office-live__dot.is-live {
+    animation: none;
+  }
+}

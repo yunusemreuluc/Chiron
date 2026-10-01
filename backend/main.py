@@ -19,8 +19,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.api import automation, macro, memory, remote, settings, system, vision, voice
+from backend.api import automation, macro, memory, office, remote, settings, system, vision, voice
 from backend.core.config import CORS_ORIGINS
+from backend.core.ofis import OfficeWatcher, office as office_state
+from backend.models.events import WSEvent
 from backend.core.remote_auth import RemoteAccessMiddleware
 from backend.websocket.manager import manager
 from backend.websocket.router import router as websocket_router
@@ -43,7 +45,16 @@ async def lifespan(_: FastAPI):
     # oradan yayınlıyor. `run_coroutine_threadsafe` için backend'in çalışan
     # döngüsüne ihtiyaç var — burada, gerçekten ayağa kalktığı anda bağlanıyor.
     manager.bind_loop(asyncio.get_running_loop())
+    # Ajan Ofisi (2026-10-02): Claude Code hook olaylarını ve Codex kayıtlarını
+    # izleyen thread. Arayüz açık değilse anlık görüntü yayınlanmaz (has_clients).
+    def _office_changed(snapshot: dict) -> None:
+        if manager.has_clients():
+            manager.broadcast_threadsafe(WSEvent(event="office_update", data=snapshot))
+
+    watcher = OfficeWatcher(office_state, on_change=_office_changed)
+    watcher.start()
     yield
+    watcher.stop()
 
 
 app = FastAPI(title="AIRON Backend", version="0.1.0", lifespan=lifespan)
@@ -60,7 +71,7 @@ app.add_middleware(
 # katman en dışta çalışır. Bkz. backend/core/remote_auth.py.
 app.add_middleware(RemoteAccessMiddleware)
 
-for router_module in (voice, system, settings, vision, memory, automation, macro, remote):
+for router_module in (voice, system, settings, vision, memory, automation, macro, remote, office):
     app.include_router(router_module.router)
 
 app.include_router(websocket_router)

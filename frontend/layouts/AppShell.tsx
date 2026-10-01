@@ -8,6 +8,7 @@ import { BootOverlay } from '@/components/BootOverlay';
 import { BrandBadge } from '@/components/BrandBadge';
 import { LeftPanel } from '@/components/LeftPanel';
 import { NodeFocusCard } from '@/components/NodeFocusCard';
+import { OfficeView } from '@/components/office/OfficeView';
 import { Sidebar } from '@/components/Sidebar';
 import { SleepVeil } from '@/components/SleepVeil';
 import { TelemetryCard } from '@/components/TelemetryCard';
@@ -174,6 +175,8 @@ export function AppShell() {
         </div>
       </div>
 
+      {/* Ajan Ofisi — "Ajanlar" modülü tam ekran açılır (bkz. components/office). */}
+      <OfficeView />
       <SleepVeil />
       <BootOverlay />
     </div>

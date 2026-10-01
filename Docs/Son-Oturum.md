@@ -1,7 +1,27 @@
 # Son Oturum
 
 Claude Code oturumları arasındaki köprü. `.claude/hooks/session_start.py` her
-açılışta buradaki **en üstteki** `## Oturum: 2026-09-28
+açılışta buradaki **en üstteki** `## Oturum:` bloğunu okuyup context'e enjekte
+ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
+
+Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
+indir. Üç madde yeter; roman değil, köprü.
+
+## Oturum: 2026-10-02
+
+**Ne yapıldı:** Ajan Ofisi (plan Faz A) yazıldı — `feature/ajan-ofisi` dalı. Claude Code
+hook'u (`~/.claude/hooks/ofis-olay.py`, settings.json'da 11 olay, async) + Codex oturum
+kayıtları → `backend/core/ofis.py` → `/api/office/*` + WS `office_update` → "Ajanlar"
+modülünde tam ekran izometrik hologram ofis, ajan kartı, kanban pano, Codex kota çubuğu.
+Astra 11 bulgu verdi, hepsi düzeltildi; canlı veride 3 hata daha bulundu ve düzeltildi.
+pytest 80/80, tsc/eslint temiz, build geçti, headless Edge ekran görüntüleriyle doğrulandı. → [[Ajan-Ofisi]]
+
+**Nerede kalındı:** Commit yok (kullanıcı istemedi). Gerçek Aıron penceresinde (desktop.py)
+açılıp kullanıcıya gösterilmedi; kullanıcı görünce görsel geri bildirim verecek.
+
+**Sıradaki:** Kullanıcı geri bildirimi → commit; sonra Faz 0 (performans ölçümü — ofis sahnesi de ölçülecek).
+
+## Oturum: 2026-09-28
 
 **Ne yapıldı:** `feature/mcp-server` dalında `mcp_server/` yazıldı — Aıron'un dört
 salt-okunur aracı (ekran OCR, aktif pencere, hafıza arama, bildirimler) MCP (mcp==2.2.0)
@@ -13,12 +33,6 @@ piksel sınırı, yutulan ağ denemesi…), biri Aıron'un kendi kodunda. → [[
 **Nerede kalındı:** Dal `origin/feature/mcp-server`'a push edildi; main'e birleştirilmedi.
 
 **Sıradaki:** main'e birleştirme (PR); istenirse Claude Desktop kaydı; `screen_vision` geçici dosya sızıntısı.
-
-## Oturum:` bloğunu okuyup context'e enjekte
-ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
-
-Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
-indir. Üç madde yeter; roman değil, köprü.
 
 ## Oturum: 2026-09-21
 

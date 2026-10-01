@@ -34,6 +34,9 @@ interface ModuleContent {
 // gösteriyor: ikisinin de arkasında gösterilecek bir veri YOK — çoklu ajan
 // sistemi planlama aşamasında, tarayıcı tarafı ise oturum durumu tutmuyor
 // (yalnızca URL açıp arama yapıyor). Sahte veri üretmek yerine bunu söylüyorlar.
+//
+// 2026-10-02: Ajanlar artık burada değil — tam ekran Ajan Ofisi açılıyor
+// (components/office/OfficeView.tsx). Kayıt aşağıda yalnız tip bütünlüğü için.
 const MODULE_CONTENT: Record<ModuleId, ModuleContent> = {
   memory: {
     title: 'Hafıza',
@@ -56,7 +59,7 @@ const MODULE_CONTENT: Record<ModuleId, ModuleContent> = {
   agents: {
     title: 'Ajanlar',
     icon: LuUsers,
-    description: 'Çoklu ajan sistemi henüz planlama aşamasında.',
+    description: '',
   },
   browser: {
     title: 'Tarayıcı',
@@ -75,7 +78,8 @@ const MODULE_CONTENT: Record<ModuleId, ModuleContent> = {
 export function LeftPanel() {
   const activeModule = useNavigationStore((state) => state.activeModule);
   const toggleModule = useNavigationStore((state) => state.toggleModule);
-  const content = activeModule ? MODULE_CONTENT[activeModule] : null;
+  // Ajanlar sol panel değil, tam ekran ofis (OfficeView) — burada çizilmez.
+  const content = activeModule && activeModule !== 'agents' ? MODULE_CONTENT[activeModule] : null;
 
   return (
     <AnimatePresence>

@@ -23,6 +23,9 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
   güncellenmeden biten oturumu işaretler ([[Gelistirme-Ortami]] § Süreklilik)
 - [[Airon-Mobil]] — telefondaki Aıron (Kotlin, `Projects/airon-mobile`): Gemini Live,
   arama/WhatsApp/cihaz araçları, PC köprüsü (`/api/remote/ask|desktop|note`)
+- [[Ajan-Ofisi]] — Claude, alt ajanlar ve Codex/Bunny/Gemini masalarda: kim ne yapıyor, görev panosu, kota
+- [[Plan-Claude-Entegrasyonu]] — telefondan sesle verilen işi PC'de Claude Code yapar;
+  önce Faz 0 (performans ölçümü, test, temizlik)
 - [[Uzaktan-Erisim]] — telefondan Aıron: Tailscale + PIN kapısı (`backend/core/remote_auth.py`),
   uzak mod (PC sessiz), telefon arayüzü `frontend/app/m`, kurulum adımları
 - [[Kurulum-ve-Baslatma]] — kurulum ve çalıştırma: requirements.txt, AIRON.bat, make_shortcut.py,

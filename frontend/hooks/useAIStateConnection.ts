@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useAIStateStore, type AIState } from '@/stores/aiStateStore';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useMicStore } from '@/stores/micStore';
+import { useOfficeStore, type OfficeSnapshot } from '@/stores/officeStore';
 import { useTimelineStore } from '@/stores/timelineStore';
 import {
   useVisionStore,
@@ -220,6 +221,12 @@ export function useAIStateConnection() {
               break;
             case 'mic_level':
               if (typeof data.level === 'number') useMicStore.getState().pushLevel(data.level);
+              break;
+            // ── Ajan Ofisi (2026-10-02) — backend/core/ofis.py ──
+            case 'office_update':
+              if (Array.isArray(data.desks)) {
+                useOfficeStore.getState().setSnapshot(data as OfficeSnapshot);
+              }
               break;
             default:
               // panel_focus/user_activity — henüz arayüzde karşılığı yok.

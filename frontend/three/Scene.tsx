@@ -13,6 +13,7 @@ import { Lighting } from './Lighting';
 import { NodeConnections } from './NodeConnections';
 import { OrbitNodes } from './OrbitNodes';
 import { PostProcessing } from './PostProcessing';
+import { useNavigationStore } from '@/stores/navigationStore';
 
 // app/globals.css'teki tablet kırılımıyla (1023px) aynı eşik — bkz. .app-shell
 // media query. Performans / Mobile Optimization: dar viewport'larda
@@ -36,9 +37,13 @@ function useAdaptiveMaxDpr(): number {
 // dpr üst sınırı ve alpha:false ile GPU maliyeti düşük tutuluyor (CLAUDE.md § PERFORMANCE).
 export function Scene() {
   const maxDpr = useAdaptiveMaxDpr();
+  // Ajan Ofisi tam ekranken çekirdek görünmüyor: kare üretmeyi tamamen durdur,
+  // GPU iki sahneyi birden çizmesin (Faz 0 — Aıron makineyi yormasın).
+  const officeOpen = useNavigationStore((state) => state.activeModule === 'agents');
 
   return (
     <Canvas
+      frameloop={officeOpen ? 'never' : 'always'}
       camera={{ position: [0, 0, CAMERA_DISTANCE], fov: 50, near: 0.1, far: 120 }}
       dpr={[1, maxDpr]}
       gl={{ antialias: true, alpha: false }}
