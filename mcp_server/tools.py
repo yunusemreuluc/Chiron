@@ -203,14 +203,15 @@ def _ensure_ocr_reader() -> None:
     ayarlarla ama indirme kapalı kurup Airon'un önbellek değişkenine koyuyoruz;
     Airon'un kodu değişmiyor, `read_text_in_jpeg` bu hazır okuyucuyu kullanıyor.
     """
+    # 2026-10-02: Airon'un okuyucusu artık `ocr._reader` (core/idle_model.py) —
+    # kullanınca yüklenip 2 dk boşta kalınca bırakılıyor. `ensure` yalnız boşsa
+    # bizim (indirmesiz) yükleyicimizle kurar ve bunu kullanım sayar.
     with _reader_lock:
-        if ocr._reader_cache is not None:
-            return
         try:
             import easyocr
 
-            ocr._reader_cache = easyocr.Reader(
-                ocr.LANGUAGES, gpu=False, verbose=False, download_enabled=False)
+            ocr._reader.ensure(lambda: easyocr.Reader(
+                ocr.LANGUAGES, gpu=False, verbose=False, download_enabled=False))
         except Exception as exc:
             raise ToolError(
                 f"OCR modeli yüklenemedi ({exc}). Modeller ~/.EasyOCR/model altında olmalı; "

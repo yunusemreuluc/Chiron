@@ -6,7 +6,6 @@ import {
   LuBell,
   LuBrain,
   LuGlobe,
-  LuMousePointerClick,
   LuSettings,
   LuUserRound,
   LuUsers,
@@ -27,7 +26,6 @@ interface SidebarItem {
 const SIDEBAR_ITEMS: SidebarItem[] = [
   { id: 'memory', label: 'Hafıza', icon: LuBrain },
   { id: 'automation', label: 'Otomasyon', icon: LuWorkflow },
-  { id: 'macro', label: 'Makro', icon: LuMousePointerClick },
   { id: 'agents', label: 'Ajanlar', icon: LuUsers },
   { id: 'browser', label: 'Tarayıcı', icon: LuGlobe },
 ];

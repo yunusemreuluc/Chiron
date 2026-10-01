@@ -144,7 +144,7 @@ async def test_missing_ocr_model_is_an_error_not_empty_text(client, monkeypatch)
         assert kwargs.get("download_enabled") is False, "MCP tarafı modeli asla indirmemeli"
         raise FileNotFoundError("craft_mlt_25k.pth bulunamadı")
 
-    monkeypatch.setattr(ocr, "_reader_cache", None)
+    ocr._reader.release()  # okuyucu boş başlasın (core/idle_model.py)
     monkeypatch.setattr(easyocr, "Reader", no_model)
     result = await client.call_tool("read_screen_text", {"source": "image", "image_path": str(TEXT_IMAGE)})
     assert "OCR modeli yüklenemedi" in error_text(result)

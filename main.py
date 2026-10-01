@@ -54,7 +54,7 @@ from actions.shell     import shell_run  # noqa: F401
 from actions.whatsapp  import send_whatsapp_message, save_whatsapp_contact  # noqa: F401
 from actions.media     import play_media  # noqa: F401
 from actions.weather   import get_weather_summary  # noqa: F401
-from actions.ocr import HAS_EASYOCR, lines_to_text, read_text_in_jpeg
+from actions.ocr import HAS_EASYOCR, lines_to_text
 from actions.screen_vision import analyze_screen  # noqa: F401
 from actions.screen_control import intervene_screen  # noqa: F401
 from actions.screen_monitor import (
@@ -66,7 +66,10 @@ from actions.ambient_context import describe_context, get_context  # noqa: F401 
 from actions.ambient_context import _idle_seconds
 from actions.auto_fix import apply_plan, get_auto_fix_mode, plan_fix, set_auto_fix  # noqa: F401
 from core.speaking_overlay import overlay as speaking_overlay
-from actions.object_recognition import detect_objects_in_jpeg, describe_object_for_learning
+from actions.object_recognition import describe_object_for_learning
+# Yerel görü (YOLO-World, EasyOCR) ayrı alt süreçte: kullanınca açılır, 2 dk boşta
+# kalınca kapanır ve belleği (1,3–1,8 GB) geri verir. Bkz. core/vision_worker.py.
+from core.vision_worker import detect_objects_in_jpeg, read_text_in_jpeg
 from actions.sys_info import check_health_thresholds
 from actions.screen_watch import check_watch_condition
 from actions.notifications import get_recent_notifications  # noqa: F401 — @register_tool yan etkisi için

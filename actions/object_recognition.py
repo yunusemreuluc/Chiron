@@ -22,6 +22,8 @@ import io
 from google import genai
 from google.genai import types
 
+from core.idle_model import IdleModel
+
 # DİKKAT — ultralytics BURADA import EDİLMEZ (2026-07-29 bellek ölçümü):
 # `from ultralytics import YOLOWorld` modül seviyesindeyken torch + ultralytics +
 # matplotlib zinciri açılışta yükleniyordu ve tek başına **273 MB** tutuyordu.
@@ -30,7 +32,7 @@ from google.genai import types
 #
 # Paketin KURULU OLUP OLMADIĞINI öğrenmek için import etmek gerekmiyor:
 # find_spec sadece dosya sisteminde arar, modülü çalıştırmaz (mikrosaniyeler).
-# Gerçek import ilk tespit çağrısında, _get_model içinde yapılıyor.
+# Gerçek import ilk tespit çağrısında, _load_model içinde yapılıyor.
 HAS_ULTRALYTICS = importlib.util.find_spec("ultralytics") is not None
 
 try:
@@ -89,22 +91,25 @@ def display_name(label: str) -> str:
     return _DISPLAY_NAMES.get(label, label)
 
 
-_model_cache = None
-_model_vocabulary: list[str] = []
+def _load_model():
+    # Ağır zincir (torch/ultralytics/matplotlib, ~273 MB) ilk gerçek tespit
+    # çağrısına kadar ertelenir — bkz. yukarıdaki HAS_ULTRALYTICS notu.
+    from ultralytics import YOLOWorld
+
+    return YOLOWorld(YOLO_WORLD_MODEL)
 
 
-def _get_model(vocabulary: list[str]):
-    global _model_cache, _model_vocabulary
-    if _model_cache is None:
-        # Ağır zincir (torch/ultralytics/matplotlib, ~273 MB) ilk gerçek tespit
-        # çağrısına kadar ertelenir — bkz. yukarıdaki HAS_ULTRALYTICS notu.
-        from ultralytics import YOLOWorld
+# Kullanınca yüklenir, 2 dk kullanılmazsa bellekten çıkar (Faz 0, 2026-10-02 —
+# kullanıcı: "çalıştırdığımda çalışsın, yoksa çalışmasın"). Bkz. core/idle_model.py.
+_model = IdleModel("YOLO-World", _load_model, idle_seconds=120)
 
-        _model_cache = YOLOWorld(YOLO_WORLD_MODEL)
-    if vocabulary != _model_vocabulary:
-        _model_cache.set_classes(vocabulary)
-        _model_vocabulary = list(vocabulary)
-    return _model_cache
+
+def _apply_vocabulary(model, vocabulary: list[str]) -> None:
+    # Dağarcık modele bağlı durum: model bırakılıp yeniden yüklenince sıfırlanır,
+    # bu yüzden global değil modelin üstünde tutuluyor.
+    if getattr(model, "_airon_vocabulary", None) != vocabulary:
+        model.set_classes(vocabulary)
+        model._airon_vocabulary = list(vocabulary)
 
 
 def detect_objects_in_jpeg(jpeg_bytes: bytes, extra_vocabulary: list[str] | None = None) -> list[dict]:
@@ -131,8 +136,10 @@ def detect_objects_in_jpeg(jpeg_bytes: bytes, extra_vocabulary: list[str] | None
 
     try:
         image = Image.open(io.BytesIO(jpeg_bytes)).convert("RGB")
-        model = _get_model(vocabulary)
-        results = model.predict(image, conf=DETECTION_CONFIDENCE, verbose=False)
+        with _model.use() as model:
+            _apply_vocabulary(model, vocabulary)
+            results = model.predict(image, conf=DETECTION_CONFIDENCE, verbose=False)
+            names = model.names
     except Exception:
         return []
 
@@ -140,7 +147,6 @@ def detect_objects_in_jpeg(jpeg_bytes: bytes, extra_vocabulary: list[str] | None
     best_by_label: dict[str, tuple[float, list[float]]] = {}
     try:
         r = results[0]
-        names = model.names
         for box in r.boxes:
             cls_id = int(box.cls[0])
             conf = float(box.conf[0])

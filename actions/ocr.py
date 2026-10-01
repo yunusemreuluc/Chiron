@@ -22,6 +22,8 @@ import importlib.util
 import io
 import logging
 
+from core.idle_model import IdleModel
+
 HAS_EASYOCR = importlib.util.find_spec("easyocr") is not None
 
 try:
@@ -50,7 +52,6 @@ MAX_LINES = 40
 # kadar ayrışabileceği — satır yüksekliğinin oranı olarak.
 ROW_TOLERANCE = 0.6
 
-_reader_cache = None
 
 
 def _sort_reading_order(lines: list[dict]) -> list[dict]:
@@ -90,16 +91,18 @@ def _sort_reading_order(lines: list[dict]) -> list[dict]:
     return ordered
 
 
-def _get_reader():
-    """EasyOCR okuyucusu — süreç başına tek sefer kurulur (ağır)."""
-    global _reader_cache
-    if _reader_cache is None:
-        import easyocr
+def _load_reader():
+    """EasyOCR okuyucusu — ağır; kullanınca kurulur."""
+    import easyocr
 
-        # gpu=False: projedeki torch CPU sürümü (2.13.0+cpu). True verilirse
-        # EasyOCR her çağrıda bir uyarı basıp yine CPU'ya düşüyor.
-        _reader_cache = easyocr.Reader(LANGUAGES, gpu=False, verbose=False)
-    return _reader_cache
+    # gpu=False: projedeki torch CPU sürümü (2.13.0+cpu). True verilirse
+    # EasyOCR her çağrıda bir uyarı basıp yine CPU'ya düşüyor.
+    return easyocr.Reader(LANGUAGES, gpu=False, verbose=False)
+
+
+# Kullanınca yüklenir, 2 dk kullanılmazsa bellekten çıkar (Faz 0, 2026-10-02).
+# Bkz. core/idle_model.py.
+_reader = IdleModel("EasyOCR", _load_reader, idle_seconds=120)
 
 
 def read_text_in_jpeg(jpeg_bytes: bytes) -> list[dict]:
@@ -126,7 +129,8 @@ def read_text_in_jpeg(jpeg_bytes: bytes) -> list[dict]:
 
         import numpy as np
 
-        results = _get_reader().readtext(np.array(image))
+        with _reader.use() as reader:
+            results = reader.readtext(np.array(image))
     except Exception:
         logger.debug("[OCR] Metin okunamadı", exc_info=True)
         return []

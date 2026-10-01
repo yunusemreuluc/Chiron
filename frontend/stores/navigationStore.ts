@@ -6,7 +6,7 @@ import { create } from 'zustand';
 // 'voice' kullanıcı isteğiyle (2026-07-29) bu listeden ÇIKARILDI: sohbet artık
 // sağ alt köşedeki kendi dock'unda (bkz. components/AssistantDock.tsx).
 // 'settings' ise Tkinter penceresinden taşınan ayarlar paneli.
-export type ModuleId = 'memory' | 'automation' | 'macro' | 'agents' | 'browser' | 'settings';
+export type ModuleId = 'memory' | 'automation' | 'agents' | 'browser' | 'settings';
 
 interface NavigationState {
   activeModule: ModuleId | null;
