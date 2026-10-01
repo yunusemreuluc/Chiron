@@ -8,6 +8,7 @@ import { CAMERA_DISTANCE, CameraRig } from './CameraRig';
 import { ElectricArcs } from './ElectricArcs';
 import { EnergyCore } from './EnergyCore';
 import { EnergyTendrils } from './EnergyTendrils';
+import { FrameGovernor } from './FrameGovernor';
 import { FrameProbe } from './FrameProbe';
 import { Lighting } from './Lighting';
 import { NodeConnections } from './NodeConnections';
@@ -43,7 +44,8 @@ export function Scene() {
 
   return (
     <Canvas
-      frameloop={officeOpen ? 'never' : 'always'}
+      // 'demand': kareyi FrameGovernor ister (uyarlanır FPS, bkz. o dosya).
+      frameloop={officeOpen ? 'never' : 'demand'}
       camera={{ position: [0, 0, CAMERA_DISTANCE], fov: 50, near: 0.1, far: 120 }}
       dpr={[1, maxDpr]}
       gl={{ antialias: true, alpha: false }}
@@ -65,6 +67,7 @@ export function Scene() {
       {/* Kare süresi sondası — `window.__aironFps()` ile okunuyor. Kare başına
           tek bir dizi yazması; sahneyi görsel olarak etkilemiyor. */}
       <FrameProbe />
+      <FrameGovernor />
 
       <Suspense fallback={null}>
         <Environment preset="night" environmentIntensity={0.25} />

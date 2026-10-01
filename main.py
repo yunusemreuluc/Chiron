@@ -916,12 +916,17 @@ class AironLive:
     async def _update_ui_webcam_preview(self):
         """UI önizlemesini ~24 FPS günceller. AI akışından bağımsız."""
         frame_interval = 1.0 / 24.0   # ~0.0417 sn → 24 FPS
+        idle_interval = 0.25          # kamera kapalıyken saniyede 4 bakış yeter
         while True:
             if self._webcam_streamer.is_active:
                 jpeg = self._webcam_streamer.get_latest_frame()
                 if jpeg:
                     self.ui.update_webcam_preview(jpeg)
-            await asyncio.sleep(frame_interval)
+                await asyncio.sleep(frame_interval)
+            else:
+                # Faz 0 (2026-10-02): kamera kapalıyken de saniyede 24 kez
+                # uyanıyordu — işsiz ama sürekli. Açılınca en fazla 250 ms gecikme.
+                await asyncio.sleep(idle_interval)
 
     def _proactive_checks_allowed(self, block_on_webcam: bool = False) -> bool:
         """Tüm proaktif bekçilerin (ekran, sistem sağlığı, özel izleme) ortak ön
