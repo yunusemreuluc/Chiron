@@ -119,8 +119,9 @@ Stdlib dışında bağımlılık yok; ortak yardımcılar `_ortak.py`'de.
 Komutlar `python .claude/hooks/session_start.py` — **mutlak yol değil**.
 İki sebep:
 
-1. Kasanın mutlak yolu `Ders Notları\Aıron` — içinde `ı` ve boşluk var. cmd'nin
-   kod sayfasından geçerken bozulma riski. Göreli yol saf ASCII.
+1. Kasanın mutlak yolu eskiden `Ders Notları\Aıron`'du — içinde `ı` ve boşluk vardı, cmd'nin
+   kod sayfasından geçerken bozulma riski. 2026-10-02'den beri `C:\Users\yunus\Projects\Airon`
+   (saf ASCII, OneDrive dışı) ama göreli yol yine de her yerde güvenli.
 2. `$CLAUDE_PROJECT_DIR` Windows kabuğunda genişlemez (`%VAR%` bekler); göreli
    yol her kabukta aynı çalışır.
 

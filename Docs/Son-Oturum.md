@@ -7,6 +7,18 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-10-02 (3) — kararlar uygulandı, proje taşındı
+
+**Ne yapıldı:** Proje **`C:\Users\yunus\Projects\Airon`**'a taşındı (OneDrive dışı); kısayol, MCP
+kaydı, Obsidian kasası güncellendi, eski klasör silindi. Makro tamamen kaldırıldı. Görü modelleri
+alt süreçte (`core/vision_worker.py`, 2 dk boşta kapanır) — Astra 3 bulgu, hepsi düzeltildi.
+Önbellek/log temizliği yapıldı. pytest 121/121, build temiz. → [[Plan-Claude-Entegrasyonu]] § Kararlar
+
+**Nerede kalındı:** Aıron yeni yerden henüz kullanıcı tarafından açılmadı. `config/api_keys.json` ve
+`memory/` artık OneDrive yedeğinde değil.
+
+**Sıradaki:** Kullanıcı Aıron'u masaüstü kısayolundan açıp denesin (ofis, OCR, kare hızı). Sonra Faz 1.
+
 ## Oturum: 2026-10-02 (2) — Faz 0
 
 **Ne yapıldı:** Ajan Ofisi commit'lendi (`0506718`, kullanıcı "güzel, sonra ayarlarız" dedi).

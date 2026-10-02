@@ -218,6 +218,20 @@ uzak kapı 32 + istek listesi + MCP 42). Açılış duman testi yerine çalışa
 izlenmiyor. Asıl yük silinecek dosyalar değil, **OneDrive senkronu**: `frontend/node_modules`
 713 MB + `venv` OneDrive içinde. Projeyi OneDrive dışına taşımak ayrı karar (soruldu).
 
+**Kararlar ve uygulama (2026-10-02, kullanıcı):**
+- Temizlik: `__pycache__`, `frontend/.next`, `logs/*.log` silindi. Ağırlıklar kullanıldığı için kaldı.
+- Makro: "kullanmıyorum, tamamen sil" — motor, API, panel, kenar çubuğu, `macros/`, not sayfası kaldırıldı.
+- Görü modelleri: "basınca çalışsın, yoksa çalışmasın" → `core/vision_worker.py`: YOLO-World + EasyOCR
+  ayrı alt süreçte, 2 dk boşta kapanır. Süreç içi bırakma (`core/idle_model.py`) ölçüldü ve belleği
+  geri VERMEDİ (torch ayırıcısı); alt süreç ölünce 1,8–2,6 GB tamamen dönüyor. Aıron 14 MB'ta kalıyor.
+  Bedel: uzun aradan sonra ilk çağrı ~6 sn (eskiden ~2,5), sıcakken 0,6 sn.
+- MSAA: "yok, yapma" — dokunulmadı.
+- OneDrive: taşındı → `C:\Users\yunus\Projects\Airon` (69.904 dosya, 2,5 GB, 0 hata; venv yeniden
+  kurulmadan çalıştı, 121/121 test). Güncellenen: masaüstü kısayolu, Claude MCP kaydı (`claude mcp
+  get airon` → Connected), Obsidian kasa kaydı (yedek `obsidian.json.bak-airon-tasima`). Eski klasör
+  silindi (OneDrive çöp kutusunda 30 gün). **Yedek notu:** git'e girmeyen `config/api_keys.json` ve
+  `memory/` artık OneDrive'da değil — ayrı yedek kurulmadı.
+
 ---
 
 ## Faz 1 — PC ucu: telefondan Claude'a iş
