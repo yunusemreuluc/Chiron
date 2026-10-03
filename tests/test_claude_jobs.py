@@ -595,3 +595,4 @@ def test_updates_and_acknowledge(tmp_path, processes, job_managers, monkeypatch)
     assert [j["id"] for j in listed] == [second.id]
     assert client.post("/api/remote/claude/ack", json={"ids": [second.id]}).json()["data"]["updated"] == 1
     assert client.get("/api/remote/claude/updates").json()["data"]["jobs"] == []
+    assert client.get("/api/remote/claude/updates").json()["data"]["active"] == 0

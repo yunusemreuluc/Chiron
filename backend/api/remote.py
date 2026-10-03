@@ -335,7 +335,9 @@ async def list_claude_jobs() -> dict:
 @router.get("/claude/updates")
 async def claude_job_updates() -> dict:
     """Telefona henüz söylenmemiş sonuçlar (bitti / onay bekliyor / hata)."""
-    return {"success": True, "message": "güncellemeler", "data": {"jobs": claude_jobs.jobs.updates()}}
+    # `active`: telefon "son 10" listesinden çıkarım yapmasın, süren iş varsa yoklamayı sürdürsün.
+    data = {"jobs": claude_jobs.jobs.updates(), "active": claude_jobs.jobs.active_count()}
+    return {"success": True, "message": "güncellemeler", "data": data}
 
 
 class ClaudeJobAck(BaseModel):

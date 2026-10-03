@@ -394,6 +394,11 @@ class ClaudeJobs:
             pending = [j for j in self._jobs.values() if j.status in NOTIFY and not j.notified]
             return [j.public() for j in sorted(pending, key=lambda j: j.finished_at or 0)]
 
+    def active_count(self) -> int:
+        """Kuyrukta + çalışan iş sayısı — telefonun yoklayıcısı buna göre sürer."""
+        with self._lock:
+            return sum(1 for j in self._jobs.values() if j.status in ACTIVE)
+
     def acknowledge(self, job_ids: list[str]) -> int:
         """Telefon sonucu kullanıcıya söyledi: bir daha gönderme."""
         count = 0
