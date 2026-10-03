@@ -336,8 +336,7 @@ async def list_claude_jobs() -> dict:
 async def claude_job_updates() -> dict:
     """Telefona henüz söylenmemiş sonuçlar (bitti / onay bekliyor / hata)."""
     # `active`: telefon "son 10" listesinden çıkarım yapmasın, süren iş varsa yoklamayı sürdürsün.
-    data = {"jobs": claude_jobs.jobs.updates(), "active": claude_jobs.jobs.active_count()}
-    return {"success": True, "message": "güncellemeler", "data": data}
+    return {"success": True, "message": "güncellemeler", "data": claude_jobs.jobs.updates_snapshot()}
 
 
 class ClaudeJobAck(BaseModel):

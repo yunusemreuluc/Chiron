@@ -394,10 +394,16 @@ class ClaudeJobs:
             pending = [j for j in self._jobs.values() if j.status in NOTIFY and not j.notified]
             return [j.public() for j in sorted(pending, key=lambda j: j.finished_at or 0)]
 
-    def active_count(self) -> int:
-        """Kuyrukta + çalışan iş sayısı — telefonun yoklayıcısı buna göre sürer."""
+    def updates_snapshot(self) -> dict[str, Any]:
+        """Söylenmemiş sonuçlar + süren iş sayısı, TEK kilit altında: ikisi ayrı okununca
+        son iş arada bitip `jobs=[], active=0` dönebiliyor, telefon yoklamayı bırakıp
+        sonucu kaçırıyordu (Astra)."""
         with self._lock:
-            return sum(1 for j in self._jobs.values() if j.status in ACTIVE)
+            pending = [j for j in self._jobs.values() if j.status in NOTIFY and not j.notified]
+            return {
+                "jobs": [j.public() for j in sorted(pending, key=lambda j: j.finished_at or 0)],
+                "active": sum(1 for j in self._jobs.values() if j.status in ACTIVE),
+            }
 
     def acknowledge(self, job_ids: list[str]) -> int:
         """Telefon sonucu kullanıcıya söyledi: bir daha gönderme."""
