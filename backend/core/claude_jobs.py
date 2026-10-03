@@ -66,6 +66,8 @@ Yunus'un yapması gereken bir şey var mı. Tablo, kod bloğu, uzun yol listesi 
 """
 
 ACTIVE = ("queued", "running")
+# Telefona haber verilecek sonuçlar. `cancelled` yok: iptali kullanıcı kendisi yaptı.
+NOTIFY = ("done", "needs_approval", "failed", "timeout", "interrupted")
 
 
 @dataclass
@@ -84,6 +86,7 @@ class Job:
     approval: str = ""
     error: str = ""
     cost_usd: float | None = None
+    notified: bool = False  # sonucu telefona söylendi mi (bkz. updates/acknowledge)
 
     def public(self) -> dict[str, Any]:
         data = asdict(self)
@@ -384,6 +387,24 @@ class ClaudeJobs:
         with self._lock:
             jobs = sorted(self._jobs.values(), key=lambda j: j.created_at, reverse=True)
             return [j.public() for j in jobs[:limit]]
+
+    def updates(self) -> list[dict[str, Any]]:
+        """Telefona henüz söylenmemiş sonuçlar, eskiden yeniye."""
+        with self._lock:
+            pending = [j for j in self._jobs.values() if j.status in NOTIFY and not j.notified]
+            return [j.public() for j in sorted(pending, key=lambda j: j.finished_at or 0)]
+
+    def acknowledge(self, job_ids: list[str]) -> int:
+        """Telefon sonucu kullanıcıya söyledi: bir daha gönderme."""
+        count = 0
+        with self._lock:
+            for job_id in job_ids:
+                job = self._jobs.get(job_id)
+                if job and job.status in NOTIFY and not job.notified:
+                    job.notified = True
+                    self._save(job)
+                    count += 1
+        return count
 
     def cancel(self, job_id: str) -> bool:
         with self._lock:

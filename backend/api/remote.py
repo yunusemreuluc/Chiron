@@ -331,6 +331,23 @@ async def list_claude_jobs() -> dict:
     return {"success": True, "message": "işler", "data": {"jobs": claude_jobs.jobs.list()}}
 
 
+# Sabit yollar {job_id}'den ÖNCE: yoksa "updates" bir iş kimliği sanılır.
+@router.get("/claude/updates")
+async def claude_job_updates() -> dict:
+    """Telefona henüz söylenmemiş sonuçlar (bitti / onay bekliyor / hata)."""
+    return {"success": True, "message": "güncellemeler", "data": {"jobs": claude_jobs.jobs.updates()}}
+
+
+class ClaudeJobAck(BaseModel):
+    ids: list[str] = Field(max_length=50)
+
+
+@router.post("/claude/ack")
+async def acknowledge_claude_jobs(body: ClaudeJobAck) -> dict:
+    count = await asyncio.to_thread(claude_jobs.jobs.acknowledge, body.ids)
+    return {"success": True, "message": "işaretlendi", "data": {"updated": count}}
+
+
 @router.get("/claude/{job_id}")
 async def claude_job_status(job_id: str, response: Response) -> dict:
     data = claude_jobs.jobs.get(job_id)

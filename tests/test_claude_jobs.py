@@ -572,3 +572,26 @@ def test_prune_only_touches_job_files(tmp_path, processes, job_managers):
     manager._jobs.clear()
     manager._prune_disk()
     assert sorted(p.name for p in jobs_dir.iterdir()) == sorted(keep)
+
+
+def test_updates_and_acknowledge(tmp_path, processes, job_managers, monkeypatch):
+    manager = _manager(tmp_path / "jobs", _stream_script(_success_events()), processes, job_managers)
+    job = manager.submit("görev")
+    _wait_for(manager, job.id, "done")
+    assert [u["id"] for u in manager.updates()] == [job.id]
+    assert manager.acknowledge([job.id, "yok"]) == 1
+    assert manager.updates() == []
+    # Kalıcı: yeniden açılınca tekrar bildirilmez.
+    reloaded = claude_jobs.ClaudeJobs(jobs_dir=tmp_path / "jobs", launcher=lambda *a: None)
+    assert reloaded.updates() == []
+
+    monkeypatch.setattr(remote.claude_jobs, "jobs", manager)
+    app = FastAPI()
+    app.include_router(remote.router)
+    client = TestClient(app)
+    second = manager.submit("iki")
+    _wait_for(manager, second.id, "done")
+    listed = client.get("/api/remote/claude/updates").json()["data"]["jobs"]
+    assert [j["id"] for j in listed] == [second.id]
+    assert client.post("/api/remote/claude/ack", json={"ids": [second.id]}).json()["data"]["updated"] == 1
+    assert client.get("/api/remote/claude/updates").json()["data"]["jobs"] == []
