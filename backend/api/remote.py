@@ -7,11 +7,18 @@ uçlar yalnızca çerezi veriyor/alıyor. Bkz. Notes/Uzaktan-Erisim.md.
 from __future__ import annotations
 
 import asyncio
+import ctypes
+import json
+from collections.abc import Callable
+from ctypes import wintypes
+from typing import Any
 
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 
+from backend.api import system as system_api
 from backend.core import claude_jobs, commands, desktop_control, feature_requests, remote_auth
+from backend.core.ofis import WAITING, WORKING, office as office_state
 from backend.websocket.manager import manager
 
 router = APIRouter(prefix="/api/remote", tags=["remote"])
@@ -151,6 +158,196 @@ ASK_TIMEOUT_SECONDS = 90.0
 _ask_lock = asyncio.Lock()
 # update_memory oku-birleştir-yaz yapıyor; eşzamanlı iki not birbirini ezmesin.
 _note_lock = asyncio.Lock()
+
+
+def _short(value: object, limit: int) -> str:
+    return str(value or "").strip()[:limit]
+
+
+def _read_context() -> dict[str, Any]:
+    # `/api/system/context` ile aynı kaynak; ekran görüntüsü/OCR yok.
+    from actions.ambient_context import read_context
+
+    return read_context()
+
+
+def _locked_status() -> bool | None:
+    """Windows giriş masaüstüne geçilemiyorsa ekran kilitlidir; bilinemezse null."""
+    try:
+        user32 = ctypes.windll.user32
+        open_desktop = user32.OpenInputDesktop
+        open_desktop.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+        open_desktop.restype = wintypes.HANDLE
+        switch_desktop = user32.SwitchDesktop
+        switch_desktop.argtypes = (wintypes.HANDLE,)
+        switch_desktop.restype = wintypes.BOOL
+        close_desktop = user32.CloseDesktop
+        close_desktop.argtypes = (wintypes.HANDLE,)
+        close_desktop.restype = wintypes.BOOL
+
+        desktop = open_desktop(0, False, 0x0100)  # DESKTOP_SWITCHDESKTOP
+        if not desktop:
+            return None
+        try:
+            return not bool(switch_desktop(desktop))
+        finally:
+            close_desktop(desktop)
+    except Exception:
+        return None
+
+
+def _pc_status() -> dict[str, object]:
+    metrics = system_api.read_pc_metrics()
+    try:
+        idle_seconds: float | None = float(_read_context()["idle_seconds"])
+    except Exception:
+        idle_seconds = None
+
+    data: dict[str, object] = {
+        "uptime_minutes": metrics["uptime_minutes"],
+        "cpu_percent": metrics["cpu_percent"],
+        "ram_percent": metrics["ram_percent"],
+        "idle_seconds": idle_seconds,
+        "locked": _locked_status(),
+    }
+    if "battery" in metrics:
+        data["battery"] = metrics["battery"]
+    return data
+
+
+def _foreground_status() -> dict[str, str | None] | None:
+    context = _read_context()
+    app = _short(context.get("app"), 80)
+    title = _short(context.get("window_title"), 80)
+    if not app and not title:
+        return None
+    return {"app": app or None, "title": title or None}
+
+
+def _claude_status() -> dict[str, list[dict[str, object]]]:
+    listed = claude_jobs.jobs.list()
+    active = [
+        {
+            "id": job.get("id"),
+            "status": job.get("status"),
+            "last_step": _short(job.get("last_step"), 160),
+            "elapsed_seconds": job.get("elapsed_seconds", 0),
+            "task": _short(job.get("task"), 120),
+        }
+        for job in listed
+        if job.get("status") in claude_jobs.ACTIVE
+    ]
+    finished = sorted(
+        (
+            job
+            for job in listed
+            if job.get("status") not in claude_jobs.ACTIVE and job.get("finished_at") is not None
+        ),
+        key=lambda job: float(job.get("finished_at") or 0),
+        reverse=True,
+    )[:3]
+    recent = [
+        {
+            "id": job.get("id"),
+            "status": job.get("status"),
+            "summary": _short(job.get("summary"), 300),
+            # Onay normalde tek cümle; boyut sözleşmesini bozan hatalı kayıtları da sınırla.
+            "approval": _short(job.get("approval"), 300),
+            "finished_at": job.get("finished_at"),
+        }
+        for job in finished
+    ]
+    return {"active": active, "recent": recent}
+
+
+def _office_status() -> list[dict[str, str]]:
+    try:
+        workers = office_state.snapshot().get("workers", [])
+    except Exception:
+        return []
+    active = []
+    for worker in workers:
+        if worker.get("status") not in (WORKING, WAITING):
+            continue
+        active.append(
+            {
+                "name": _short(worker.get("name"), 80),
+                "status": _short(worker.get("status"), 40),
+                "task": _short(
+                    worker.get("current") or worker.get("title") or worker.get("brief"), 100
+                ),
+            }
+        )
+        if len(active) == 5:
+            break
+    return active
+
+
+def _assistant_status() -> dict[str, bool]:
+    return {"voice_ready": bool(commands.is_ready())}
+
+
+async def _status_section(reader: Callable[[], Any]) -> Any:
+    try:
+        return await asyncio.to_thread(reader)
+    except Exception:
+        return None
+
+
+def _fit_status_response(response: dict[str, Any], limit: int = 4096) -> None:
+    """Değişken metinleri gerekirse kısaltarak UTF-8 JSON yanıtını 4 KB altında tutar."""
+    data = response["data"]
+    slots: list[tuple[dict[str, Any], str]] = []
+    foreground = data.get("foreground")
+    if isinstance(foreground, dict):
+        slots.extend((foreground, key) for key in ("app", "title"))
+    claude = data.get("claude")
+    if isinstance(claude, dict):
+        for job in claude.get("active", []):
+            slots.extend((job, key) for key in ("last_step", "task"))
+        for job in claude.get("recent", []):
+            slots.extend((job, key) for key in ("summary", "approval"))
+    for worker in data.get("office") or []:
+        slots.extend((worker, key) for key in ("name", "task"))
+
+    def size() -> int:
+        return len(json.dumps(response, ensure_ascii=False, separators=(",", ":")).encode("utf-8"))
+
+    while size() >= limit:
+        candidates = [
+            (len(value.encode("utf-8")), owner, key, value)
+            for owner, key in slots
+            if isinstance((value := owner.get(key)), str) and value
+        ]
+        if not candidates:
+            break
+        _, owner, key, value = max(candidates, key=lambda item: item[0])
+        owner[key] = value[: max(0, len(value) // 2)]
+
+
+@router.get("/status")
+async def remote_status() -> dict:
+    """Telefondan, sesli Aıron oturumuna sormadan okunabilen kısa PC özeti."""
+    pc, foreground, claude, office, assistant = await asyncio.gather(
+        _status_section(_pc_status),
+        _status_section(_foreground_status),
+        _status_section(_claude_status),
+        _status_section(_office_status),
+        _status_section(_assistant_status),
+    )
+    response = {
+        "success": True,
+        "message": "PC durumu",
+        "data": {
+            "pc": pc,
+            "foreground": foreground,
+            "claude": claude,
+            "office": office,
+            "assistant": assistant,
+        },
+    }
+    _fit_status_response(response)
+    return response
 
 
 class AskRequest(BaseModel):

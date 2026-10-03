@@ -19,6 +19,29 @@ except ImportError:  # pragma: no cover — psutil requirements.txt'te var
 router = APIRouter(prefix="/api/system", tags=["system"])
 
 
+def read_pc_metrics() -> dict[str, object]:
+    """Ağ sondası olmadan hızlı PC ölçümleri; telemetri ve uzak durum bunu paylaşır."""
+    if not HAS_PSUTIL:
+        raise RuntimeError("psutil yok")
+
+    data: dict[str, object] = {
+        "cpu_percent": round(psutil.cpu_percent(interval=None), 1),
+        "ram_percent": round(psutil.virtual_memory().percent, 1),
+    }
+    try:
+        data["uptime_minutes"] = max(0, int((time.time() - psutil.boot_time()) // 60))
+    except Exception:
+        data["uptime_minutes"] = None
+    try:
+        battery = psutil.sensors_battery()
+        if battery is not None:
+            data["battery"] = round(battery.percent, 1)
+            data["charging"] = bool(battery.power_plugged)
+    except Exception:
+        pass
+    return data
+
+
 # ── İnternet sondası (2026-07-31) ───────────────────────────────────────────
 # "İnternet var mı" sorusunun DÜRÜST cevabı bir arayüz bayrağı değil, gerçek bir
 # bağlantı denemesi. psutil'in `net_io_counters`'ı yalnızca arayüzden kaç bayt
@@ -89,26 +112,21 @@ async def telemetry() -> dict:
     sorguladığı için bu doğru davranış (interval=0.5 verseydik her istek yarım
     saniye backend'i bloklardı).
     """
-    if not HAS_PSUTIL:
-        return {"success": False, "message": "psutil yok", "data": {}}
-
-    data: dict[str, object] = {}
     try:
-        data["cpu"] = round(psutil.cpu_percent(interval=None), 1)
-        data["ram"] = round(psutil.virtual_memory().percent, 1)
+        metrics = read_pc_metrics()
+        data: dict[str, object] = {
+            "cpu": metrics["cpu_percent"],
+            "ram": metrics["ram_percent"],
+        }
         data["disk"] = round(psutil.disk_usage("C:\\").percent, 1)
     except Exception:
         return {"success": False, "message": "sistem bilgisi okunamadı", "data": {}}
 
     # Pil yalnızca dizüstünde var; masaüstünde alan hiç gönderilmiyor (null
     # göndermek arayüzde "pil %—" gibi anlamsız bir satır üretirdi).
-    try:
-        battery = psutil.sensors_battery()
-        if battery is not None:
-            data["battery"] = round(battery.percent, 1)
-            data["charging"] = bool(battery.power_plugged)
-    except Exception:
-        pass
+    if "battery" in metrics:
+        data["battery"] = metrics["battery"]
+        data["charging"] = metrics["charging"]
 
     # İnternet: gerçek bağlantı denemesi (bkz. _probe_internet). Çevrimdışıysa
     # `online: False` dönüyor ve alan GİZLENMİYOR — "internet yok" bir eksiklik
