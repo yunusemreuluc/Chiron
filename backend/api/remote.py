@@ -286,6 +286,24 @@ async def list_feature_requests() -> dict:
     return {"success": True, "message": "istek listesi", "data": {"items": items}}
 
 
+class FeatureRequestRemove(BaseModel):
+    number: str = Field(max_length=16)
+
+
+@router.post("/requests/remove")
+async def remove_feature_request(body: FeatureRequestRemove) -> dict:
+    """İsteği geçmişini koruyarak normal listeden kaldırır."""
+    try:
+        result = await asyncio.to_thread(feature_requests.remove, body.number)
+    except ValueError as error:
+        return {"success": False, "message": str(error), "data": {}}
+    return {
+        "success": True,
+        "message": f"{result['number']} listeden kaldırıldı.",
+        "data": result,
+    }
+
+
 @router.get("/requests/done")
 async def completed_feature_requests() -> dict:
     """Telefonda henüz bildirilmeyen tamamlanmış istekleri döndürür."""

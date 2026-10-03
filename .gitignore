@@ -41,3 +41,6 @@ config/window_state.json
 
 # İstek listesi çalışma durumu (işlenmiş istek kimlikleri)
 config/feature_requests_state.json
+
+# Telefondan verilen Claude işlerinin tam kaydı — görev metinleri, yerel kalır.
+logs/claude-jobs/

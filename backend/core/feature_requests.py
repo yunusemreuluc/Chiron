@@ -173,6 +173,15 @@ def _raw_status(section: str) -> str:
     return match.group(1).strip() if match else ""
 
 
+def _normalise_number(number: str) -> str:
+    """Kullanıcının yazdığı istek numarasını depo biçimine çevirir."""
+    match = re.fullmatch(r"(?:İ|I)-([0-9]+)|([0-9]+)", number.strip())
+    if match is None:
+        return number.strip()
+    value = int(match.group(1) or match.group(2))
+    return f"İ-{value:03d}"
+
+
 def _count(section: str) -> int:
     metadata = _metadata_line.search(section)
     match = _count_field.search(metadata.group(0)) if metadata else None
@@ -331,7 +340,7 @@ def add(
         return {"number": number, "count": 1, "merged": False, "duplicate": False}
 
 
-def list_items() -> list[dict]:
+def list_items(include_removed: bool = False) -> list[dict]:
     """İstek listesini dosyayı değiştirmeden özetler."""
     with _store_lock:
         if not STORE_PATH.exists():
@@ -340,6 +349,9 @@ def list_items() -> list[dict]:
         items: list[dict] = []
         for start, end, number, title in _sections(text):
             section = text[start:end]
+            # NEDEN: Kullanıcı "sil" dediğinde kayıt geçmişte kalsın ama normal listede görünmesin.
+            if not include_removed and _status(section) == "yapilmayacak":
+                continue
             last_said = ""
             last_detail = ""
             for line in section.splitlines():
@@ -361,6 +373,39 @@ def list_items() -> list[dict]:
                 }
             )
         return items
+
+
+def remove(number: str) -> dict:
+    """İsteği geçmişten silmeden ``yapılmayacak`` olarak işaretler."""
+    wanted = _normalise_number(number)
+    with _store_lock:
+        text = _read_store()
+        for start, end, stored_number, title in _sections(text):
+            if stored_number != wanted:
+                continue
+            section = text[start:end]
+            result = {
+                "number": stored_number,
+                "title": title,
+                "status": "yapılmayacak",
+            }
+            if _status(section) == "yapilmayacak":
+                return result
+
+            metadata = _metadata_line.search(section)
+            status = _status_field.search(metadata.group(0)) if metadata else None
+            if status is None:
+                raise ValueError(f"İstek {wanted} durum alanı bulunamadı.")
+            raw_status = status.group(1)
+            leading_space = raw_status[: len(raw_status) - len(raw_status.lstrip())]
+            trailing_space = raw_status[len(raw_status.rstrip()) :]
+            replacement = f"{leading_space}yapılmayacak{trailing_space}"
+            status_start = metadata.start() + status.start(1)
+            status_end = metadata.start() + status.end(1)
+            changed_section = section[:status_start] + replacement + section[status_end:]
+            _atomic_write(text[:start] + changed_section + text[end:])
+            return result
+    raise ValueError(f"İstek {wanted} bulunamadı.")
 
 
 def pending_done() -> list[dict]:

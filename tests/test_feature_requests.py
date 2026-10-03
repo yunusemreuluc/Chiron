@@ -179,7 +179,102 @@ def test_remote_request_endpoints(monkeypatch, tmp_path):
             "/api/remote/requests", json={"id": "api-2", "title": "  \n "}
         ).json()
         assert invalid["success"] is False
+        removable = client.post(
+            "/api/remote/requests",
+            json={"id": "api-3", "title": "Listeden kaldırılacak"},
+        ).json()
+        assert removable["data"]["number"] == "İ-002"
+
+        removed = client.post(
+            "/api/remote/requests/remove", json={"number": "2"}
+        ).json()
+        assert removed == {
+            "success": True,
+            "message": "İ-002 listeden kaldırıldı.",
+            "data": {
+                "number": "İ-002",
+                "title": "Listeden kaldırılacak",
+                "status": "yapılmayacak",
+            },
+        }
+        missing = client.post(
+            "/api/remote/requests/remove", json={"number": "İ-999"}
+        ).json()
+        assert missing == {
+            "success": False,
+            "message": "İstek İ-999 bulunamadı.",
+            "data": {},
+        }
     assert invalid["data"] == {}
+
+
+def test_remove_normalises_number_and_preserves_history(monkeypatch, tmp_path):
+    store = _use_temporary_store(monkeypatch, tmp_path)
+    titles = ["Birinci", "İkinci", "Üçüncü", "Dördüncü", "Kalacak"]
+    for index, title in enumerate(titles, start=1):
+        feature_requests.add(
+            f"id-{index}", title, "söz", "", "telefon", "şimdi"
+        )
+    text = store.read_text(encoding="utf-8")
+    last_status = text.rfind("**Durum:** yeni")
+    store.write_text(
+        text[:last_status]
+        + text[last_status:].replace("**Durum:** yeni", "**Durum:** yapıldı", 1),
+        encoding="utf-8",
+    )
+    before_sections = feature_requests._sections(store.read_text(encoding="utf-8"))
+    untouched_before = store.read_text(encoding="utf-8")[
+        before_sections[-1][0] : before_sections[-1][1]
+    ]
+
+    variants = ["İ-001", "I-002", "3", "004"]
+    for index, variant in enumerate(variants, start=1):
+        assert feature_requests.remove(variant) == {
+            "number": f"İ-{index:03d}",
+            "title": titles[index - 1],
+            "status": "yapılmayacak",
+        }
+
+    assert feature_requests.list_items() == [
+        {
+            "number": "İ-005",
+            "title": "Kalacak",
+            "status": "yapıldı",
+            "count": 1,
+            "last_said": "söz",
+            "last_detail": "",
+        }
+    ]
+    all_items = feature_requests.list_items(include_removed=True)
+    assert [item["number"] for item in all_items] == [
+        "İ-001",
+        "İ-002",
+        "İ-003",
+        "İ-004",
+        "İ-005",
+    ]
+    assert [item["status"] for item in all_items[:4]] == ["yapılmayacak"] * 4
+    after_text = store.read_text(encoding="utf-8")
+    after_sections = feature_requests._sections(after_text)
+    assert after_text[after_sections[-1][0] : after_sections[-1][1]] == untouched_before
+
+    before_second_remove = store.read_bytes()
+    assert feature_requests.remove("001") == {
+        "number": "İ-001",
+        "title": "Birinci",
+        "status": "yapılmayacak",
+    }
+    assert store.read_bytes() == before_second_remove
+    assert feature_requests.pending_done() == [
+        {"number": "İ-005", "title": "Kalacak"}
+    ]
+
+    try:
+        feature_requests.remove("999")
+    except ValueError as error:
+        assert str(error) == "İstek İ-999 bulunamadı."
+    else:
+        raise AssertionError("Bulunmayan istek numarası ValueError üretmedi.")
 
 
 def test_detail_merge_count_and_list_items_are_read_only(monkeypatch, tmp_path):
@@ -381,9 +476,10 @@ def _run_directly(test):
 if __name__ == "__main__":
     _run_directly(test_request_store_workflow)
     _run_directly(test_remote_request_endpoints)
+    _run_directly(test_remove_normalises_number_and_preserves_history)
     _run_directly(test_detail_merge_count_and_list_items_are_read_only)
     _run_directly(test_sections_survive_renamed_or_deleted_list_heading)
     _run_directly(test_state_prevents_duplicate_when_ids_comment_is_deleted)
     _run_directly(test_metadata_is_read_only_from_status_line_and_user_text_is_escaped)
     _run_directly(test_deleted_number_is_not_reused)
-    print("7 test geçti")
+    print("8 test geçti")
