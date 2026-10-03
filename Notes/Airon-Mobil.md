@@ -216,6 +216,20 @@ Kullanıcı isteği: "msjlaşma şeyi mobile gelsin, Claude ile yazışma gibi o
   `yapılmayacak` olur ve listeden düşer, geçmiş kalır (Codex Sol, iki taraf).
 - Derlendi, kuruldu (2026-10-03 04:51). Gerçek cihazda denenmedi.
 
+## 2026-10-03 (3) — istekler İ-006..009
+
+- **İ-006 gündem:** Live oturumuna `googleSearch` aracı; aynı native-audio modelle fonksiyon
+  araçlarıyla birlikte PC'den canlı doğrulandı (gerçek haber döndü).
+- **İ-007 hata bildirimi:** `report_bug` → istek listesine "Hata: …", son 6 araç çağrısının
+  kişisel içeriksiz özeti (`RecentCalls`: araç, action, başarı, mesaj başı) eklenir.
+- **İ-008 müzik sesi yok:** kök neden oturum boyunca tutulan ses odağı (`CarAudio`,
+  `GAIN_TRANSIENT_MAY_DUCK`) — kullanıcının tarifi: "ana ekran ses tuşu açık kalıyor". Başarılı müzik
+  komutundan (media_*, unmute, play_youtube) sonra Aıron cevabını bitirince oturum kapanır.
+  İ-003 (medya komutu çalışmıyor) büyük ihtimalle aynı kök; arabada doğrulanacak.
+- **İ-009 PC raporu:** `get_pc_status` → PC `GET /api/remote/status` (Sol): sesli Aıron'a sormadan
+  uptime, CPU/RAM, boşta süre, kilit, ön pencere, Claude işleri, ofis, `voice_ready`. 04:55'teki
+  `query_desktop_airon` hatasının kök nedeni kanıtlanmadı (log yok); olası: PC sesli oturumu duraklı.
+
 ## Sıradaki
 
 - Gerçek kullanımda uyandırma geri bildirimi; arabada 2 ortam kaydı → yeniden eğitim;
