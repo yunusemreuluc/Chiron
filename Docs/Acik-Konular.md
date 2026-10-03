@@ -13,7 +13,7 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 **Durum:** Commit'lendi (`0506718`, `feature/ajan-ofisi`); kullanıcı "güzel, görseli sonra ayarlarız" dedi → [[Ajan-Ofisi]]
 
 ### Claude Code entegrasyonu — telefondan Claude'a iş
-**Durum:** Faz A + Faz 0 bitti, kararlar uygulandı, proje `Projects\Airon`'a taşındı (2026-10-02); sıradaki Faz 1
+**Durum:** Faz 1 (PC ucu, `/api/remote/claude`) bitti, testli + canlı denendi, commit yok (2026-10-03); sıradaki Faz 2/3 (telefon tarafı)
 Ayrıntı: [[Plan-Claude-Entegrasyonu]].
 
 ### MCP server — Aıron araçları Claude'a açık

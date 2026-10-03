@@ -11,7 +11,7 @@ import asyncio
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 
-from backend.core import commands, desktop_control, feature_requests, remote_auth
+from backend.core import claude_jobs, commands, desktop_control, feature_requests, remote_auth
 from backend.websocket.manager import manager
 
 router = APIRouter(prefix="/api/remote", tags=["remote"])
@@ -302,3 +302,49 @@ async def acknowledge_feature_requests(body: FeatureRequestAck) -> dict:
     """Telefonun kullanıcıya haber verdiği istekleri işaretler."""
     updated = await asyncio.to_thread(feature_requests.mark_notified, body.numbers)
     return {"success": True, "message": "bildirimler güncellendi", "data": {"updated": updated}}
+
+
+# ── Telefondan Claude Code'a iş (Faz 1, 2026-10-03) ──────────────────────────
+# Bkz. backend/core/claude_jobs.py ve Notes/Plan-Claude-Entegrasyonu.md § Faz 1.
+# Kapı: /api/remote/* public değil — uzaktan PIN oturumu şart.
+
+
+class ClaudeJobRequest(BaseModel):
+    task: str = Field(max_length=claude_jobs.MAX_TASK_CHARS)
+    # Dolu ise o işin oturumunu sürdürür (onay cevabı, "bir de şunu ekle").
+    resume_of: str | None = Field(default=None, max_length=32)
+
+
+@router.post("/claude")
+async def start_claude_job(body: ClaudeJobRequest, response: Response) -> dict:
+    try:
+        job = await asyncio.to_thread(claude_jobs.jobs.submit, body.task, body.resume_of)
+    except ValueError as error:
+        response.status_code = 409
+        return {"success": False, "message": str(error), "data": {}}
+    data = claude_jobs.jobs.get(job.id) or job.public()
+    return {"success": True, "message": "İş Claude'a verildi.", "data": data}
+
+
+@router.get("/claude")
+async def list_claude_jobs() -> dict:
+    return {"success": True, "message": "işler", "data": {"jobs": claude_jobs.jobs.list()}}
+
+
+@router.get("/claude/{job_id}")
+async def claude_job_status(job_id: str, response: Response) -> dict:
+    data = claude_jobs.jobs.get(job_id)
+    if data is None:
+        response.status_code = 404
+        return {"success": False, "message": "Böyle bir iş yok.", "data": {}}
+    return {"success": True, "message": data["status"], "data": data}
+
+
+@router.post("/claude/{job_id}/cancel")
+async def cancel_claude_job(job_id: str) -> dict:
+    ok = await asyncio.to_thread(claude_jobs.jobs.cancel, job_id)
+    return {
+        "success": ok,
+        "message": "İptal edildi." if ok else "İş bulunamadı ya da zaten bitmiş.",
+        "data": {},
+    }

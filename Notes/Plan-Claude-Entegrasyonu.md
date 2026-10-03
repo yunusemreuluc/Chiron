@@ -256,6 +256,34 @@ izlenmiyor. Asıl yük silinecek dosyalar değil, **OneDrive senkronu**: `fronte
   sonsuza kadar kotayı yemesin).
 - Test: PC'den curl ile iş ver → biter → özet döner; kapı olmadan 401.
 
+### Faz 1 — yapılan (2026-10-03)
+
+`backend/core/claude_jobs.py` + `backend/api/remote.py` sonundaki uçlar:
+`POST /api/remote/claude {task, resume_of?}` · `GET /api/remote/claude` (son 10) ·
+`GET /api/remote/claude/{id}` · `POST /api/remote/claude/{id}/cancel`. Kapı: `/api/remote/*` public değil.
+
+- **Durumlar:** `queued → running → done | needs_approval | failed | timeout | cancelled`; Aıron
+  kapanırken yarıda kalan iş açılışta `interrupted`. Telefona giden alanlar: `last_step` (canlı tek
+  satır), `steps`, `summary` (sesli okunacak son mesaj), `approval`, `session_id`, `cost_usd`.
+- **İzin modu `auto`** (araç kısıtı yok kararına en yakın güvenli hâl: bu oturumun kendisi gibi,
+  tehlikeli adımı sınıflandırıcı durdurur) + `--append-system-prompt`: geri alınamayan adımda dur,
+  `ONAY_GEREKLI: <ne>` yaz. Telefon cevabı `resume_of` ile aynı oturumu `--resume` eder.
+- **Enjeksiyon:** `claude` npm başlatıcısı `.CMD` — argüman cmd.exe'den geçer. `claude.exe`
+  doğrudan çalıştırılıyor, görev stdin'den gidiyor; exe bulunamazsa iş başlamaz.
+- **Süreç ağacı = Windows Job Object** (Astra): askıda başlat → job'a ata → uyandır;
+  `KILL_ON_JOB_CLOSE`. Süre sınırı (45 dk), iptal ve Aıron'un kapanması/çökmesi bütün ağacı
+  öldürür — Claude'un arka planda başlattığı ve stdout'u tutan torunlar dahil (eskiden kuyruk kilitlenirdi).
+- Tek iş + 3'lük kuyruk; kayıt `logs/claude-jobs/<id>.json(l)`, son 30 iş, log iş başına 20 MB.
+
+**Doğrulama:** pytest 145/145 (iş yöneticisi 24: Sol 15 + Claude 9 Astra regresyonu). Canlı, gerçek
+`claude`: sayma görevi 12 sn `done`; silme görevi `needs_approval` ("…kalıcı olarak sileceğim") →
+"evet" ile `resume` → aynı oturumda silip `done`. Astra 1. tur 7 bulgu (5 yüksek), hepsi doğrulandı ve
+düzeltildi; bir yarışı Sol da ayrıca yakaladı. Astra 2. tur 3 bulgu: Job Object kurulamazsa
+psutil yedeği aynı kilidi geri getiriyordu (kritik) → artık iş başlatılmaz, `failed`; log kotası tek
+büyük satırla aşılıyordu; budama `*.json.backup`'ı da siliyordu. Üçü düzeltildi, testli.
+
+**Kalan:** telefondan gerçek deneme (Aıron Mobil'de araç yok → Faz 3); `/m` web arayüzüne iş kutusu yok.
+
 ## Faz 2 — Onay ve bildirim
 - Claude Code `PreToolUse` hook'u geri alınamayan araç çağrısını yakalar → Aıron'a sorar →
   telefonda "Şunu yapacak, onay?" → evet/hayır işe geri döner.

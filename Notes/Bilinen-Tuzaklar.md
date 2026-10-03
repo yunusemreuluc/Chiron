@@ -529,3 +529,21 @@ güvenilmez. Ölçüm protokolünde ayrıca:
 - Headless Chromium + SwiftShader ile FPS ölçme: yazılım rasterleştirme, sayı
   anlamsız. Gerçek pencere (pywebview + `gui="edgechromium"`) ya da en azından
   donanım hızlandırmalı bir tarayıcı gerekiyor.
+
+## Alt süreç ağacı "ebeveyni öldür + çocuklarını bul"la ölmez
+
+2026-10-03, Claude iş yöneticisi (`backend/core/claude_jobs.py`), Astra incelemesi gerçek
+Windows süreçleriyle gösterdi: ebeveyn çıkar, arka planda başlattığı bir torun stdout'u
+miras alıp açık tutar. `for line in proc.stdout` EOF'u hiç görmez, `psutil` ile
+`children()` artık ebeveyn olmadığı için torunu bulamaz, zaman aşımı "ebeveyn zaten
+bitmiş" deyip hiçbir şey yapmaz — kuyruk sonsuza dek `running` kalır.
+
+Çözüm **Windows Job Object**: süreç `CREATE_SUSPENDED` başlatılır, job'a atanır, sonra
+uyandırılır (atamadan önce çocuk doğuramasın). `TerminateJobObject` bütün ağacı tek
+çağrıda öldürür; `KILL_ON_JOB_CLOSE` sayesinde Aıron çökse bile Windows ağacı temizler.
+Okuma ayrı thread'de; ana thread `proc.wait(timeout)` bekler, sonra job'u kapatır →
+stdout'u tutan kalmaz → okuyucu EOF görür.
+
+Aynı işte ikinci tuzak: npm'in kurduğu `claude` bir **`.CMD`**. Windows'ta .cmd/.bat'a
+verilen argümanlar cmd.exe ayrıştırmasından geçer (`&`, `|`, `%` — "BatBadBut"); kullanıcı
+metni asla argüman olmaz. Arkasındaki `claude.exe` doğrudan çağrılır, metin stdin'den gider.

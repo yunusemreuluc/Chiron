@@ -20,6 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from backend.api import automation, memory, office, remote, settings, system, vision, voice
+from backend.core import claude_jobs
 from backend.core.config import CORS_ORIGINS
 from backend.core.ofis import OfficeWatcher, office as office_state
 from backend.models.events import WSEvent
@@ -55,6 +56,8 @@ async def lifespan(_: FastAPI):
     watcher.start()
     yield
     watcher.stop()
+    # Telefondan verilen Claude işi Aıron'la birlikte kapanır (süreç ağacıyla).
+    claude_jobs.jobs.shutdown()
 
 
 app = FastAPI(title="AIRON Backend", version="0.1.0", lifespan=lifespan)

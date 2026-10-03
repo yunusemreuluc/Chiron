@@ -7,6 +7,21 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-10-03 — Faz 1 bitti (PC ucu)
+
+**Ne yapıldı:** Telefondan Claude'a iş: `backend/core/claude_jobs.py` + `/api/remote/claude` uçları
+(kullanıcı onayıyla; auto mod reddettiği için izin modu değiştirilerek). `claude.exe` doğrudan + görev
+stdin'den, izin modu `auto`, `ONAY_GEREKLI:` → `needs_approval` → `resume_of` ile devam, süreç ağacı
+Windows Job Object'te. Canlı: sayma işi 12 sn `done`; silme işi onay istedi, "evet" ile aynı oturumda
+bitti. Testleri Codex Sol yazdı (15), Claude 9 regresyon ekledi; pytest 145/145. Astra iki tur: 7 + 3
+bulgu, hepsi doğrulandı ve düzeltildi. Yedek: `yedek.ps1` saatlik olarak `api_keys.json` + `memory/`'yi
+`OneDrive\Yedekler\Airon`'a kopyalıyor. → [[Plan-Claude-Entegrasyonu]] § Faz 1 — yapılan
+
+**Nerede kalındı:** Commit yok (dal `feature/ajan-ofisi`). Çalışan Aıron eski kodla açık olabilir —
+uçlar Aıron yeniden başlatılınca devreye girer. Telefonda bu uçları çağıran araç/arayüz yok.
+
+**Sıradaki:** commit → Faz 2 (onay sorusu telefona, bitince bildirim) / Faz 3 (Kotlin `delegate_to_claude`).
+
 ## Oturum: 2026-10-02 (3) — kararlar uygulandı, proje taşındı
 
 **Ne yapıldı:** Proje **`C:\Users\yunus\Projects\Airon`**'a taşındı (OneDrive dışı); kısayol, MCP
