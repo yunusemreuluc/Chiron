@@ -20,6 +20,10 @@ Sonra (kullanıcı isteği): telefona yazılı sohbet (yazışma modu: ses + mik
 balonları/canlı şerit (airon-mobile `dd803fe`); İ-005 istek kaldırma (Sol; PC `d03ddc3`, kasada
 `yapıldı`). Astra yazışma modunda 3 bulgu (1 kritik: mikrofon karesi yarışı) — düzeltildi.
 
+Metin2 (AlcazarMeta) kupon girme denendi: pencere bulma/öne alma/ekran görüntüsü çalışıyor ama oyun
+yazılımla gönderilen klavyeyi tamamen yok sayıyor (F10 ve harfler). Koruma atlatılmadı, kullanıcı "kalsın" dedi,
+deneme kodu silindi.
+
 **Nerede kalındı:** Hiçbiri gerçek kullanımda denenmedi. PC'deki Aıron yeni kodla yeniden
 başlatılmadı (uçlar ancak o zaman var). Telefonda bildirim izni ve WorkManager Xiaomi pil
 kısıtında gecikebilir.
