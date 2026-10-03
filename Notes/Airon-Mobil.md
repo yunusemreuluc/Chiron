@@ -199,6 +199,23 @@ Bağlı: [[Plan-Claude-Entegrasyonu]] § Faz 1 — yapılan. Araçlar: `delegate
 - Codex Sol ilk sürümü yazdı; güvenlik kapısı ve inceleme düzeltmeleri Claude. Derleme + birim
   test geçti, 2026-10-03 04:28'de telefona kuruldu. **Gerçek cihazda denenmedi.**
 
+## 2026-10-03 (2) — yazılı sohbet ve istek kaldırma
+
+Kullanıcı isteği: "msjlaşma şeyi mobile gelsin, Claude ile yazışma gibi olsun".
+- **Yazışma modu:** alt çubukta yazı kutusu (`Composer`). Yazılan mesaj Live oturumuna
+  `sendText` ile gider; oturum yoksa açılır, hazır olunca bekleyenler gönderilir. Yazışma
+  modunda cevap sesi çalınmaz (`AudioIO.playbackMuted`), mikrofon duraklar (`micPaused`) —
+  toplantıda/sessizde kullanılır; cevap ekranda transcript olarak okunur. Mikrofona dokunmak
+  sesli moda döndürür. Boşta kapanma 5 dk (sesli 45 sn).
+- **Güvenlik:** yazılan mesaj kullanıcı girdisi → `lastUserVoiceAt` ilerler (mesaj taslağı ve
+  Claude onay kapıları bunu görür). Mikrofon "duraklı mı" kontrolü ile damga güncellemesi aynı
+  kilitte (Astra kritik: eski kare kapıyı açabiliyordu). Servis `exported=false`.
+- **Claude balonları:** sonuç / onay sorusu sohbette turuncu "Claude · bitti / onay bekliyor"
+  balonu; ekran açıkken süren iş için canlı şerit ("Claude · pytest koşuyor · 2 dk", 5 sn yoklama).
+- **İ-005:** `remove_feature_request` → PC `POST /api/remote/requests/remove`, istek
+  `yapılmayacak` olur ve listeden düşer, geçmiş kalır (Codex Sol, iki taraf).
+- Derlendi, kuruldu (2026-10-03 04:51). Gerçek cihazda denenmedi.
+
 ## Sıradaki
 
 - Gerçek kullanımda uyandırma geri bildirimi; arabada 2 ortam kaydı → yeniden eğitim;

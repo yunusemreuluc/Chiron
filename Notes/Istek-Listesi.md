@@ -27,7 +27,7 @@ Durum değerleri: `yeni` → `bakıldı` → `yapıldı` / `yapılmayacak`. Duru
 <!-- ids: 02f2d72e-1bf5-44e7-a529-8ca0bdf4dbc4 -->
 
 ### İ-005 · İstek listesinden silme özelliği
-**Durum:** yeni · **Sayı:** 1 · **Bildirildi:** hayır
+**Durum:** yapıldı · **Sayı:** 1 · **Bildirildi:** hayır
 - 2026-09-21 03:00 · "Silme özelliğini ekle" · denenen: uygun araç yok · Xiaomi 22101316G, 0.1.0
   - Ayrıntı: Kullanıcı mevcut istek listesindeki öğeleri silmek istedi ancak bunun için bir araç bulunmuyor. İdeal davranış, kullanıcının isteklerini kolayca yönetebilmesi, silme veya düzenleme yapabilmesi olmalı.
 <!-- ids: c33e1d5b-6e6c-4fd8-a2c0-e210ac6e6c57 -->

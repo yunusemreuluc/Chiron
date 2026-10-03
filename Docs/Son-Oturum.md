@@ -16,6 +16,10 @@ sayma işi, onay → resume, yerel uvicorn üzerinden HTTP uçtan uca. Telefon (
 güvenlik kapısı. Sol: PC testleri (15) + telefon ilk sürümü; Astra 4 tur (7+3 PC, 7+4 telefon), hepsi
 düzeltildi. APK telefona kuruldu. Yedek: `yedek.ps1` → `OneDrive\Yedekler\Airon`.
 
+Sonra (kullanıcı isteği): telefona yazılı sohbet (yazışma modu: ses + mikrofon kapalı) + Claude
+balonları/canlı şerit (airon-mobile `dd803fe`); İ-005 istek kaldırma (Sol; PC `d03ddc3`, kasada
+`yapıldı`). Astra yazışma modunda 3 bulgu (1 kritik: mikrofon karesi yarışı) — düzeltildi.
+
 **Nerede kalındı:** Hiçbiri gerçek kullanımda denenmedi. PC'deki Aıron yeni kodla yeniden
 başlatılmadı (uçlar ancak o zaman var). Telefonda bildirim izni ve WorkManager Xiaomi pil
 kısıtında gecikebilir.
