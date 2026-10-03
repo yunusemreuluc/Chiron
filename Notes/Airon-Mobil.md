@@ -180,6 +180,25 @@ varsayılanı olarak derlemeye koyuyor; uygulama Ayarlar'ından değişir.
   kişi adı/mesaj metni/numara YASAK — [[Istek-Listesi]] public depoda takip ediliyor).
 - Astra incelemesi: 5 bulgu, hepsi doğrulandı ve düzeltildi (biri kritik: onaysız gönderim).
 
+## 2026-10-03 — PC'deki Claude Code'a iş (Plan Faz 2 + 3)
+
+Bağlı: [[Plan-Claude-Entegrasyonu]] § Faz 1 — yapılan. Araçlar: `delegate_to_claude`,
+`claude_job_status`, `cancel_claude_job` (`tools/ClaudeJobs.kt`).
+
+- **Akış:** "Claude'a şunu yaptır" → taslak okunur, "vereyim mi?" → evet → PC kuyruğa alır.
+  `ClaudeWatchWorker` (WorkManager, dakikada bir, en fazla 6 sa, PC'nin `active` sayısına göre)
+  bitince / onay gerekince bildirim gösterir. Bildirime dokununca konuşma açılır, sonuç
+  `[CLAUDE İŞİ]` olarak sesli okunur. Onay sorusunda "evet/hayır" → aynı oturum `--resume`.
+- **Güvenlik kapısı** (Astra iki tur, kritik 3): PC'deki Claude tam yetkili, model ise gelen
+  WhatsApp mesajını / Claude özetini okuyor. Bu yüzden:
+  - Yeni iş iki aşamalı (`draft_id` + taslaktan sonra kullanıcı sesi), `send_message` deseni.
+  - Onay cevabı serbest metin değil `decision=approve|reject`; PC'ye giden metni uygulama yazar.
+  - Aynı anda tek onay sorusu; kapı soru sesli olarak SONUNA KADAR okununca açılır, kesilirse açılmaz.
+- **Ack:** ses çalımı bitince; 50'lik partiler; atomik dosya; söylenen işin bildirimi kaldırılır,
+  `claude_told.json` ile geri gelmez.
+- Codex Sol ilk sürümü yazdı; güvenlik kapısı ve inceleme düzeltmeleri Claude. Derleme + birim
+  test geçti, 2026-10-03 04:28'de telefona kuruldu. **Gerçek cihazda denenmedi.**
+
 ## Sıradaki
 
 - Gerçek kullanımda uyandırma geri bildirimi; arabada 2 ortam kaydı → yeniden eğitim;

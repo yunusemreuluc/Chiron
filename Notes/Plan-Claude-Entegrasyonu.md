@@ -284,7 +284,18 @@ büyük satırla aşılıyordu; budama `*.json.backup`'ı da siliyordu. Üçü d
 
 **Kalan:** telefondan gerçek deneme (Aıron Mobil'de araç yok → Faz 3); `/m` web arayüzüne iş kutusu yok.
 
-## Faz 2 — Onay ve bildirim
+## Faz 2 + 3 — yapılan (2026-10-03)
+
+Telefon tarafı Aıron Mobil'de: [[Airon-Mobil]] § 2026-10-03. PC'ye eklenenler:
+`GET /api/remote/claude/updates` (söylenmemiş sonuçlar + `active`, tek kilit) ve
+`POST /api/remote/claude/ack`. Onay Faz 2 planındaki `PreToolUse` hook'u yerine
+`ONAY_GEREKLI` + `--resume` ile çözüldü (Faz 1 — yapılan). Push yerine WorkManager yoklaması +
+yerel bildirim. Astra telefon tarafını iki tur inceledi: 7 + 4 bulgu, hepsi düzeltildi.
+
+**Kalan — gerçek senaryo:** telefon hücresel veriyle iş verir → PC'de biter → bildirim → sesli sonuç.
+Aıron PC'de yeni kodla yeniden başlatılmadan uçlar yok.
+
+## Faz 2 — Onay ve bildirim (ilk plan)
 - Claude Code `PreToolUse` hook'u geri alınamayan araç çağrısını yakalar → Aıron'a sorar →
   telefonda "Şunu yapacak, onay?" → evet/hayır işe geri döner.
 - İş bitince telefona bildirim; araba modundaysa Aıron sesli okur.

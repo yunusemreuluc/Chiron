@@ -7,20 +7,21 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
-## Oturum: 2026-10-03 — Faz 1 bitti (PC ucu)
+## Oturum: 2026-10-03 — telefondan Claude'a iş: PC + telefon bitti
 
-**Ne yapıldı:** Telefondan Claude'a iş: `backend/core/claude_jobs.py` + `/api/remote/claude` uçları
-(kullanıcı onayıyla; auto mod reddettiği için izin modu değiştirilerek). `claude.exe` doğrudan + görev
-stdin'den, izin modu `auto`, `ONAY_GEREKLI:` → `needs_approval` → `resume_of` ile devam, süreç ağacı
-Windows Job Object'te. Canlı: sayma işi 12 sn `done`; silme işi onay istedi, "evet" ile aynı oturumda
-bitti. Testleri Codex Sol yazdı (15), Claude 9 regresyon ekledi; pytest 145/145. Astra iki tur: 7 + 3
-bulgu, hepsi doğrulandı ve düzeltildi. Yedek: `yedek.ps1` saatlik olarak `api_keys.json` + `memory/`'yi
-`OneDrive\Yedekler\Airon`'a kopyalıyor. → [[Plan-Claude-Entegrasyonu]] § Faz 1 — yapılan
+**Ne yapıldı:** PC: `claude_jobs.py` + `/api/remote/claude` (+ `updates`/`ack`), Job Object süreç
+ağacı, commit'ler `7e0e7b6` `ea9c909` `5716d33` `c6cbb59`; pytest 146/146. Canlı: gerçek `claude` ile
+sayma işi, onay → resume, yerel uvicorn üzerinden HTTP uçtan uca. Telefon (airon-mobile `d5459a0`):
+`delegate_to_claude` + durum + iptal, WorkManager bildirimi, `[CLAUDE İŞİ]` sesli sonuç, iki aşamalı
+güvenlik kapısı. Sol: PC testleri (15) + telefon ilk sürümü; Astra 4 tur (7+3 PC, 7+4 telefon), hepsi
+düzeltildi. APK telefona kuruldu. Yedek: `yedek.ps1` → `OneDrive\Yedekler\Airon`.
 
-**Nerede kalındı:** Commit yok (dal `feature/ajan-ofisi`). Çalışan Aıron eski kodla açık olabilir —
-uçlar Aıron yeniden başlatılınca devreye girer. Telefonda bu uçları çağıran araç/arayüz yok.
+**Nerede kalındı:** Hiçbiri gerçek kullanımda denenmedi. PC'deki Aıron yeni kodla yeniden
+başlatılmadı (uçlar ancak o zaman var). Telefonda bildirim izni ve WorkManager Xiaomi pil
+kısıtında gecikebilir.
 
-**Sıradaki:** commit → Faz 2 (onay sorusu telefona, bitince bildirim) / Faz 3 (Kotlin `delegate_to_claude`).
+**Sıradaki:** Kullanıcı Aıron'u yeniden başlatıp telefondan "Claude'a şunu yaptır" der →
+bildirim + sesli sonuç + onay akışı gerçek cihazda ölçülür.
 
 ## Oturum: 2026-10-02 (3) — kararlar uygulandı, proje taşındı
 
