@@ -148,3 +148,34 @@ bitti ──> dogrulaniyor: Aıron commit_all → test komutunu KENDİSİ koşar
 Canlı deneme: geçici depoda hatalı `carp` fonksiyonu → Claude düzeltti, Aıron test koştu (1 passed),
 birleştirme commit'i oluştu, dal ve kopya temizlendi. Testler: `tests/test_pano_worktree.py` (21;
 Codex Terra 16 + Claude 5 gerileme). Terra read-only: 6 bulgu, 5'i düzeltildi, 1'i (kilit) bırakıldı.
+
+## Lider ajan Jarvis ve ekip (2026-10-26, adım 4)
+
+**Motorlar:** `claude_jobs` artık üç motoru aynı kuyrukta, aynı Job Object ve süre sınırıyla koşar
+(`Job.engine`): `claude` (stream-json), `codex` (`node codex.js exec --json -m gpt-5.6-terra --sandbox
+workspace-write -C <worktree> -`), `gemini` (`node gemini.js --approval-mode plan -o text`, salt okunur).
+Codex/Gemini `.cmd` başlatıcıyla DEĞİL `node <betik>` ile, görev stdin'den (BatBadBut). Codex olayları
+(`thread.started`, `item.completed`, `turn.completed|failed`) `_codex_event` ile Claude biçimine çevrilir.
+Gemini'nin stderr'i stdout'a katılı; "True color / Ripgrep" uyarıları `_GEMINI_NOISE` ile ayıklanır.
+Codex/Gemini oturum sürdürmez: "Yeniden dene" görevi baştan, notla verir. Gemini kartı kopya açmaz.
+
+**Jarvis:** "Jarvis'e böldür" → `claude -p --permission-mode plan` (salt okunur), görev `LEADER_NOTE`:
+ekip tanımı + kurallar + JSON şablonu. `parse_plan` son ```json bloğunu okur, doğrular (en çok 8 görev,
+"sonra" yalnız öncekileri gösterir, bilinmeyen ajan → claude). Alt kartlar: `parent`, `after` (bağımlılık;
+bitmeden Başlat kapalı), repo ve test komutu üstten miras. Üst kart `bolundu`; alt kartların hepsi kapanınca
+`bitti` (hepsi iptalse `iptal`). Bölünmüş kart sonlandırılmaz; açık alt kartı varken silinmez.
+Plan okunamazsa üst kart `hata`, "Yeniden dene" yeniden planlatır.
+
+**Terra'nın kotası:** ChatGPT free planında Codex kotası 2026-10-26'da doldu ("usage limit ... try again at
+Nov 24th, 2026 10:02 PM"). Codex kartı bu hatayla düşünce pano tarihi okur (`codex_retry_at`),
+`config/pano.json`'da `codex_blocked_until` olarak saklar: Jarvis'e "codex kullanılamaz" denir, yine verirse
+o görev Claude'a çevrilir, codex kartı başlamaz. Kartın ajanı bekliyor/durdu/hata durumunda değiştirilebilir
+(PATCH `agent`; Claude oturumu başka ajana geçmez, görev baştan). Pano 2026-10-26'da bu bilgiyle başlatıldı.
+
+**Codex `-C` yan etkisi:** Codex her `-C` klasörünü `~/.codex/config.toml`'a `trust_level = "trusted"` diye
+yazıyor; worktree'ler için satır birikir (zararsız, ara sıra temizlenebilir).
+
+Canlı deneme: Jarvis küçük bir kartı iki Terra görevine böldü (README ikincisinin "sonra"sında); Terra ilkini
+yaptı, kendi sandbox'ında testi koşamadı (venv) ama Aıron koştu → geçti → birleşti. Testler:
+`tests/test_pano_leader.py` (Terra 19, kotası dolarken yazdı + Claude 5 kota testi); paket 174/174.
+Çapraz inceleme YAPILAMADI: Terra kotası dolu, Astra yok, özel kod Gemini'ye gitmez — Claude kendi inceledi.

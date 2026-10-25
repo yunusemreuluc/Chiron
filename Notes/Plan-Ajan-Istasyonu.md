@@ -27,7 +27,7 @@ alınan koda kaynak notu düşülüyor.
 | Ajan | Durum |
 |---|---|
 | Claude | çalışıyor |
-| Codex `gpt-5.6-terra` / `luna` | çalışıyor; ChatGPT aboneliği 10-11'de bitti, Sol/Astra yok |
+| Codex `gpt-5.6-terra` / `luna` | ücretsiz kota 2026-10-26'da doldu, 24.11.2026 22:02'ye kadar yok; Sol/Astra yok |
 | Gemini `gemini-3.8-flash` | çalışıyor |
 | Ollama `qwen2.5:7b` | kurulu, denenmedi |
 | OpenCode + OpenRouter ücretsiz modeller | kurulu, denenmedi |
@@ -40,8 +40,8 @@ alınan koda kaynak notu düşülüyor.
 | 1 | Panoya yazma: kart ekle, Başlat, durdur, sonlandır. Kart yaşam döngüsü: bekliyor → çalışıyor ↔ duraklatıldı → onay bekliyor → bitti/iptal | ruflo-workflows (aşamalar, onay kapıları) | yapıldı 2026-10-26 → [[Ajan-Ofisi]] |
 | 2 | Panodan iş başlatma (`claude_jobs.py`'ye bağla) | — | yapıldı 2026-10-26 (1 ile birlikte) |
 | 3 | Her iş ayrı worktree + test; birleştirme Yunus onayıyla | — | yapıldı 2026-10-26 → [[Ajan-Ofisi]] § Proje kartı |
-| 4 | Lider ajan Jarvis: kartı böler, kime gideceğini yazar | — | sırada |
-| 5 | 2D uzay istasyonu ofisi (mevcut `three/office` yerine) | ruflo-console "Oda" (incele/kes/sonlandır) | |
+| 4 | Lider ajan Jarvis: kartı böler, kime gideceğini yazar | — | yapıldı 2026-10-26 → [[Ajan-Ofisi]] § Lider ajan |
+| 5 | 2D uzay istasyonu ofisi (mevcut `three/office` yerine) | ruflo-console "Oda" (incele/kes/sonlandır) | sırada |
 | 6 | Kota takibi: %50/75/90 uyarı, %100 dur | ruflo-cost-tracker | |
 | 7 | Bekçi: 13 kural, önce öğren → uyar; engelleme modunu Yunus açar | ruflo-protector | |
 | 8 | 7/24 döngü: kotada dur, sıfırlanınca devam, sabah rapor | — | 6 ve 7 bitmeden açılmaz |
