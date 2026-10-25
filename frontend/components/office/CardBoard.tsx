@@ -11,6 +11,10 @@ import {
   fetchPano,
   fetchRepos,
   mergeCard,
+  planCard,
+  setCardAgent,
+  type CardAgent,
+  type PanoAgents,
   type PanoRepo,
   type CardStatus,
   type PanoCard,
@@ -26,7 +30,7 @@ const POLL_MS = 2000;
 
 const COLUMNS: { id: string; label: string; accepts: CardStatus[] }[] = [
   { id: 'bekliyor', label: 'Bekliyor', accepts: ['bekliyor'] },
-  { id: 'calisiyor', label: 'Çalışıyor', accepts: ['calisiyor', 'dogrulaniyor'] },
+  { id: 'calisiyor', label: 'Çalışıyor', accepts: ['planlaniyor', 'calisiyor', 'dogrulaniyor', 'bolundu'] },
   { id: 'onay', label: 'Onayını bekliyor', accepts: ['onay', 'birlestir'] },
   { id: 'durdu', label: 'Durdu / hata', accepts: ['duraklatildi', 'hata'] },
   { id: 'kapandi', label: 'Bitti', accepts: ['bitti', 'iptal'] },
@@ -42,6 +46,16 @@ const STATUS_TEXT: Record<CardStatus, string> = {
   hata: 'Hata',
   dogrulaniyor: 'Test ediliyor',
   birlestir: 'Birleştirme onayı',
+  planlaniyor: 'Jarvis planlıyor',
+  bolundu: 'Bölündü',
+};
+
+// Ekip adları ofisteki karakterlerle aynı (Notes/Plan-Ajan-Istasyonu.md).
+const AGENT_TEXT: Record<CardAgent, string> = { claude: 'Claude', codex: 'Terra', gemini: 'Gemini' };
+const AGENT_HINT: Record<CardAgent, string> = {
+  claude: 'her iş: tasarım, çok dosyalı, zor',
+  codex: 'Codex · tanımı net mekanik kod',
+  gemini: 'yalnız okur, dosyaya dokunmaz',
 };
 
 // Claude'un özeti Markdown gelebiliyor; kartta düz metin gösterilir, `**` görünmesin.
@@ -63,13 +77,15 @@ function useNow(): number {
 
 export function CardBoard() {
   const [cards, setCards] = useState<PanoCard[] | null>(null);
+  const [agents, setAgents] = useState<PanoAgents>({});
   const [offline, setOffline] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const now = useNow();
 
-  const apply = useCallback((data: { cards: PanoCard[] } | null) => {
+  const apply = useCallback((data: { cards: PanoCard[]; agents?: PanoAgents } | null) => {
     if (data) {
       setCards(data.cards);
+      setAgents(data.agents ?? {});
       setOffline(false);
     } else {
       setOffline(true);
@@ -117,6 +133,10 @@ export function CardBoard() {
     );
   }
 
+  const byId = new Map(cards.map((c) => [c.id, c]));
+  // Terra'nın kotası doluysa ne zamana kadar — seçimde ve kartta gösterilir.
+  const codexUntil = agents.codex && !agents.codex.available ? (agents.codex.until ?? 0) : null;
+
   return (
     <div className="pano">
       <AnimatePresence>
@@ -143,10 +163,10 @@ export function CardBoard() {
                 <span className="office-board__count">{items.length}</span>
               </header>
               <div className="office-board__list">
-                {col.id === 'bekliyor' && <Composer run={run} />}
+                {col.id === 'bekliyor' && <Composer run={run} codexUntil={codexUntil} />}
                 <AnimatePresence initial={false}>
                   {items.map((card) => (
-                    <CardItem key={card.id} card={card} now={now} run={run} />
+                    <CardItem key={card.id} card={card} now={now} run={run} byId={byId} codexUntil={codexUntil} />
                   ))}
                 </AnimatePresence>
                 {!items.length && col.id !== 'bekliyor' && <p className="pano-col__empty">Boş</p>}
@@ -161,13 +181,30 @@ export function CardBoard() {
 
 type Run = (work: () => Promise<{ success: boolean; message: string }>) => Promise<boolean>;
 
-function Composer({ run }: { run: Run }) {
+function untilText(ts: number): string {
+  return ts ? new Date(ts * 1000).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) : 'bir süre';
+}
+
+function AgentOptions({ codexUntil }: { codexUntil: number | null }) {
+  return (
+    <>
+      {(Object.keys(AGENT_TEXT) as CardAgent[]).map((a) => (
+        <option key={a} value={a} disabled={a === 'codex' && codexUntil !== null}>
+          {AGENT_TEXT[a]} · {a === 'codex' && codexUntil !== null ? `kota dolu, ${untilText(codexUntil)}` : AGENT_HINT[a]}
+        </option>
+      ))}
+    </>
+  );
+}
+
+function Composer({ run, codexUntil }: { run: Run; codexUntil: number | null }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [detail, setDetail] = useState('');
   const [repos, setRepos] = useState<PanoRepo[]>([]);
   const [repo, setRepo] = useState('');
   const [testCmd, setTestCmd] = useState('');
+  const [agent, setAgent] = useState<CardAgent>('claude');
   const [busy, setBusy] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
 
@@ -194,7 +231,7 @@ function Composer({ run }: { run: Run }) {
     setBusy(true);
     let createdId: string | null = null;
     const ok = await run(async () => {
-      const result = await createCard(title, detail, repo, repo ? testCmd : '');
+      const result = await createCard(title, detail, repo, repo ? testCmd : '', agent);
       createdId = result.data?.card.id ?? null;
       return result;
     });
@@ -207,6 +244,7 @@ function Composer({ run }: { run: Run }) {
       setDetail('');
       setRepo('');
       setTestCmd('');
+      setAgent('claude');
       setOpen(false);
     }
     setBusy(false);
@@ -253,6 +291,12 @@ function Composer({ run }: { run: Run }) {
         placeholder="Ayrıntı: hangi proje, hangi dosyalar, bitince ne olmalı (isteğe bağlı)"
         aria-label="Kart ayrıntısı"
       />
+      <label className="pano-field" htmlFor="pano-agent">
+        <span className="label-micro">Kim yapsın · büyük işi Jarvis&apos;e böldürebilirsin</span>
+        <select id="pano-agent" value={agent} onChange={(e) => setAgent(e.target.value as CardAgent)}>
+          <AgentOptions codexUntil={codexUntil} />
+        </select>
+      </label>
       <label className="pano-field" htmlFor="pano-repo">
         <span className="label-micro">Proje</span>
         <select id="pano-repo" value={repo} onChange={(e) => pickRepo(e.target.value)}>
@@ -297,7 +341,19 @@ function Composer({ run }: { run: Run }) {
   );
 }
 
-function CardItem({ card, now, run }: { card: PanoCard; now: number; run: Run }) {
+function CardItem({
+  card,
+  now,
+  run,
+  byId,
+  codexUntil,
+}: {
+  card: PanoCard;
+  now: number;
+  run: Run;
+  byId: Map<string, PanoCard>;
+  codexUntil: number | null;
+}) {
   const [confirm, setConfirm] = useState<'stop' | 'delete' | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -310,8 +366,12 @@ function CardItem({ card, now, run }: { card: PanoCard; now: number; run: Run })
   };
 
   const s = card.status;
-  const live = s === 'calisiyor';
+  const planning = s === 'planlaniyor';
+  const live = s === 'calisiyor' || planning;
   const testing = s === 'dogrulaniyor';
+  const agent = card.agent ?? 'claude';
+  const blockedBy = (card.after ?? []).filter((id) => byId.get(id)?.status !== 'bitti');
+  const kids = (card.children ?? []).map((id) => byId.get(id)).filter((k): k is PanoCard => Boolean(k));
   const meta = live
     ? card.queue_position
       ? `Sırada · ${card.queue_position}.`
@@ -319,7 +379,8 @@ function CardItem({ card, now, run }: { card: PanoCard; now: number; run: Run })
     : testing
       ? `${duration(now - card.updated)} · commit + test`
       : ago(card.updated, now);
-  const body = plain(s === 'hata' ? card.error : card.summary);
+  // Bölünmüş/planlanan kartta özet Jarvis'in ham JSON'u — gösterilmez, plan listesi var.
+  const body = s === 'bolundu' || planning ? '' : plain(s === 'hata' ? card.error : card.summary);
   const repoName = card.repo ? card.repo.split(/[\\/]/).pop() : null;
 
   return (
@@ -340,6 +401,31 @@ function CardItem({ card, now, run }: { card: PanoCard; now: number; run: Run })
       </span>
       <span className="office-task__title">{card.title}</span>
       <span className="office-task__meta">{meta}</span>
+
+      <span className="office-task__chips pano-crew">
+        <span className={`pano-agent is-${agent}`}>{planning || s === 'bolundu' ? 'Jarvis' : AGENT_TEXT[agent]}</span>
+        {card.parent && <span title="Bu kart bir planın parçası">↳ {card.parent}</span>}
+        {blockedBy.length > 0 && <span className="is-wait">{blockedBy.join(', ')} bitince</span>}
+      </span>
+
+      {s === 'bolundu' && (
+        <div className="pano-plan">
+          {card.plan_summary && <p>{plain(card.plan_summary)}</p>}
+          <span className="label-micro">
+            {kids.filter((k) => k.status === 'bitti').length}/{kids.length} bitti
+          </span>
+          <ul>
+            {kids.map((k) => (
+              <li key={k.id} className={`is-${k.status}`}>
+                <span className="pano-plan__dot" aria-hidden />
+                <span className="office-task__id">{k.id}</span>
+                <span className="truncate">{k.title}</span>
+                <span className={`pano-agent is-${k.agent ?? 'claude'}`}>{AGENT_TEXT[k.agent ?? 'claude']}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {repoName && (
         <span className="office-task__chips pano-repo">
@@ -407,8 +493,30 @@ function CardItem({ card, now, run }: { card: PanoCard; now: number; run: Run })
       ) : (
         <div className="pano-actions">
           {s === 'bekliyor' && (
-            <button type="button" className="pano-btn is-primary" disabled={busy} onClick={() => void act(() => cardAction(card.id, 'start'))}>
+            <button
+              type="button"
+              className="pano-btn is-primary"
+              disabled={busy || blockedBy.length > 0}
+              title={blockedBy.length ? `Önce ${blockedBy.join(', ')} bitmeli` : undefined}
+              onClick={() => void act(() => cardAction(card.id, 'start'))}
+            >
               Başlat
+            </button>
+          )}
+          {(s === 'bekliyor' || s === 'duraklatildi' || s === 'hata') && !card.planning && (
+            <select
+              className="pano-agent-pick"
+              aria-label="Ajanı değiştir"
+              value={agent}
+              disabled={busy}
+              onChange={(e) => void act(() => setCardAgent(card.id, e.target.value as CardAgent))}
+            >
+              <AgentOptions codexUntil={codexUntil} />
+            </select>
+          )}
+          {s === 'bekliyor' && !card.parent && (
+            <button type="button" className="pano-btn is-jarvis" disabled={busy} onClick={() => void act(() => planCard(card.id))}>
+              Jarvis&apos;e böldür
             </button>
           )}
           {s === 'duraklatildi' && (
@@ -441,7 +549,7 @@ function CardItem({ card, now, run }: { card: PanoCard; now: number; run: Run })
               </button>
             </>
           )}
-          {live && (
+          {live && !planning && (
             <button
               type="button"
               className="pano-btn"
@@ -456,7 +564,7 @@ function CardItem({ card, now, run }: { card: PanoCard; now: number; run: Run })
               Sonlandır
             </button>
           )}
-          {!live && !testing && (
+          {!live && !testing && s !== 'bolundu' && (
             <button type="button" className="pano-btn is-quiet" disabled={busy} onClick={() => setConfirm('delete')}>
               Sil
             </button>

@@ -152,13 +152,21 @@ class FakeJobs:
     def __init__(self) -> None:
         self.jobs: dict[str, dict] = {}
         self.submissions: list[dict] = []
+        self.engines: list[tuple[str, str]] = []
         self.cancelled: list[str] = []
         self.submit_errors: list[ValueError] = []
         self._next = 1
 
     def submit(
-        self, task: str, resume_of: str | None = None, origin: str = "telefon", cwd: str | None = None
+        self,
+        task: str,
+        resume_of: str | None = None,
+        origin: str = "telefon",
+        cwd: str | None = None,
+        engine: str = "claude",
+        mode: str = "auto",
     ) -> SimpleNamespace:
+        self.engines.append((engine, mode))
         if self.submit_errors:
             raise self.submit_errors.pop(0)
         job_id = f"job-{self._next}"

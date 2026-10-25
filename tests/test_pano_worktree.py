@@ -26,12 +26,20 @@ class FakeJobs:
     def __init__(self) -> None:
         self.jobs: dict[str, dict] = {}
         self.submissions: list[dict] = []
+        self.engines: list[tuple[str, str]] = []
         self.cancelled: list[str] = []
         self._next = 1
 
     def submit(
-        self, task: str, resume_of: str | None = None, origin: str = "telefon", cwd: str | None = None
+        self,
+        task: str,
+        resume_of: str | None = None,
+        origin: str = "telefon",
+        cwd: str | None = None,
+        engine: str = "claude",
+        mode: str = "auto",
     ) -> SimpleNamespace:
+        self.engines.append((engine, mode))
         job_id = f"job-{self._next}"
         self._next += 1
         self.submissions.append(

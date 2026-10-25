@@ -37,11 +37,14 @@ class CardCreate(BaseModel):
     # Proje kartı: iş bu deponun ayrı bir worktree'sinde yapılır, test Aıron'da koşar.
     repo: str | None = Field(default=None, max_length=400)
     test_cmd: str | None = Field(default=None, max_length=MAX_TEST_CMD)
+    # Kartı kim yapacak: claude | codex (Terra) | gemini (yalnız okur).
+    agent: str = Field(default="claude", max_length=16)
 
 
 class CardEdit(BaseModel):
     title: str | None = Field(default=None, max_length=MAX_TITLE)
     detail: str | None = Field(default=None, max_length=MAX_DETAIL)
+    agent: str | None = Field(default=None, max_length=16)
 
 
 class CardAnswer(BaseModel):
@@ -77,13 +80,17 @@ async def create_card(body: CardCreate, request: Request, response: Response) ->
                 "data": {},
             }
     return await _run(
-        response, lambda: pano.create(body.title, body.detail, body.repo, body.test_cmd), "Kart açıldı."
+        response,
+        lambda: pano.create(body.title, body.detail, body.repo, body.test_cmd, body.agent),
+        "Kart açıldı.",
     )
 
 
 @router.patch("/{card_id}")
 async def edit_card(card_id: str, body: CardEdit, response: Response) -> dict:
-    return await _run(response, lambda: pano.edit(card_id, body.title, body.detail), "Kart güncellendi.")
+    return await _run(
+        response, lambda: pano.edit(card_id, body.title, body.detail, body.agent), "Kart güncellendi."
+    )
 
 
 @router.delete("/{card_id}")
@@ -97,7 +104,13 @@ async def delete_card(card_id: str, response: Response) -> dict:
 
 @router.post("/{card_id}/start")
 async def start_card(card_id: str, response: Response) -> dict:
-    return await _run(response, lambda: pano.start(card_id), "Kart Claude'a verildi.")
+    return await _run(response, lambda: pano.start(card_id), "Kart ajana verildi.")
+
+
+@router.post("/{card_id}/plan")
+async def plan_card(card_id: str, response: Response) -> dict:
+    """Kartı lider ajan Jarvis'e böldürür (salt okunur Claude oturumu, JSON plan → alt kartlar)."""
+    return await _run(response, lambda: pano.plan(card_id), "Jarvis planlıyor.")
 
 
 @router.post("/{card_id}/pause")

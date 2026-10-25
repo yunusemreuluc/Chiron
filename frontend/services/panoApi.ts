@@ -12,7 +12,12 @@ export type CardStatus =
   | 'birlestir'
   | 'bitti'
   | 'iptal'
-  | 'hata';
+  | 'hata'
+  | 'planlaniyor'
+  | 'bolundu';
+
+// Kartı kim yapar: claude (her iş) · codex (Terra, mekanik kod) · gemini (yalnız okur).
+export type CardAgent = 'claude' | 'codex' | 'gemini';
 
 export interface CardTest {
   ok: boolean;
@@ -49,6 +54,13 @@ export interface PanoCard {
   test?: CardTest | null;
   diff?: string;
   merged?: string | null;
+  // Lider ajan (adım 4)
+  agent?: CardAgent;
+  parent?: string | null;
+  children?: string[];
+  after?: string[];
+  planning?: boolean;
+  plan_summary?: string;
 }
 
 export interface PanoRepo {
@@ -57,12 +69,22 @@ export interface PanoRepo {
   test_cmd: string;
 }
 
-export const fetchPano = () => fetchData<{ cards: PanoCard[] }>('/api/pano');
+/** Ajanların şu anki durumu — Terra'nın (Codex) kotası dolunca `available: false`. */
+export interface PanoAgents {
+  codex?: { available: boolean; until: number | null };
+}
+
+export const fetchPano = () => fetchData<{ cards: PanoCard[]; agents?: PanoAgents }>('/api/pano');
+
+export const setCardAgent = (id: string, agent: CardAgent) =>
+  request<{ card: PanoCard }>(`/api/pano/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify({ agent }) });
 
 export const fetchRepos = () => fetchData<{ repos: PanoRepo[] }>('/api/pano/repos');
 
-export const createCard = (title: string, detail: string, repo?: string, testCmd?: string) =>
-  post<{ card: PanoCard }>('/api/pano', { title, detail, repo: repo || null, test_cmd: testCmd || null });
+export const createCard = (title: string, detail: string, repo?: string, testCmd?: string, agent: CardAgent = 'claude') =>
+  post<{ card: PanoCard }>('/api/pano', { title, detail, repo: repo || null, test_cmd: testCmd || null, agent });
+
+export const planCard = (id: string) => post<{ card: PanoCard }>(`/api/pano/${encodeURIComponent(id)}/plan`);
 
 export const cardAction = (id: string, action: 'start' | 'pause' | 'stop') =>
   post<{ card: PanoCard }>(`/api/pano/${encodeURIComponent(id)}/${action}`);

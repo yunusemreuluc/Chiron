@@ -80,6 +80,22 @@ Yunus'un yapması gereken bir şey var mı.
 
 ORIGINS = ("telefon", "pano")
 
+# Motorlar (Ajan İstasyonu adım 4, 2026-10-26): pano kartı Claude'a, Codex'e ya da
+# Gemini'ye gidebilir. Hepsi aynı kuyrukta, aynı Job Object ve süre sınırıyla.
+# Codex ve Gemini npm'in .cmd başlatıcısıyla DEĞİL, `node <betik>` ile çalışır ve görev
+# stdin'den gider — .cmd'ye argüman geçmek cmd.exe ayrıştırmasından geçiyor (BatBadBut).
+ENGINES = ("claude", "codex", "gemini")
+# Claude izin modu: "auto" iş yapar; "plan" salt okunur — lider ajan (Jarvis) yalnızca planlar.
+MODES = ("auto", "plan")
+CODEX_MODEL = "gpt-5.6-terra"  # ChatGPT planı free (2026-10-11'den beri): Sol/Astra yok
+GEMINI_MODEL = "gemini-3.8-flash"
+NPM_DIR = Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming") / "npm" / "node_modules"
+CODEX_JS = NPM_DIR / "@openai" / "codex" / "bin" / "codex.js"
+_GEMINI_NOISE = re.compile(
+    r"^\s*(Warning: True color|Ripgrep is not available|Loaded cached credentials|Data collection is disabled)"
+)
+GEMINI_JS = NPM_DIR / "@google" / "gemini-cli" / "bundle" / "gemini.js"
+
 ACTIVE = ("queued", "running")
 # Telefona haber verilecek sonuçlar. `cancelled` yok: iptali kullanıcı kendisi yaptı.
 NOTIFY = ("done", "needs_approval", "failed", "timeout", "interrupted")
@@ -104,6 +120,8 @@ class Job:
     notified: bool = False  # sonucu telefona söylendi mi (bkz. updates/acknowledge)
     origin: str = "telefon"  # telefon | pano — sistem notunu ve telefona bildirimi belirler
     cwd: str | None = None  # Claude'un açıldığı klasör; boşsa WORK_DIR (pano kartının worktree'si)
+    engine: str = "claude"  # claude | codex | gemini
+    mode: str = "auto"  # Claude izin modu: auto | plan (salt okunur, lider ajan)
 
     def public(self) -> dict[str, Any]:
         data = asdict(self)
@@ -304,7 +322,7 @@ class ClaudeJobs:
         time_limit: float = TIME_LIMIT_SECONDS,
     ) -> None:
         self.jobs_dir = jobs_dir
-        self._launch = launcher or self._launch_claude
+        self._launch = launcher or self._launch_engine
         self.time_limit = time_limit
         self._lock = threading.Lock()
         self._jobs: dict[str, Job] = {}
@@ -314,6 +332,7 @@ class ClaudeJobs:
         self._cancel: set[str] = set()
         self._closed = False
         self._worker: threading.Thread | None = None
+        self._codex_text: dict[str, str] = {}  # iş başına Codex'in son mesajı (sonuç metni)
         self._load()
 
     # ── Kalıcılık ────────────────────────────────────────────────────────
@@ -360,7 +379,13 @@ class ClaudeJobs:
 
     # ── Dış arayüz ───────────────────────────────────────────────────────
     def submit(
-        self, task: str, resume_of: str | None = None, origin: str = "telefon", cwd: str | None = None
+        self,
+        task: str,
+        resume_of: str | None = None,
+        origin: str = "telefon",
+        cwd: str | None = None,
+        engine: str = "claude",
+        mode: str = "auto",
     ) -> Job:
         task = task.strip()
         if not task:
@@ -371,6 +396,10 @@ class ClaudeJobs:
             raise ValueError("Bilinmeyen iş kaynağı.")
         if cwd is not None and not Path(cwd).is_dir():
             raise ValueError(f"Çalışma klasörü yok: {cwd}")
+        if engine not in ENGINES or mode not in MODES:
+            raise ValueError("Bilinmeyen ajan ya da mod.")
+        if resume_of and engine != "claude":
+            raise ValueError("Bu ajan oturum sürdürmüyor; görev baştan verilir.")
         with self._lock:
             if self._closed:
                 raise ValueError("Aıron kapanıyor; iş alınmıyor.")
@@ -386,7 +415,7 @@ class ClaudeJobs:
             # Panonun işi telefona haber verilmez: sonuç kartta okunuyor.
             job = Job(
                 id=secrets.token_hex(4), task=task, resume_of=resume_of, origin=origin,
-                notified=origin != "telefon", cwd=cwd,
+                notified=origin != "telefon", cwd=cwd, engine=engine, mode=mode,
             )
             if parent:
                 job.session_id = parent.session_id
@@ -510,23 +539,41 @@ class ClaudeJobs:
                     if job.status in ACTIVE:
                         self._finish(job, "failed", error=f"Beklenmeyen hata: {error}")
 
-    def _launch_claude(self, job: Job, log_path: Path) -> subprocess.Popen:
-        exe = find_claude_exe()
-        if not exe:
-            raise FileNotFoundError("claude.exe bulunamadı (npm i -g @anthropic-ai/claude-code).")
-        args = [
-            exe,
-            "-p",
-            "--output-format",
-            "stream-json",
-            "--verbose",
-            "--permission-mode",
-            PERMISSION_MODE,
-            "--append-system-prompt",
-            PANO_NOTE if job.origin == "pano" else SYSTEM_NOTE,
-        ]
-        if job.resume_of and job.session_id:
-            args += ["--resume", job.session_id]
+    def _launch_engine(self, job: Job, log_path: Path) -> subprocess.Popen:
+        if job.engine == "claude":
+            exe = find_claude_exe()
+            if not exe:
+                raise FileNotFoundError("claude.exe bulunamadı (npm i -g @anthropic-ai/claude-code).")
+            args = [
+                exe,
+                "-p",
+                "--output-format",
+                "stream-json",
+                "--verbose",
+                "--permission-mode",
+                job.mode if job.mode == "plan" else PERMISSION_MODE,
+                "--append-system-prompt",
+                PANO_NOTE if job.origin == "pano" else SYSTEM_NOTE,
+            ]
+            if job.resume_of and job.session_id:
+                args += ["--resume", job.session_id]
+        else:
+            node = shutil.which("node")
+            script = CODEX_JS if job.engine == "codex" else GEMINI_JS
+            if not node or not script.exists():
+                raise FileNotFoundError(f"{job.engine} bulunamadı ({script}).")
+            if job.engine == "codex":
+                # Yazma yalnız -C klasöründe (kartın worktree'si). Son argüman "-": görev stdin'den.
+                args = [
+                    node, str(script), "exec", "--skip-git-repo-check", "-m", CODEX_MODEL,
+                    "--sandbox", "workspace-write", "--json", "-C", job.cwd or str(WORK_DIR), "-",
+                ]
+            else:
+                # Gemini yalnız okur (plan modu = salt okunur); -p sabit, asıl görev stdin'de.
+                args = [
+                    node, str(script), "--skip-trust", "-m", GEMINI_MODEL,
+                    "--approval-mode", "plan", "-o", "text", "-p", "Görev standart girişte; onu yap.",
+                ]
         env = dict(os.environ)
         # Aıron bir Claude oturumundan başlatıldıysa iç içe oturum işareti taşınmasın.
         env.pop("CLAUDECODE", None)
@@ -574,13 +621,18 @@ class ClaudeJobs:
         result: dict[str, Any] | None = None
         tail: deque[str] = deque(maxlen=5)
         events: list[dict[str, Any]] = []
+        texts: list[str] = []  # Gemini düz metin yazar; sonucun kendisi bu
         reader: threading.Thread | None = None
         timed_out = False
         try:
             # Görev stdin'den, ayrı thread'de: süreç okumazsa boru dolup _run'ı kilitlemesin.
-            threading.Thread(target=_feed_stdin, args=(proc, job.task), daemon=True).start()
+            task = job.task
+            if job.engine != "claude":
+                # Codex/Gemini'de --append-system-prompt yok: kural notu görevin başına.
+                task = f"{PANO_NOTE if job.origin == 'pano' else SYSTEM_NOTE}\n\n{job.task}"
+            threading.Thread(target=_feed_stdin, args=(proc, task), daemon=True).start()
             reader = threading.Thread(
-                target=self._read_output, args=(job, proc, log_path, events, tail), daemon=True
+                target=self._read_output, args=(job, proc, log_path, events, tail, texts), daemon=True
             )
             reader.start()
             try:
@@ -608,6 +660,10 @@ class ClaudeJobs:
 
         for event in events:
             result = self._on_event(job, event) or result
+        if result is None and job.engine == "gemini" and proc.returncode == 0 and texts:
+            # stderr stdout'a katılı: CLI'nin terminal uyarıları cevaba karışmasın (canlı deneme).
+            lines = [ln for ln in "".join(texts).splitlines() if not _GEMINI_NOISE.match(ln)]
+            result = {"type": "result", "subtype": "success", "result": "\n".join(lines).strip()}
 
         with self._lock:
             if job.id in self._cancel or self._closed:
@@ -617,13 +673,15 @@ class ClaudeJobs:
                 self._finish(job, "timeout", error=f"{self.time_limit // 60:.0f} dk sınırı doldu, durduruldu.")
             elif result is None:
                 detail = " | ".join(tail) or f"çıkış kodu {proc.returncode}"
-                self._finish(job, "failed", error=f"Claude sonuç vermeden kapandı: {detail}")
+                self._finish(job, "failed", error=f"{job.engine.capitalize()} sonuç vermeden kapandı: {detail}")
             else:
                 text = str(result.get("result") or "")
                 job.summary, job.approval = split_approval(text)
                 job.cost_usd = result.get("total_cost_usd")
                 if result.get("is_error") or result.get("subtype") not in (None, "success"):
-                    self._finish(job, "failed", error=str(result.get("subtype") or "hata"))
+                    # Codex hatası (kota, bağlantı) sonucun METNİNDE; Claude'unki subtype'ta.
+                    detail = result.get("result") if job.engine != "claude" else None
+                    self._finish(job, "failed", error=str(detail or result.get("subtype") or "hata")[:500])
                 elif job.approval:
                     self._finish(job, "needs_approval")
                 else:
@@ -636,6 +694,7 @@ class ClaudeJobs:
         log_path: Path,
         events: list[dict[str, Any]],
         tail: deque[str],
+        texts: list[str] | None = None,
     ) -> None:
         """stdout'u satır satır okur, log'a yazar (kotalı), canlı adımı günceller."""
         assert proc.stdout is not None
@@ -655,7 +714,16 @@ class ClaudeJobs:
                         written += len(raw)
                     except Exception:
                         log = None
-                line = raw.decode("utf-8", "replace").strip()
+                text = raw.decode("utf-8", "replace")
+                line = text.strip()
+                if job.engine == "gemini":
+                    if texts is not None and len(texts) < 4000:
+                        texts.append(text)
+                    if line:
+                        tail.append(line[:300])
+                        with self._lock:
+                            job.last_step = line[:160]
+                    continue
                 if not line:
                     continue
                 try:
@@ -665,6 +733,10 @@ class ClaudeJobs:
                     continue
                 if not isinstance(event, dict):
                     continue
+                if job.engine == "codex":
+                    event = self._codex_event(job, event)
+                    if event is None:
+                        continue
                 if event.get("type") == "result":
                     events.append(event)
                 else:
@@ -677,6 +749,38 @@ class ClaudeJobs:
                     log.close()
                 except Exception:
                     pass
+
+    def _codex_event(self, job: Job, event: dict[str, Any]) -> dict[str, Any] | None:
+        """Codex `--json` olayını Claude stream-json biçimine çevirir; gerisi aynı yoldan akar.
+        (codex 0.154: thread.started, item.completed{agent_message|command_execution|file_change},
+        turn.completed, turn.failed, error)."""
+        kind = event.get("type")
+        if kind == "thread.started":
+            return {"type": "system", "session_id": event.get("thread_id")}
+        if kind == "item.completed":
+            item = event.get("item") or {}
+            itype = item.get("type")
+            if itype == "agent_message":
+                text = str(item.get("text") or "")
+                self._codex_text[job.id] = text
+                return {"type": "assistant", "message": {"content": [{"type": "text", "text": text}]}}
+            if itype == "command_execution":
+                tool = {"type": "tool_use", "name": "Bash", "input": {"command": str(item.get("command") or "")}}
+                return {"type": "assistant", "message": {"content": [tool]}}
+            if itype == "file_change":
+                changes = item.get("changes") or []
+                path = changes[0].get("path") if changes and isinstance(changes[0], dict) else ""
+                tool = {"type": "tool_use", "name": "Edit", "input": {"file_path": str(path or "")}}
+                return {"type": "assistant", "message": {"content": [tool]}}
+            return None
+        if kind == "turn.completed":
+            return {"type": "result", "subtype": "success", "is_error": False,
+                    "result": self._codex_text.pop(job.id, "")}
+        if kind in ("turn.failed", "error"):
+            message = (event.get("error") or {}).get("message") if isinstance(event.get("error"), dict) else None
+            return {"type": "result", "subtype": "hata", "is_error": True,
+                    "result": str(message or event.get("message") or kind)}
+        return None
 
     def _on_event(self, job: Job, event: dict[str, Any]) -> dict[str, Any] | None:
         kind = event.get("type")

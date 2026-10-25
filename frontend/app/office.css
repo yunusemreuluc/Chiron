@@ -1026,3 +1026,68 @@
   font-family: var(--font-mono-ui);
   font-size: 10.5px;
 }
+
+/* Lider ajan (adım 4) — kim yapıyor, plan listesi */
+.pano-card.is-planlaniyor { --desk: #a78bfa; }
+.pano-card.is-bolundu { --desk: #a78bfa; }
+.pano-agent { font-weight: 500; }
+.pano-agent.is-claude { color: #9db8ff !important; }
+.pano-agent.is-codex { color: #4fd1c5 !important; }
+.pano-agent.is-gemini { color: #c4a1ff !important; }
+.pano-crew .is-wait { color: var(--office-wait) !important; }
+.pano-btn.is-jarvis {
+  color: #c4b5fd;
+  background: rgba(167, 139, 250, 0.1);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+.pano-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: rgba(167, 139, 250, 0.06);
+  border: 1px solid rgba(167, 139, 250, 0.22);
+}
+.pano-plan p {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--foreground-secondary);
+}
+.pano-plan ul {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.pano-plan li {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  color: var(--foreground-secondary);
+}
+.pano-plan li .pano-agent { font-size: 10px; }
+.pano-plan__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(202, 216, 234, 0.35);
+}
+.pano-plan li.is-calisiyor .pano-plan__dot,
+.pano-plan li.is-dogrulaniyor .pano-plan__dot { background: #6fd3ff; }
+.pano-plan li.is-onay .pano-plan__dot,
+.pano-plan li.is-birlestir .pano-plan__dot { background: var(--office-wait); }
+.pano-plan li.is-hata .pano-plan__dot { background: var(--office-err); }
+.pano-plan li.is-bitti .pano-plan__dot { background: var(--office-ok); }
+.pano-plan li.is-bitti .truncate { text-decoration: line-through; text-decoration-color: rgba(255,255,255,.2); }
+.pano-agent-pick {
+  max-width: 100px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--foreground-secondary);
+  background: rgba(5, 8, 14, 0.6);
+  border: 1px solid var(--border-subtle);
+}
