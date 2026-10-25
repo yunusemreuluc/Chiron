@@ -9,6 +9,12 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 
 ## Açık
 
+### Aıron Mobil — Play Store yayını
+**Durum:** Plan yazıldı (2026-10-14, [[Plan-Play-Yayini]]); hedef "benim telefonumdaki gibi": özellik kesilmeyecek, kod başlamadı
+
+### Ajan İstasyonu — ofisten iş verme, 7/24 döngü
+**Durum:** Adım 1-3 bitti (pano + proje kartı worktree/test/birleştirme, 2026-10-26, commit'siz, 151/151); sırada adım 4 lider ajan Jarvis
+
 ### Ajan Ofisi — kim ne yapıyor (Faz A)
 **Durum:** Commit'lendi (`0506718`, `feature/ajan-ofisi`); kullanıcı "güzel, görseli sonra ayarlarız" dedi → [[Ajan-Ofisi]]
 

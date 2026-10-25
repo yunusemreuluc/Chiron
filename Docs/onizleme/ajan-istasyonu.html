@@ -1,0 +1,506 @@
+<title>Ajan Ofisi Önizleme</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=Silkscreen&display=swap">
+<style>
+/* Layout: tek büyük piksel sahne (istasyon köprüsü), altında mürettebat kartları ve olay kaydı. Tek koyu görünüm: uzay. */
+:root {
+  color-scheme: dark;
+  --bg: #05060f;
+  --panel: #0c0f22;
+  --line: #1f2547;
+  --fg: #e4e8fb;
+  --muted: #8c93bd;
+  --accent: #8f9bff;
+  --wait: #ffb020;
+  --err: #ff5d6c;
+  --ok: #7ee0b5;
+  --f-display: "Pixelify Sans", "Courier New", monospace;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-pixel: "Silkscreen", "Courier New", monospace;
+}
+html, body { background: var(--bg); color: var(--fg); }
+body {
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+  background-image: radial-gradient(1px 1px at 20% 30%, #3a4170 50%, transparent 51%), radial-gradient(1px 1px at 70% 80%, #2b3160 50%, transparent 51%), radial-gradient(1px 1px at 85% 15%, #3a4170 50%, transparent 51%);
+  background-size: 180px 180px, 240px 240px, 300px 300px;
+}
+.wrap { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 16px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 5vw, 44px); line-height: 1.1; margin: 0; text-wrap: balance; }
+.lede { color: var(--muted); margin: 8px 0 0; max-width: 60ch; }
+.controls { display: flex; gap: 8px; flex-wrap: wrap; }
+button {
+  font: 500 14px var(--f-body);
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+button:hover { border-color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+
+.view { position: relative; width: 100%; aspect-ratio: 7 / 5; max-width: 100%; border-radius: 10px; overflow: hidden; border: 2px solid var(--line); background: #03040b; box-shadow: 0 0 60px -20px #4b56c8; }
+.view canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+.overlay { position: absolute; inset: 0; pointer-events: none; }
+.p-tag, .p-bub { position: absolute; transform: translate(-50%, -100%); white-space: nowrap; font-family: var(--f-pixel); }
+.p-tag { font-size: clamp(8px, 1.1vw, 11px); color: #fff; text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000; }
+.p-bub {
+  font-size: clamp(8px, 1.1vw, 11px);
+  padding: 4px 7px;
+  background: #e9ecff;
+  color: #14163a;
+  border: 2px solid #14163a;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.5);
+}
+.p-bub.bub--wait { background: #ffe3a3; }
+.p-bub.bub--err { background: #ffc7cd; }
+.p-bub.bub--ok { background: #c9f5e2; }
+
+.crew { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+@media (max-width: 760px) { .crew { grid-template-columns: repeat(2, 1fr); } }
+.member { display: flex; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; min-width: 0; }
+.member canvas { width: 54px; height: 66px; image-rendering: pixelated; flex: none; }
+.member b { display: block; font-family: var(--f-display); font-weight: 700; font-size: 17px; }
+.member span { display: block; font-size: 13px; color: var(--muted); }
+
+.cols { display: grid; grid-template-columns: 1.1fr 1fr; gap: 16px; }
+@media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+.box { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.box h2 { font: 600 12px var(--f-body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0; }
+#log { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 14px; min-height: 7.5em; }
+#log li { display: flex; gap: 10px; min-width: 0; }
+#log time { font-variant-numeric: tabular-nums; color: var(--muted); flex: none; }
+#log .who { font-weight: 600; flex: none; }
+.map { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.map li { display: grid; grid-template-columns: 9.5em 1fr; gap: 10px; }
+.map li span:first-child { color: var(--muted); }
+.note { color: var(--muted); font-size: 13px; margin: 0; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Ajan İstasyonu</h1>
+      <p class="lede">Ofis bir uzay istasyonunun köprüsü oldu. Jarvis kaptan koltuğunda, ekip konsollarda. Senaryo aynı: kart gelir, Jarvis dağıtır, ekip çalışır, onay ister, test sonucu yanar.</p>
+    </div>
+    <div class="controls">
+      <button id="btn-pause" type="button" aria-pressed="false">Durdur</button>
+      <button id="btn-speed" type="button" aria-pressed="false">Hız: 1×</button>
+      <button id="btn-restart" type="button">Baştan oynat</button>
+    </div>
+  </header>
+
+  <div class="view" id="view"><canvas id="px" width="224" height="160"></canvas><div class="overlay" id="ov"></div></div>
+
+  <section class="crew" aria-label="Mürettebat">
+    <div class="member"><canvas width="18" height="22" data-who="jarvis"></canvas><div><b>Jarvis</b><span>Kaptan · Claude</span><span>Planlar, işi böler</span></div></div>
+    <div class="member"><canvas width="18" height="22" data-who="terra"></canvas><div><b>Terra</b><span>Robot · Codex</span><span>Mekanik kod</span></div></div>
+    <div class="member"><canvas width="18" height="22" data-who="gemini"></canvas><div><b>Gemini</b><span>Uzaylı · Gemini</span><span>Okuma, araştırma</span></div></div>
+    <div class="member"><canvas width="18" height="22" data-who="alt"></canvas><div><b>Alt ajan</b><span>Astronot · Claude</span><span>Zor iş, arayüz</span></div></div>
+  </section>
+
+  <div class="cols">
+    <section class="box" aria-live="polite">
+      <h2>Köprüde olanlar</h2>
+      <ul id="log"></ul>
+    </section>
+    <section class="box">
+      <h2>Ofisteki karşılığı</h2>
+      <ul class="map">
+        <li><span>Konsol</span><span>Ajanın masası. Çalışırken hologram ekranı yanar.</span></li>
+        <li><span>Kaptan koltuğu</span><span>Şef masası, Jarvis.</span></li>
+        <li><span>Onay terminali</span><span>Senden izin bekleyen işler. Işığı kehribar yanıp söner.</span></li>
+        <li><span>Dinlenme kapsülü</span><span>Boştaki ajanlar burada bekler.</span></li>
+        <li><span>Pencere</span><span>Süs. Yıldızlar, gezegen, ara sıra geçen gemi.</span></li>
+      </ul>
+    </section>
+  </div>
+  <p class="note">Hızlı taslak, karakterler kodla piksel piksel çizildi. Gerçek sürümde sprite'lar daha detaylı olur, durumlar Airon'un canlı verisinden gelir. Kota dolunca ajan kapsülde uyur, gece modu gibi ek sahneler de eklenebilir.</p>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ───────────── Dünya: x −7..7, z −5..5 · 16 px = 1 birim ───────────── */
+const U = 16, PX = x => Math.round((x + 7) * U), PZ = z => Math.round((z + 5) * U);
+const AISLE_Z = 0.7;
+const DESKS = {
+  jarvis: { x: 0,  z: -2.9, w: 2.4 },
+  terra:  { x: -3.6, z: -0.9, w: 1.7 },
+  gemini: { x: 3.6,  z: -0.9, w: 1.7 },
+  alt:    { x: -3.6, z: 2.8,  w: 1.7 },
+  bos:    { x: 3.6,  z: 2.8,  w: 1.7 },
+};
+const REST = { x: -6.1, z: -2.6 };
+const TERM = { x: 6.2, z: -2.6 };
+const seat = id => ({ x: DESKS[id].x, z: DESKS[id].z + 0.85 });
+
+const AGENTS = [
+  { id: 'jarvis', name: 'Jarvis', look: 'captain', color: '#7aa2ff', home: seat('jarvis') },
+  { id: 'terra',  name: 'Terra',  look: 'robot',   color: '#4fd1c5', home: { x: -5.3, z: -1.7 } },
+  { id: 'gemini', name: 'Gemini', look: 'alien',   color: '#b794f6', home: { x: -6.2, z: -1.3 } },
+  { id: 'alt',    name: 'Alt ajan', look: 'astro', color: '#f0a6e8', home: { x: -5.4, z: -0.6 } },
+];
+const byId = Object.fromEntries(AGENTS.map(a => [a.id, a]));
+
+function scripts() {
+  return {
+    jarvis: [
+      { t: 'act', s: 'typing', d: 2.4, say: 'Yeni kart: Panoya yazma özelliği' },
+      { t: 'walk', to: { x: -4.9, z: -2.0 } },
+      { t: 'act', s: 'talk', d: 2.6, say: 'Terra API, Gemini okuma, Alt arayüz' },
+      { t: 'emit', k: 'go' },
+      { t: 'walk', to: seat('jarvis') },
+      { t: 'act', s: 'typing', d: 0.1 },
+      { t: 'waitCount', k: 'done', n: 3, s: 'typing' },
+      { t: 'act', s: 'ok', d: 2.6, say: 'Rapor hazır, onayına gönderildi', kind: 'ok' },
+      { t: 'waitAllIdle' },
+      { t: 'restart' },
+    ],
+    terra: [
+      { t: 'waitFor', k: 'go' },
+      { t: 'walk', to: seat('terra') },
+      { t: 'act', s: 'typing', d: 4.5 },
+      { t: 'act', s: 'talk', d: 1.6, say: 'Paket kurmam lazım, onay?', kind: 'wait' },
+      { t: 'walk', to: { x: TERM.x - 0.5, z: TERM.z + 0.8 } },
+      { t: 'act', s: 'waiting', d: 3.6, say: '? Onay bekliyor', kind: 'wait' },
+      { t: 'act', s: 'talk', d: 1.0, say: 'Onaylandı', kind: 'ok' },
+      { t: 'walk', to: seat('terra') },
+      { t: 'act', s: 'typing', d: 3.0 },
+      { t: 'act', s: 'ok', d: 1.8, say: 'Test geçti: 24/24', kind: 'ok' },
+      { t: 'emit', k: 'done' },
+      { t: 'walk', to: byId.terra.home },
+      { t: 'idle' },
+    ],
+    gemini: [
+      { t: 'waitFor', k: 'go' },
+      { t: 'walk', to: seat('gemini') },
+      { t: 'act', s: 'typing', d: 4.2 },
+      { t: 'act', s: 'ok', d: 1.8, say: '3 dosya okundu, özet hazır', kind: 'ok' },
+      { t: 'emit', k: 'done' },
+      { t: 'walk', to: byId.gemini.home },
+      { t: 'idle' },
+    ],
+    alt: [
+      { t: 'waitFor', k: 'go' },
+      { t: 'walk', to: seat('alt') },
+      { t: 'act', s: 'typing', d: 4.0 },
+      { t: 'act', s: 'err', d: 1.8, say: 'Test kaldı: 1 hata', kind: 'err' },
+      { t: 'act', s: 'typing', d: 3.4 },
+      { t: 'act', s: 'ok', d: 1.6, say: 'Düzeltildi, test geçti', kind: 'ok' },
+      { t: 'emit', k: 'done' },
+      { t: 'walk', to: byId.alt.home },
+      { t: 'idle' },
+    ],
+  };
+}
+
+const SPEED = 2.3;
+let signals, counts, clock;
+function reset() {
+  signals = new Set(); counts = {}; clock = 0;
+  const sc = scripts();
+  for (const a of AGENTS) {
+    a.x = a.home.x; a.z = a.home.z; a.face = Math.PI;
+    a.queue = sc[a.id].slice(); a.cur = null; a.state = 'idle';
+    a.say = null; a.kind = null; a.walkPhase = 0; a.path = null;
+  }
+}
+function pathTo(a, to) {
+  const pts = [];
+  if (Math.abs(a.x - to.x) > 0.3) pts.push({ x: a.x, z: AISLE_Z }, { x: to.x, z: AISLE_Z });
+  pts.push({ x: to.x, z: to.z });
+  return pts;
+}
+function log(a, text, kind) {
+  const ul = document.getElementById('log');
+  const li = document.createElement('li');
+  const m = Math.floor(clock / 60), s = Math.floor(clock % 60);
+  li.innerHTML = `<time>${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}</time><span class="who" style="color:${a.color}">${a.name}</span><span></span>`;
+  li.lastChild.textContent = text;
+  if (kind) li.lastChild.style.color = `var(--${kind})`;
+  ul.prepend(li);
+  while (ul.children.length > 5) ul.lastChild.remove();
+}
+function step(dt) {
+  clock += dt;
+  const allIdle = AGENTS.filter(a => a.id !== 'jarvis').every(a => a.cur && a.cur.t === 'idle');
+  for (const a of AGENTS) {
+    if (!a.cur) {
+      a.cur = a.queue.shift() || { t: 'idle' };
+      a.elapsed = 0;
+      const c = a.cur;
+      if (c.t === 'act') { a.state = c.s; a.say = c.say || null; a.kind = c.kind || null; if (c.say) log(a, c.say, c.kind); }
+      if (c.t === 'walk') { a.path = pathTo(a, c.to); a.state = 'walk'; a.say = null; }
+      if (c.t === 'emit') { signals.add(c.k); counts[c.k] = (counts[c.k] || 0) + 1; a.cur = null; continue; }
+      if (c.t === 'idle' || c.t === 'waitFor') { a.state = 'idle'; a.say = null; }
+      if (c.t === 'waitCount') a.state = c.s;
+      if (c.t === 'restart') { reset(); return; }
+    }
+    const c = a.cur;
+    a.elapsed += dt;
+    if (c.t === 'act' && a.elapsed >= c.d) { a.cur = null; a.say = null; }
+    else if (c.t === 'waitFor' && signals.has(c.k)) a.cur = null;
+    else if (c.t === 'waitCount' && (counts[c.k] || 0) >= c.n) a.cur = null;
+    else if (c.t === 'waitAllIdle' && allIdle) { a.state = 'idle'; if (a.elapsed > 1.5) a.cur = null; }
+    else if (c.t === 'walk') {
+      let left = SPEED * dt;
+      while (left > 0 && a.path.length) {
+        const p = a.path[0], dx = p.x - a.x, dz = p.z - a.z, dist = Math.hypot(dx, dz);
+        if (dist < 1e-3) { a.path.shift(); continue; }
+        a.face = Math.atan2(dx, dz);
+        const mv = Math.min(left, dist);
+        a.x += dx / dist * mv; a.z += dz / dist * mv; left -= mv;
+        if (mv === dist) a.path.shift();
+      }
+      a.walkPhase += dt * 9;
+      if (!a.path.length) { a.cur = null; a.state = 'idle'; a.face = Math.PI; }
+    }
+  }
+}
+
+/* ───────────── Karakterler ───────────── */
+const SKIN = '#f1c49c';
+function drawPerson(R, a, x, y, t) {
+  const walking = a.state === 'walk';
+  const f = walking ? Math.floor(a.walkPhase / Math.PI) % 2 : 0;
+  const up = walking && Math.cos(a.face) < -0.5;
+  const sx = walking && Math.abs(Math.sin(a.face)) > 0.7 ? Math.sign(Math.sin(a.face)) : 0;
+  const b = walking ? f : (a.state === 'typing' ? Math.floor(t * 6) % 2 : 0);
+  const arm = a.state === 'typing' ? Math.floor(t * 8) % 2 : (walking ? f : 0);
+  const blink = Math.floor(t * 2) % 2;
+  R(x - 4, y, 9, 2, 'rgba(0,0,0,.4)');
+  const L = { captain: '#1c2142', robot: '#6b778f', alien: '#4f3882', astro: '#cfd6e6' }[a.look];
+  R(x - 3, y - 4, 2, 4 - (f ? 1 : 0), L); R(x + 1, y - 4, 2, 4 - (f ? 0 : 1), L);
+  const eyeX = sx > 0 ? 1 : sx < 0 ? -1 : 0;
+  if (a.look === 'captain') {
+    if (!up) R(x - 5, y - 9 + b, 10, 7, '#7a1f3d');
+    R(x - 4, y - 10 + b, 8, 7, '#2f4fa8');
+    R(x - 4, y - 10 + b, 2, 1, '#f2c94c'); R(x + 2, y - 10 + b, 2, 1, '#f2c94c');
+    R(x - 4, y - 5 + b, 8, 1, '#f2c94c');
+    if (up) R(x - 4, y - 9 + b, 8, 6, '#7a1f3d');
+    R(x - 5, y - 9 + b + arm, 1, 4, '#2f4fa8'); R(x + 4, y - 9 + b + (1 - arm), 1, 4, '#2f4fa8');
+    R(x - 3, y - 16 + b, 6, 6, SKIN);
+    R(x - 3, y - 17 + b, 6, up ? 6 : 2, '#2a2f45');
+    if (!up) { R(x - 2 + eyeX, y - 14 + b, 1, 1, '#14163a'); R(x + 1 + eyeX, y - 14 + b, 1, 1, '#14163a'); }
+  } else if (a.look === 'robot') {
+    R(x - 4, y - 10 + b, 8, 7, '#9aa7bd'); R(x - 4, y - 4 + b, 8, 1, '#6b778f');
+    if (!up) R(x - 1, y - 8 + b, 2, 2, blink ? a.color : '#1d3b3a');
+    R(x - 5, y - 9 + b + arm, 1, 4, '#7c889f'); R(x + 4, y - 9 + b + (1 - arm), 1, 4, '#7c889f');
+    R(x - 3, y - 16 + b, 6, 5, '#b8c3d6'); R(x - 3, y - 12 + b, 6, 1, '#8e99ae');
+    if (!up) R(x - 2 + eyeX, y - 14 + b, 4, 1, a.color);
+    R(x, y - 19 + b, 1, 3, '#6b778f'); R(x, y - 20 + b, 1, 1, blink ? a.color : '#2d3a4a');
+  } else if (a.look === 'alien') {
+    R(x - 4, y - 10 + b, 8, 8, '#6d4bb5'); R(x - 1, y - 10 + b, 2, 8, '#8a68d1');
+    R(x - 5, y - 9 + b + arm, 1, 4, '#b794f6'); R(x + 4, y - 9 + b + (1 - arm), 1, 4, '#b794f6');
+    R(x - 4, y - 17 + b, 8, 7, '#b794f6'); R(x - 3, y - 18 + b, 6, 1, '#b794f6');
+    if (!up) { R(x - 3 + eyeX, y - 14 + b, 2, 2, '#14101f'); R(x + 1 + eyeX, y - 14 + b, 2, 2, '#14101f'); R(x - 3 + eyeX, y - 14 + b, 1, 1, '#ffffff'); }
+    R(x - 3, y - 20 + b, 1, 2, '#9a78e0'); R(x + 2, y - 20 + b, 1, 2, '#9a78e0');
+    R(x - 3, y - 21 + b, 1, 1, '#f0a6e8'); R(x + 2, y - 21 + b, 1, 1, '#f0a6e8');
+  } else {
+    if (up) R(x - 3, y - 11 + b, 6, 6, '#b9c1d3');
+    R(x - 4, y - 10 + b, 8, 7, '#e8ecf5'); R(x - 4, y - 7 + b, 8, 1, a.color);
+    if (up) R(x - 3, y - 10 + b, 6, 5, '#b9c1d3');
+    R(x - 5, y - 9 + b + arm, 1, 4, '#d5dbe8'); R(x + 4, y - 9 + b + (1 - arm), 1, 4, '#d5dbe8');
+    R(x - 4, y - 17 + b, 8, 7, '#f4f6fb'); R(x - 4, y - 11 + b, 8, 1, '#c3cadb');
+    if (!up) { R(x - 3 + eyeX, y - 15 + b, 6, 4, '#2a1f4a'); R(x - 2 + eyeX, y - 15 + b, 2, 1, a.color); }
+  }
+  if (a.state === 'waiting') {
+    R(x + 4, y - 27, 6, 8, '#ffb020');
+    R(x + 5, y - 26, 4, 1, '#14163a'); R(x + 8, y - 25, 1, 2, '#14163a'); R(x + 6, y - 23, 2, 1, '#14163a'); R(x + 6, y - 21, 2, 1, '#14163a');
+  }
+}
+
+/* ───────────── Sahne ───────────── */
+const cv = document.getElementById('px');
+const ctx = cv.getContext('2d');
+ctx.imageSmoothingEnabled = false;
+const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x | 0, y | 0, w | 0, h | 0); };
+const WIN = { x: 8, y: 3, w: 208, h: 22 };
+
+// Statik zemin bir kez çizilir
+const bg = document.createElement('canvas'); bg.width = 224; bg.height = 160;
+{
+  const b = bg.getContext('2d');
+  const B = (x, y, w, h, c) => { b.fillStyle = c; b.fillRect(x, y, w, h); };
+  B(0, 0, 224, 30, '#151a33');
+  for (let ty = 2; ty < 10; ty++) for (let tx = 0; tx < 14; tx++) {
+    const X = tx * 16, Y = ty * 16 - 2;
+    B(X, Y, 16, 16, (tx + ty) % 2 ? '#262c45' : '#2b324e');
+    B(X, Y, 16, 1, '#1c2137'); B(X, Y, 1, 16, '#1c2137');
+    B(X + 2, Y + 2, 1, 1, '#465075'); B(X + 13, Y + 2, 1, 1, '#465075'); B(X + 2, Y + 13, 1, 1, '#465075'); B(X + 13, Y + 13, 1, 1, '#465075');
+  }
+  B(0, 28, 224, 2, '#3c4570'); B(0, 30, 224, 1, '#0d1022');
+  // Kaptan platformu
+  const px = PX(0), pz = PZ(-2.9);
+  B(px - 30, pz - 2, 60, 30, '#2e2560'); B(px - 28, pz, 56, 26, '#3a2f78');
+  B(px - 28, pz + 25, 56, 1, '#7a6be0');
+  // Dinlenme kapsülü (sol duvar)
+  const rx = PX(REST.x), rz = PZ(REST.z);
+  B(rx - 10, rz - 12, 16, 20, '#3a4365'); B(rx - 9, rz - 11, 14, 18, '#4b5680');
+  B(rx - 7, rz - 9, 10, 8, '#0c1a2e'); B(rx - 6, rz - 8, 3, 2, '#7fe3ff');
+  B(rx - 7, rz + 1, 4, 3, '#1d2236'); B(rx - 1, rz + 2, 3, 2, '#ff6b6b');
+  // Cam kubbede bitki
+  B(rx + 8, rz - 2, 10, 9, '#5a6488'); B(rx + 9, rz - 8, 8, 7, '#1f3d55'); B(rx + 10, rz - 6, 6, 4, '#3fae62'); B(rx + 12, rz - 8, 2, 3, '#56cc7a'); B(rx + 10, rz - 8, 1, 2, '#9fd8ff');
+  // Onay terminali (sağ duvar)
+  const tx = PX(TERM.x), tz = PZ(TERM.z);
+  B(tx - 6, tz - 14, 14, 22, '#3a4365'); B(tx - 5, tz - 13, 12, 20, '#4b5680');
+  B(tx - 4, tz - 11, 10, 7, '#0c1a2e');
+  B(tx - 4, tz - 2, 3, 2, '#ffb020'); B(tx, tz - 2, 3, 2, '#7ee0b5'); B(tx + 4, tz - 2, 2, 2, '#ff5d6c');
+  // Koridor çizgisi
+  for (let x = 4; x < 224; x += 16) B(x, PZ(AISLE_Z) + 3, 8, 1, '#1b5f7a');
+}
+
+// Pencere: yıldızlar, gezegen, gemi
+const STARS = Array.from({ length: 70 }, (_, i) => {
+  const r = Math.sin(i * 12.9898) * 43758.5453; const r2 = Math.sin(i * 78.233) * 12345.678;
+  return { x: (r - Math.floor(r)) * WIN.w, y: (r2 - Math.floor(r2)) * WIN.h, s: 2 + (i % 3) * 3, c: i % 7 === 0 ? '#ffd9a0' : i % 5 === 0 ? '#a8c8ff' : '#ffffff' };
+});
+const planet = document.createElement('canvas'); planet.width = 44; planet.height = 26;
+{
+  const p = planet.getContext('2d');
+  const cx = 22, cy = 13, r = 9;
+  for (let y = 0; y < 26; y++) for (let x = 0; x < 44; x++) {
+    const dx = x - cx, dy = y - cy, d = dx * dx + dy * dy;
+    if (d < r * r) {
+      const band = Math.floor((dy + r) / 3) % 3;
+      let c = ['#e07a5f', '#f2cc8f', '#c9654d'][band];
+      if (dx > 4 && d > (r - 3) * (r - 3)) c = '#7a3b30';
+      if (dx < -3 && dy < -2 && d > (r - 3) * (r - 3)) c = '#ffe1b3';
+      p.fillStyle = c; p.fillRect(x, y, 1, 1);
+    }
+    const e = (dx * dx) / (20 * 20) + (dy * dy) / (4 * 4);
+    if (e > 0.82 && e < 1.0 && !(d < r * r && dy < 0)) { p.fillStyle = '#d8c3ff'; p.fillRect(x, y, 1, 1); }
+  }
+}
+function drawWindow(t) {
+  R(WIN.x, WIN.y, WIN.w, WIN.h, '#03040c');
+  ctx.save(); ctx.beginPath(); ctx.rect(WIN.x, WIN.y, WIN.w, WIN.h); ctx.clip();
+  for (const s of STARS) {
+    const x = WIN.x + ((s.x - t * s.s) % WIN.w + WIN.w) % WIN.w;
+    R(x, WIN.y + s.y, 1, 1, s.c);
+  }
+  const span = WIN.w + 60;
+  const px = WIN.x + WIN.w + 10 - ((t * 1.6) % span);
+  ctx.drawImage(planet, Math.round(px), WIN.y - 2);
+  const cyc = t % 16;
+  if (cyc < 5) {
+    const sx = WIN.x - 14 + (cyc / 5) * (WIN.w + 28), sy = WIN.y + 15;
+    R(sx, sy, 9, 3, '#c9d2ea'); R(sx + 6, sy - 1, 3, 1, '#c9d2ea'); R(sx + 3, sy + 1, 3, 1, '#6fd3ff');
+    R(sx - 3, sy + 1, 3, 1, Math.floor(t * 10) % 2 ? '#ffb347' : '#ff6b3d');
+  }
+  ctx.restore();
+  R(WIN.x - 3, WIN.y - 2, WIN.w + 6, 2, '#5a6596'); R(WIN.x - 3, WIN.y + WIN.h, WIN.w + 6, 2, '#5a6596');
+  for (let x = WIN.x - 3; x <= WIN.x + WIN.w; x += 52) R(x, WIN.y - 2, 3, WIN.h + 4, '#5a6596');
+}
+
+function consoleDesk(id, t) {
+  const d = DESKS[id], a = byId[id], w = Math.round(d.w * U), x = PX(d.x) - w / 2, y = PZ(d.z) - 6;
+  const on = a && (a.state === 'typing' || a.state === 'ok' || a.state === 'err') && Math.hypot(a.x - seat(id).x, a.z - seat(id).z) < 0.4;
+  const color = !a ? '#3d4a70' : on && a.state === 'err' ? '#ff5d6c' : on && a.state === 'ok' ? '#7ee0b5' : a.color;
+  R(x + 2, y + 12, w - 4, 3, 'rgba(0,0,0,.4)');
+  R(x, y, w, 12, '#3a4361'); R(x, y, w, 3, '#5a668f'); R(x, y + 11, w, 1, '#1e2438');
+  for (let i = 0; i < Math.floor((w - 6) / 4); i++) {
+    const lit = (Math.floor(t * 3) + i * 7 + id.length) % 4 === 0;
+    R(x + 3 + i * 4, y + 6, 2, 1, lit ? ['#ff6b6b', '#7ee0b5', '#ffd166', '#6fd3ff'][i % 4] : '#262d45');
+  }
+  R(PX(d.x) - 4, y - 1, 8, 1, '#7d8bb3');
+  const sw = Math.min(18, w - 6), sx = PX(d.x) - sw / 2, sy = y - 12;
+  if (on || id === 'jarvis') {
+    ctx.globalAlpha = on ? 0.6 : 0.3;
+    R(sx, sy, sw, 10, color);
+    ctx.globalAlpha = on ? 0.9 : 0.4;
+    for (let i = 0; i < 3; i++) R(sx + 2, sy + 2 + i * 3, 2 + ((t * 7 + i * 3) % (sw - 5) | 0), 1, '#ffffff');
+    ctx.globalAlpha = 1;
+    R(sx, sy + 10, sw, 1, color);
+  } else {
+    R(sx + 3, sy + 9, sw - 6, 1, '#2b3550');
+  }
+}
+function chair(id) {
+  const s = seat(id), x = PX(s.x), y = PZ(s.z);
+  if (id === 'jarvis') { R(x - 7, y - 3, 14, 10, '#5b4fa3'); R(x - 7, y + 6, 14, 2, '#3a2f78'); R(x - 8, y - 1, 1, 6, '#7a6be0'); R(x + 7, y - 1, 1, 6, '#7a6be0'); return; }
+  R(x - 5, y - 2, 10, 8, '#414a6e'); R(x - 5, y + 5, 10, 2, '#2a3150');
+}
+
+const ov = document.getElementById('ov');
+const labels = {};
+for (const a of AGENTS) {
+  const tag = document.createElement('div'); tag.className = 'p-tag'; tag.textContent = a.name;
+  const bub = document.createElement('div'); bub.className = 'p-bub'; bub.hidden = true;
+  ov.append(tag, bub); labels[a.id] = { tag, bub };
+}
+
+function render(t) {
+  ctx.drawImage(bg, 0, 0);
+  drawWindow(t);
+  for (let x = 4; x < 224; x += 16) if ((Math.floor(t * 2) + x / 16) % 6 === 0) R(x + 3, PZ(AISLE_Z) + 3, 2, 1, '#6fd3ff');
+  const waiting = AGENTS.some(a => a.state === 'waiting');
+  const tx = PX(TERM.x), tz = PZ(TERM.z);
+  R(tx - 1, tz - 17, 4, 3, waiting && Math.floor(t * 4) % 2 ? '#ffb020' : '#5a3d10');
+  if (waiting) { R(tx - 4, tz - 11, 10, 7, Math.floor(t * 4) % 2 ? '#ffb020' : '#3a2a08'); }
+  else { R(tx - 3, tz - 10, 2, 1, '#7ee0b5'); R(tx - 3, tz - 8, 6, 1, '#2c6a55'); }
+  const items = [];
+  for (const id of Object.keys(DESKS)) items.push({ z: DESKS[id].z + 0.2, draw: () => consoleDesk(id, t) });
+  for (const id of Object.keys(DESKS)) items.push({ z: seat(id).z - 0.05, draw: () => chair(id) });
+  for (const a of AGENTS) items.push({ z: a.z + 0.01, draw: () => drawPerson(R, a, PX(a.x), PZ(a.z), t) });
+  items.sort((p, q) => p.z - q.z).forEach(i => i.draw());
+
+  const s = cv.clientWidth / 224;
+  for (const a of AGENTS) {
+    const { tag, bub } = labels[a.id];
+    const x = PX(a.x) * s, top = (PZ(a.z) - 22) * s;
+    tag.style.left = x + 'px'; tag.style.top = top + 'px';
+    if (a.say) {
+      bub.hidden = false;
+      if (bub.textContent !== a.say) bub.textContent = a.say;
+      bub.classList.toggle('bub--wait', a.kind === 'wait');
+      bub.classList.toggle('bub--err', a.kind === 'err');
+      bub.classList.toggle('bub--ok', a.kind === 'ok');
+      bub.style.left = x + 'px'; bub.style.top = (top - 16) + 'px';
+    } else bub.hidden = true;
+  }
+}
+
+// Mürettebat kartlarındaki küçük portreler
+const portraits = [...document.querySelectorAll('.member canvas')].map(c => {
+  const pc = c.getContext('2d');
+  const PR = (x, y, w, h, col) => { pc.fillStyle = col; pc.fillRect(x | 0, y | 0, w | 0, h | 0); };
+  return { pc, PR, a: { ...byId[c.dataset.who], state: 'idle', walkPhase: 0, face: Math.PI } };
+});
+function renderPortraits(t) {
+  for (const p of portraits) { p.pc.clearRect(0, 0, 18, 22); drawPerson(p.PR, p.a, 9, 20, t); }
+}
+
+/* ───────────── Döngü ───────────── */
+let paused = false, speed = 1, last = performance.now(), t = 0;
+reset();
+for (let i = 0; i < 9 / 0.05; i++) step(0.05);
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (!paused) { t += dt * speed; step(dt * speed); }
+  render(t);
+  renderPortraits(t);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+const bp = document.getElementById('btn-pause');
+const setPaused = p => { paused = p; bp.textContent = p ? 'Oynat' : 'Durdur'; bp.setAttribute('aria-pressed', String(p)); };
+if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setPaused(true);
+bp.addEventListener('click', () => setPaused(!paused));
+const bs = document.getElementById('btn-speed');
+bs.addEventListener('click', () => { speed = speed === 1 ? 2 : 1; bs.textContent = `Hız: ${speed}×`; bs.setAttribute('aria-pressed', String(speed === 2)); });
+document.getElementById('btn-restart').addEventListener('click', () => { document.getElementById('log').innerHTML = ''; reset(); setPaused(false); });
+})();
+</script>

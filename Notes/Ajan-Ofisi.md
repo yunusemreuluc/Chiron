@@ -85,3 +85,66 @@ incelemesinin 11 bulgusu ve canlı veride bulunan 3 hata için regresyon.
 - Ofisten iş verme / durdurma yok (Faz 1). Onay Claude Code penceresinde verilir.
 - Arka plana atılan bir lane'in bitişi, Claude o bildirimi işlemezse (oturum
   kapandıysa) bilinmez — "durdu, bitişi izlenemedi" yazar, tahmin etmez.
+
+## Yazılabilir pano (2026-10-26, Ajan İstasyonu adım 1+2)
+
+Plan: [[Plan-Ajan-Istasyonu]]. Sekmeler artık **Ofis · Pano · Etkinlik**. "Etkinlik" eski gözlem
+panosu (`TaskBoard.tsx`, salt okunur). "Pano" yazılabilir: `components/office/CardBoard.tsx`.
+
+```
+CardBoard ──2 sn yoklama──> GET /api/pano ──> backend/core/pano.py (Pano)
+   düğmeler ──POST /api/pano/{id}/start|pause|stop|answer──┘      │ kart durumu iş kuyruğundan türetilir
+                                                                  ▼
+                                   backend/core/claude_jobs.py  submit(origin="pano")  → claude -p
+```
+
+- **Kart durumları:** bekliyor → calisiyor ↔ duraklatildi / onay / hata → bitti / iptal.
+  Kart kendi durumunu uydurmaz: `_reconcile` her okumada işin gerçek durumuna bakar.
+  Durdur/Sonlandır işi iptal eder; iptalden sonra kartın nereye düşeceğini `intent` söyler.
+- **Devam:** aynı Claude oturumu `--resume` ile (`session_job`). İş `KEEP_JOBS` geçmişinden
+  düşmüşse görev baştan verilir. Kuyruk doluysa kart değişmez, hata söylenir.
+- **`origin="pano"`:** sistem notu `PANO_NOTE` (özet sesli okunmuyor, kartta), iş `notified=True`
+  doğar → telefona haber verilmez. Telefondan gelen işler eskisi gibi.
+- **Kayıt:** `config/pano.json` (git dışı). Okunamayan dosya silinmez, `pano.bozuk-<ts>.json`
+  olarak kenara alınır. Kullanıcı eyleminde diske yazılamazsa hata döner (`_commit`); kart açma
+  geri alınır.
+- **Ölçüm (gerçek iş):** önemsiz bir kart bile ~0,39 $ — her `claude -p` oturumu hafıza köprüsü ve
+  hook'larla açılıyor. 7/24 döngüde kart başına maliyet buna göre düşünülmeli.
+
+Testler: `tests/test_pano.py` (19; sahte kuyrukla durum makinesi + gerçek `ClaudeJobs` + API).
+Çapraz inceleme: Astra yok (ücretsiz plan) → Terra read-only; 3 kalıcılık bulgusu, üçü düzeltildi.
+
+## Proje kartı — ayrı kopya, test, onaylı birleştirme (2026-10-26, adım 3)
+
+Kart açarken **Proje** seçilirse (`GET /api/pano/repos` → `~/Projects` altındaki git depoları) iş
+o deponun ayrı bir worktree'sinde yapılır. Kod: `backend/core/pano_git.py` (git/test) + `pano.py` (durum).
+
+```
+Başlat ──> worktree ~/Projects/.pano-worktrees/<repo>-K-001, dal pano/K-001 (ana dalın ucundan)
+Claude worktree'de çalışır (cwd = worktree; commit/push/merge YAPMA notu görevde)
+bitti ──> dogrulaniyor: Aıron commit_all → test komutunu KENDİSİ koşar → reset_after_test
+          ├─ değişiklik yok → bitti, kopya + dal silinir
+          ├─ test kaldı → hata (çıktının kuyruğu kartta; Yeniden dene aynı oturumu sürdürür)
+          └─ test geçti / test yok → birlestir ──Birleştir──> ana klasörde merge --no-ff → bitti
+                                               └─Reddet──> iptal, kopya silinir, DAL KALIR
+```
+
+- **Birleştirme kuralları:** ana klasör kartın açıldığı dalda olmalı; izlenen dosyalarda commit'lenmemiş
+  değişiklik varsa birleştirme REDDEDİLİR (Yunus'un yarım işi korunur). Çakışmada `merge --abort`,
+  kart `hata`ya düşer ve hata metni Claude'a "worktree'de `git merge <ana dal>` yap" der.
+  ⚠ Airon'un kendi deposu şu an commit'siz değişiklik taşıdığı için Airon kartları birleşemez —
+  önce commit.
+- **Test komutu:** kabukta, Claude'un izin denetimi OLMADAN koşar. Bu yüzden uzaktan (telefon)
+  yalnızca `suggest_test` önerisi ya da boş kabul edilir (403); özel komut yalnız PC'den.
+  Süreç ağacı Job Object'te (zaman aşımı 15 dk, Aıron kapanınca test de ölür).
+- **Test artıkları:** test `commit_all`'dan SONRA koştuğu için HEAD'den farklı her şey testin ürünü;
+  `reset --hard` + `clean -fd` ile atılır. Önceden (canlı deneme) `__pycache__` yüzünden
+  `worktree remove` reddediyor, dal silinemiyordu.
+- **Hiçbir iş kaybolmaz:** kopya zorla silinmeden önce kalan iş dala commit'lenir ("kopya silinirken
+  kalan iş"). Test sürerken kart sonlandırılamaz/silinemez.
+- **Bilinen sınır:** birleştirme ve kopya silme pano kilidi altında (birkaç sn); yavaş diskte pano
+  o sürede donar (Terra, düşük önem — bilinçli bırakıldı).
+
+Canlı deneme: geçici depoda hatalı `carp` fonksiyonu → Claude düzeltti, Aıron test koştu (1 passed),
+birleştirme commit'i oluştu, dal ve kopya temizlendi. Testler: `tests/test_pano_worktree.py` (21;
+Codex Terra 16 + Claude 5 gerileme). Terra read-only: 6 bulgu, 5'i düzeltildi, 1'i (kilit) bırakıldı.

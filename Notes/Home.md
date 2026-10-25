@@ -23,6 +23,9 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
   güncellenmeden biten oturumu işaretler ([[Gelistirme-Ortami]] § Süreklilik)
 - [[Airon-Mobil]] — telefondaki Aıron (Kotlin, `Projects/airon-mobile`): Gemini Live,
   arama/WhatsApp/cihaz araçları, PC köprüsü (`/api/remote/ask|desktop|note`)
+- [[Plan-Play-Yayini]] — mobili Play Store'a çıkarma: `play` flavor'ı, kullanıcının kendi anahtarı,
+  üyelik yok, kapalı test (12 kişi/14 gün)
+- [[Plan-Ajan-Istasyonu]] — ofisten iş verme ve 7/24 döngü: 2D uzay istasyonu, Jarvis lider, 8 adım
 - [[Ajan-Ofisi]] — Claude, alt ajanlar ve Codex/Bunny/Gemini masalarda: kim ne yapıyor, görev panosu, kota
 - [[Plan-Claude-Entegrasyonu]] — telefondan sesle verilen işi PC'de Claude Code yapar;
   önce Faz 0 (performans ölçümü, test, temizlik)

@@ -7,6 +7,46 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-10-26 (2) — Proje kartı: worktree + test + onaylı birleştirme (adım 3)
+
+**Ne yapıldı:** `backend/core/pano_git.py` (yeni), `pano.py` (dogrulaniyor/birlestir, merge), `/api/pano/repos`
+ve `/merge`, `claude_jobs` iş başına `cwd`, Composer'da proje + test komutu, kartta birleştirme kutusu.
+Testler: Terra 16 + Claude 5 gerileme; tüm paket 151/151. Canlı: gerçek Claude ile geçici depoda düzelt → test →
+birleştir, dal/kopya temiz (ilk denemede `__pycache__` temizliği engelliyordu, düzeltildi). Terra inceleme 6 bulgu
+(1 kritik: uzaktan özel test komutu) → 5 düzeltildi. Commit atılmadı.
+
+**Nerede kalındı:** Airon deposu commit'siz → Airon kartları birleşemez; kullanıcıya commit sorulacak.
+Sıradaki adım 4: lider ajan Jarvis (kartı böler, kime gideceğini yazar).
+
+## Oturum: 2026-10-26 — Yazılabilir pano (Ajan İstasyonu adım 1+2)
+
+**Ne yapıldı:** `backend/core/pano.py` + `/api/pano` + `CardBoard.tsx`; sekmeler Ofis · Pano · Etkinlik.
+Kart → `claude_jobs` (`origin="pano"`, telefona bildirim yok). Testler Terra'ya yazdırıldı (16) + 3
+gerileme; tüm paket 130/130. Gerçek işle denendi: başlat → bitti, durdur → duraklatıldı, sonlandır → iptal,
+yetim süreç yok. Terra read-only inceleme: 3 kalıcılık bulgusu düzeltildi. Commit atılmadı. Ayrıntı: [[Ajan-Ofisi]].
+
+**Nerede kalındı:** Kullanıcı Airon penceresinde Pano'yu deneyecek. Sıradaki adım 3: her iş ayrı worktree + test,
+birleştirme onayla. Tuzaklar: Codex 0.154'te `--full-auto` yok; pytest `--basetemp` ile (TEMP ACL bozuk).
+
+## Oturum: 2026-10-25 — Ajan İstasyonu planı (AgentSpace benzeri 7/24 sistem)
+
+**Ne yapıldı:** Kullanıcı Muratify'ın AgentSpace'i gibi iş veren, 7/24 kendi kendine çalışan ofis istedi.
+Codex teşhisi: ChatGPT aboneliği bitmiş (free) → `~/.codex/config.toml` varsayılanı `gpt-5.6-terra`.
+Space Bunny ve Hermes kaldırıldı. Ruflo incelendi, kurulmadı (4 fikir alınacak). Ofis kararı: 2D pixel-art
+uzay istasyonu, Jarvis lider. Taslak `Docs/onizleme/ajan-istasyonu.html`. Plan: [[Plan-Ajan-Istasyonu]]. Airon kodu yazılmadı.
+
+**Nerede kalındı:** Kullanıcı taslağı onayladı ("sonra iyileştirirsin"). Sıradaki: 1. adım, panoya yazma
+(kart ekle/Başlat/durdur/sonlandır), `TaskBoard.tsx` + `ofis.py` + `claude_jobs.py`.
+
+## Oturum: 2026-10-14 — Aıron Mobil'i Play Store'a çıkarma planı
+
+**Ne yapıldı:** Kullanıcı mobili Play'de yayınlamak istedi (amaç: CV). Kararlar: kullanıcı kendi
+Gemini anahtarını girer (ilk açılışta adım adım rehber), ayrı `play` flavor'ı (kişisel sürüm kalır),
+veritabanı/üyelik yok. Plan ve yapılacaklar: [[Plan-Play-Yayini]]. Kod yazılmadı.
+
+**Nerede kalındı:** Hedef: kullanıcının telefonundaki deneyimin aynısı (varsayılan asistan rolü, herkese uyan uyandırma sözü, WhatsApp onaylı gönderim).
+Sonra 1. adım: `play` flavor'ı + izin temizliği.
+
 ## Oturum: 2026-10-03 — telefondan Claude'a iş: PC + telefon bitti
 
 **Ne yapıldı:** PC: `claude_jobs.py` + `/api/remote/claude` (+ `updates`/`ack`), Job Object süreç

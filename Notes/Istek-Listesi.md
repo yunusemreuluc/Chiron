@@ -33,26 +33,32 @@ Durum değerleri: `yeni` → `bakıldı` → `yapıldı` / `yapılmayacak`. Duru
 <!-- ids: c33e1d5b-6e6c-4fd8-a2c0-e210ac6e6c57 -->
 
 ### İ-006 · Güncel gündem bilgilerine erişim
-**Durum:** yapıldı · **Sayı:** 1 · **Bildirildi:** hayır
+**Durum:** yapıldı · **Sayı:** 1 · **Bildirildi:** evet
 - 2026-10-01 14:21 · "Bugün gündem ne?" · denenen: uygun araç yok · Xiaomi 22101316G, 0.1.0
   - Ayrıntı: Kullanıcı güncel gündem bilgilerini öğrenmek istedi ancak mevcut araçlarla buna erişilemedi. İdeal davranış, kullanıcının gün içindeki önemli haberleri ve gelişmeleri sesli olarak özetleyebilmektir.
 <!-- ids: f44ce607-50ab-4147-b257-cc55d7da623f -->
 
 ### İ-007 · Hata bildirimi yapma özelliği
-**Durum:** yapıldı · **Sayı:** 1 · **Bildirildi:** hayır
+**Durum:** yapıldı · **Sayı:** 1 · **Bildirildi:** evet
 - 2026-10-02 22:25 · "Hata bildirimi yap" · denenen: uygun araç yok · Xiaomi 22101316G, 0.1.0
   - Ayrıntı: Kullanıcı, sistemde karşılaştığı hataları bildirmek için bir özellik talep ediyor. Mevcut araçlar arasında doğrudan hata bildirimi yapmaya uygun bir fonksiyon bulunmamaktadır. Kullanıcının herhangi bir durumda kolayca hata kaydı oluşturabilmesi hedeflenmektedir.
 <!-- ids: 5d0ca5b6-c724-401f-994f-ca659a445774 -->
 
 ### İ-008 · Müzik çalarken ses sorununda bağlantı kesme
-**Durum:** yapıldı · **Sayı:** 1 · **Bildirildi:** hayır
+**Durum:** yapıldı · **Sayı:** 1 · **Bildirildi:** evet
 - 2026-10-02 22:37 · "Müziği başlattığı zaman ses gelmiyor, bağlantıyı kesmek istiyorum." · denenen: manage_device_audio media_play_pause - ses gelmedi, bağlantı kesme aracı yok · Xiaomi 22101316G, 0.1.0
   - Ayrıntı: Kullanıcı müzik oynatma komutu verdi (manage_device_audio action=media_play_pause), ancak ses gelmediğini belirtti. Ses sorunu karşısında bağlantının kesilmesini istedi. Mevcut araçlarda bağlantıyı kesmeye yönelik bir fonksiyon bulunmamaktadır. İdeal durumda, ses gelmediği algılandığında veya kullanıcı talep ettiğinde bağlantının kesilebilmesi beklenir.
 <!-- ids: 389a6503-7efb-4c3a-a575-d4a78c9ac3c2 -->
 
 ### İ-009 · PC durumunu görüntüleme
-**Durum:** yapıldı · **Sayı:** 1 · **Bildirildi:** hayır
+**Durum:** yapıldı · **Sayı:** 1 · **Bildirildi:** evet
 - 2026-10-03 04:55 · "pcde şuan ne yapılıyor" · denenen: query_desktop_airon question='PC'de şuan ne yapılıyor' - success=false · Xiaomi 22101316G, 0.1.0
   - Ayrıntı: Kullanıcı mevcut PC durumunu (açık uygulamalar, sistem durumu gibi) öğrenmek istedi ancak query_desktop_airon aracı success=false döndü. Aracın başarılı olup kullanıcının isteğini yerine getirmesi beklenir.
 <!-- ids: aa8d8c13-c58f-476c-b1ad-733e6094662c -->
+
+### İ-010 · Terminalde yeni sekme açma ve Claude'a bağlanma
+**Durum:** yeni · **Sayı:** 1 · **Bildirildi:** hayır
+- 2026-10-20 03:48 · "terminalde yeni secme aç ve clauda bağlan" · denenen: uygun araç yok · Xiaomi 22101316G, 0.1.0
+  - Ayrıntı: Kullanıcı Windows Terminal uygulamasında yeni bir sekme açmak ve bu sekme üzerinden Claude'a bağlanmak istiyor. Mevcut araç setinde Terminal içinde sekme açma veya Claude entegrasyonu sağlama işlevi bulunmamaktadır. İdeal olarak, komut doğrudan PC'de yürütülmelidir.
+<!-- ids: 6870dc01-f4eb-47da-b34c-2bf12e6cb247 -->
 
