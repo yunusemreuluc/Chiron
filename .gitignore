@@ -37,10 +37,16 @@ weights/
 
 # Çalışma zamanı log dosyası
 logs/*.log
+logs/*.log.*
 config/window_state.json
 
 # İstek listesi çalışma durumu (işlenmiş istek kimlikleri)
 config/feature_requests_state.json
 
 # Telefondan verilen Claude işlerinin tam kaydı — görev metinleri, yerel kalır.
+logs/claude-jobs/
+
+# Görev panosu kartları — canlı veri (backend/core/pano.py)
+config/pano.json
+# Claude işlerinin tam akışı (claude_jobs.py) — konuşma kaydı, depoya girmez
 logs/claude-jobs/

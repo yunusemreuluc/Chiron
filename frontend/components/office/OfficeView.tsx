@@ -8,7 +8,14 @@ import { fetchOfficeState } from '@/services/officeApi';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { isActive, useOfficeStore } from '@/stores/officeStore';
 import { AgentCard } from './AgentCard';
+import { CardBoard } from './CardBoard';
 import { TaskBoard } from './TaskBoard';
+
+const TABS = [
+  { id: 'ofis', label: 'Ofis' },
+  { id: 'pano', label: 'Pano' },
+  { id: 'etkinlik', label: 'Etkinlik' },
+] as const;
 import { ago } from './format';
 
 // Ajan Ofisi ekranı (2026-10-02). Kenar çubuğundaki "Ajanlar" modülü burayı
@@ -116,17 +123,17 @@ export function OfficeView() {
             </div>
 
             <div className="glass-panel office-tabs" role="tablist">
-              {(['ofis', 'pano'] as const).map((t) => (
+              {TABS.map((t) => (
                 <button
-                  key={t}
+                  key={t.id}
                   type="button"
                   role="tab"
-                  aria-selected={tab === t}
-                  onClick={() => setTab(t)}
-                  className={`office-tabs__tab ${tab === t ? 'is-on' : ''}`}
+                  aria-selected={tab === t.id}
+                  onClick={() => setTab(t.id)}
+                  className={`office-tabs__tab ${tab === t.id ? 'is-on' : ''}`}
                 >
-                  {tab === t && <motion.span layoutId="office-tab" className="office-tabs__glow" />}
-                  <span className="relative">{t === 'ofis' ? 'Ofis' : 'Pano'}</span>
+                  {tab === t.id && <motion.span layoutId="office-tab" className="office-tabs__glow" />}
+                  <span className="relative">{t.label}</span>
                 </button>
               ))}
             </div>
@@ -158,16 +165,16 @@ export function OfficeView() {
 
           {/* Pano görünümü sahnenin üstüne cam bir katman olarak gelir */}
           <AnimatePresence>
-            {tab === 'pano' && (
+            {tab !== 'ofis' && (
               <motion.div
-                key="board"
+                key={tab}
                 className="office-board-layer"
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 14 }}
                 transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
               >
-                <TaskBoard />
+                {tab === 'pano' ? <CardBoard /> : <TaskBoard />}
               </motion.div>
             )}
           </AnimatePresence>

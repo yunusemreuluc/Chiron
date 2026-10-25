@@ -119,7 +119,8 @@ export interface OfficeSnapshot {
   tracking: { events_seen: number; last_event_ts: number | null };
 }
 
-export type OfficeTab = 'ofis' | 'pano';
+// pano = yazılabilir kart panosu (CardBoard), etkinlik = oturumların gözlem panosu (TaskBoard).
+export type OfficeTab = 'ofis' | 'pano' | 'etkinlik';
 
 interface OfficeStore {
   snapshot: OfficeSnapshot | null;

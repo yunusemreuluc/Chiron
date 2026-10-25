@@ -65,6 +65,21 @@ force push, Drive/Etsy yüklemesi) O ADIMI YAPMA. Oraya kadar hazırla, sonra so
 Yunus'un yapması gereken bir şey var mı. Tablo, kod bloğu, uzun yol listesi yok.
 """
 
+# Panodan (Aıron'un Ajan Ofisi, PC başında) başlatılan iş. Yunus ekranın başında
+# olabilir ya da olmayabilir; özet sesli okunmuyor, karta yazılıyor.
+PANO_NOTE = f"""\
+Bu iş Aıron'un görev panosundan, bir karttan geldi. Yunus sonucu kartta okuyacak; \
+soru sorarsan cevabı ancak sonra, kart üzerinden gelir.
+- İşi uçtan uca kendin bitir; netleştirme gerekiyorsa makul varsayımla ilerle ve varsayımı özette söyle.
+- Geri alınamayan bir adıma gelirsen (toplu silme, üzerine yazma, ödeme, başkasına mesaj/e-posta/yayın, \
+force push, Drive/Etsy yüklemesi, git push) O ADIMI YAPMA. Oraya kadar hazırla, sonra son mesajını \
+"{APPROVAL_MARKER} <tek cümlede ne yapacağın>" satırıyla bitir ve dur.
+- Son mesajın kartın özeti olacak: Türkçe, kısa; ne yaptın, hangi dosyalar değişti, test sonucu ne, \
+Yunus'un yapması gereken bir şey var mı.
+"""
+
+ORIGINS = ("telefon", "pano")
+
 ACTIVE = ("queued", "running")
 # Telefona haber verilecek sonuçlar. `cancelled` yok: iptali kullanıcı kendisi yaptı.
 NOTIFY = ("done", "needs_approval", "failed", "timeout", "interrupted")
@@ -87,6 +102,8 @@ class Job:
     error: str = ""
     cost_usd: float | None = None
     notified: bool = False  # sonucu telefona söylendi mi (bkz. updates/acknowledge)
+    origin: str = "telefon"  # telefon | pano — sistem notunu ve telefona bildirimi belirler
+    cwd: str | None = None  # Claude'un açıldığı klasör; boşsa WORK_DIR (pano kartının worktree'si)
 
     def public(self) -> dict[str, Any]:
         data = asdict(self)
@@ -342,12 +359,18 @@ class ClaudeJobs:
             logger.exception("Eski Claude iş dosyaları silinemedi")
 
     # ── Dış arayüz ───────────────────────────────────────────────────────
-    def submit(self, task: str, resume_of: str | None = None) -> Job:
+    def submit(
+        self, task: str, resume_of: str | None = None, origin: str = "telefon", cwd: str | None = None
+    ) -> Job:
         task = task.strip()
         if not task:
             raise ValueError("Görev boş.")
         if len(task) > MAX_TASK_CHARS:
             raise ValueError(f"Görev en fazla {MAX_TASK_CHARS} karakter olabilir.")
+        if origin not in ORIGINS:
+            raise ValueError("Bilinmeyen iş kaynağı.")
+        if cwd is not None and not Path(cwd).is_dir():
+            raise ValueError(f"Çalışma klasörü yok: {cwd}")
         with self._lock:
             if self._closed:
                 raise ValueError("Aıron kapanıyor; iş alınmıyor.")
@@ -360,9 +383,15 @@ class ClaudeJobs:
                     raise ValueError("O iş hâlâ sürüyor; bitince devam ettirilebilir.")
             if len(self._queue) >= MAX_QUEUE:
                 raise ValueError("Kuyruk dolu; önceki işler bitsin.")
-            job = Job(id=secrets.token_hex(4), task=task, resume_of=resume_of)
+            # Panonun işi telefona haber verilmez: sonuç kartta okunuyor.
+            job = Job(
+                id=secrets.token_hex(4), task=task, resume_of=resume_of, origin=origin,
+                notified=origin != "telefon", cwd=cwd,
+            )
             if parent:
                 job.session_id = parent.session_id
+                # Claude oturumları klasöre bağlı: devam, oturumun açıldığı klasörde olmalı.
+                job.cwd = parent.cwd
             self._jobs[job.id] = job
             self._queue.append(job.id)
             self._save(job)
@@ -494,7 +523,7 @@ class ClaudeJobs:
             "--permission-mode",
             PERMISSION_MODE,
             "--append-system-prompt",
-            SYSTEM_NOTE,
+            PANO_NOTE if job.origin == "pano" else SYSTEM_NOTE,
         ]
         if job.resume_of and job.session_id:
             args += ["--resume", job.session_id]
@@ -505,7 +534,7 @@ class ClaudeJobs:
         # Askıda başlar; _run Job Object'e atayıp uyandırır (bkz. ProcessTree).
         return subprocess.Popen(
             args,
-            cwd=str(WORK_DIR),
+            cwd=job.cwd or str(WORK_DIR),
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

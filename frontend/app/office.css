@@ -735,3 +735,294 @@
     animation: none;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Yazılabilir pano (2026-10-25) — components/office/CardBoard.tsx.
+   Kartın sol çizgisi durumun rengi; sıcak tonlar yine yalnız dikkat isteyen
+   durumlarda (onay = kehribar, hata = mercan, bitti = nane).
+   ══════════════════════════════════════════════════════════════════════════ */
+.pano {
+  position: relative;
+  height: 100%;
+}
+.pano-card {
+  cursor: default;
+}
+.pano-card:hover {
+  transform: none;
+}
+.pano-card.is-bekliyor { --desk: #7fb2ff; }
+.pano-card.is-calisiyor { --desk: #6fd3ff; }
+.pano-card.is-onay { --desk: var(--office-wait); }
+.pano-card.is-duraklatildi { --desk: rgba(202, 216, 234, 0.45); }
+.pano-card.is-hata { --desk: var(--office-err); }
+.pano-card.is-bitti { --desk: var(--office-ok); }
+.pano-card.is-iptal { --desk: rgba(202, 216, 234, 0.25); }
+.pano-card.is-iptal .office-task__title {
+  color: var(--foreground-secondary);
+  text-decoration: line-through;
+  text-decoration-color: rgba(255, 255, 255, 0.2);
+}
+.pano-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.pano-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  color: var(--desk);
+  background: color-mix(in srgb, var(--desk) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--desk) 28%, transparent);
+}
+.pano-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 0 currentColor;
+  animation: pano-pulse 1.6s var(--ease-out-quint) infinite;
+}
+@keyframes pano-pulse {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 60%, transparent); }
+  100% { box-shadow: 0 0 0 7px transparent; }
+}
+.pano-card__step {
+  font-family: var(--font-mono-ui);
+  font-size: 10px;
+  color: var(--foreground-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pano-card__body {
+  font-size: 11.5px;
+  line-height: 1.45;
+  text-align: left;
+  color: var(--foreground-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.pano-card__body.is-open {
+  display: block;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.pano-approval {
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: rgba(255, 176, 32, 0.07);
+  border: 1px solid rgba(255, 176, 32, 0.3);
+}
+.pano-approval .label-micro {
+  color: var(--office-wait);
+}
+.pano-approval p {
+  margin-top: 5px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--foreground);
+}
+.pano-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-top: 2px;
+}
+.pano-btn {
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  transition:
+    background var(--duration-fast) var(--ease-out-quint),
+    border-color var(--duration-fast) var(--ease-out-quint);
+}
+.pano-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: var(--border-strong);
+}
+.pano-btn:focus-visible {
+  outline: 2px solid rgba(127, 178, 255, 0.7);
+  outline-offset: 2px;
+}
+.pano-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.pano-btn.is-primary {
+  background: rgba(127, 178, 255, 0.16);
+  border-color: rgba(127, 178, 255, 0.4);
+  box-shadow: var(--glow-primary-sm);
+}
+.pano-btn.is-ok {
+  color: var(--office-ok);
+  background: rgba(126, 224, 181, 0.1);
+  border-color: rgba(126, 224, 181, 0.35);
+}
+.pano-btn.is-danger {
+  color: var(--office-err);
+  background: rgba(255, 93, 108, 0.1);
+  border-color: rgba(255, 93, 108, 0.35);
+}
+.pano-btn.is-quiet {
+  color: var(--foreground-secondary);
+  background: transparent;
+  border-color: transparent;
+}
+.pano-confirm {
+  font-size: 11.5px;
+  color: var(--foreground-secondary);
+  margin-right: 2px;
+}
+.pano-new {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px;
+  border-radius: 13px;
+  font-size: 12.5px;
+  color: var(--foreground-secondary);
+  border: 1px dashed var(--border-strong);
+  transition:
+    color var(--duration-base) var(--ease-out-quint),
+    border-color var(--duration-base) var(--ease-out-quint);
+}
+.pano-new:hover {
+  color: var(--foreground);
+  border-color: rgba(127, 178, 255, 0.5);
+}
+.pano-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 11px;
+  border-radius: 13px;
+  background: rgba(127, 178, 255, 0.06);
+  border: 1px solid rgba(127, 178, 255, 0.28);
+}
+.pano-composer input,
+.pano-composer textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--foreground);
+  background: rgba(5, 8, 14, 0.6);
+  border: 1px solid var(--border-subtle);
+  resize: vertical;
+}
+.pano-composer input:focus,
+.pano-composer textarea:focus {
+  outline: none;
+  border-color: rgba(127, 178, 255, 0.55);
+}
+.pano-composer ::placeholder {
+  color: var(--foreground-disabled);
+}
+.pano-col__empty {
+  padding: 18px 0;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--foreground-disabled);
+}
+.pano-notice {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  z-index: 6;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--foreground);
+  background: rgba(40, 14, 18, 0.85);
+  border: 1px solid rgba(255, 93, 108, 0.4);
+  backdrop-filter: blur(12px);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .pano-pulse {
+    animation: none;
+  }
+}
+
+/* Proje kartı (adım 3) — çalışma kopyası, test, birleştirme */
+.pano-card.is-dogrulaniyor { --desk: #6fd3ff; }
+.pano-card.is-birlestir { --desk: var(--office-ok); }
+.pano-repo span {
+  font-family: var(--font-mono-ui);
+  font-size: 9.5px;
+}
+.pano-merge {
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: rgba(255, 176, 32, 0.07);
+  border: 1px solid rgba(255, 176, 32, 0.3);
+}
+.pano-merge.is-tested {
+  background: rgba(126, 224, 181, 0.07);
+  border-color: rgba(126, 224, 181, 0.3);
+}
+.pano-merge .label-micro {
+  color: var(--office-wait);
+}
+.pano-merge.is-tested .label-micro {
+  color: var(--office-ok);
+}
+.pano-merge p {
+  margin-top: 5px;
+  font-size: 11.5px;
+  color: var(--foreground-secondary);
+}
+.pano-merge strong {
+  font-family: var(--font-mono-ui);
+  font-weight: 500;
+  color: var(--foreground);
+}
+.pano-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.pano-composer select {
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--foreground);
+  background: rgba(5, 8, 14, 0.6);
+  border: 1px solid var(--border-subtle);
+}
+.pano-composer select:focus {
+  outline: none;
+  border-color: rgba(127, 178, 255, 0.55);
+}
+.pano-composer #pano-test {
+  font-family: var(--font-mono-ui);
+  font-size: 10.5px;
+}
+.pano-hint {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--foreground-secondary);
+}
+.pano-card__body.is-red {
+  font-family: var(--font-mono-ui);
+  font-size: 10.5px;
+}
