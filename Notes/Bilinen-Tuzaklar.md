@@ -547,3 +547,10 @@ stdout'u tutan kalmaz → okuyucu EOF görür.
 Aynı işte ikinci tuzak: npm'in kurduğu `claude` bir **`.CMD`**. Windows'ta .cmd/.bat'a
 verilen argümanlar cmd.exe ayrıştırmasından geçer (`&`, `|`, `%` — "BatBadBut"); kullanıcı
 metni asla argüman olmaz. Arkasındaki `claude.exe` doğrudan çağrılır, metin stdin'den gider.
+
+## Hook cevabı Windows'ta cp1254 çıkar
+
+Python hook'u (`bekci.py`) `sys.stdout.write` ile JSON cevap verdiğinde Windows varsayılanı cp1254;
+Türkçe gerekçe ("Aıron bekçisi…") UTF-8 bekleyen tarafta bozuluyor/çözülemiyordu. İlk canlı deneme ASCII
+gerekçeyle yapıldığı için görünmedi, Türkçe testte yakalandı (2026-10-26). **Kural:** Claude Code hook'u
+yazan her Python betiği `sys.stdin`/`sys.stdout`'u `reconfigure(encoding="utf-8")` ile açar.

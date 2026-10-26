@@ -226,3 +226,57 @@ stream-json her işte `rate_limit_event` gönderiyor → `rate_limit_info.unifie
   bugünkü iş kayıtlarından yazıldı.
 
 Testler: `tests/test_pano_quota.py` (11; Claude yazdı — Codex kotası dolu). Paket 185/185.
+
+## Bekçi — ajanın tehlikeli adımı (2026-10-26, adım 7)
+
+Fikir: ruvnet/ruflo `ruflo-protector` (kod alınmadı). Kod: `backend/core/bekci.py` (yalnız stdlib).
+Kullanıcı kararı: global `~/.claude/settings.json`'a DOKUNULMAZ (ilk deneme güvenlik denetiminde durmuştu).
+
+- **Katman 1, araç öncesi (yalnız Claude):** `claude_jobs` her `claude -p`'ye `--settings logs/bekci/settings.json`
+  ekler; içinde PreToolUse hook'u → `python backend/core/bekci.py`. Ayar yalnız o oturuma, worktree'de değil
+  (ajan kendi bekçisini kapatamasın). 2026-10-26 gerçek işle denendi: hook `-p`'de tetikleniyor,
+  `AIRON_CLAUDE_JOB` geliyor, `deny` adımı durduruyor.
+- **Katman 2, birleştirme öncesi (her motor):** `_verify` worktree diff'ini `scan_diff` ile tarar — eklenen
+  anahtar/parola, `.env`/anahtar dosyası, `.claude`/`.git/hooks`, CI dosyası. Codex/Gemini'yi bu katman görür.
+- **13 kural:** toplu-silme, git-push, git-yikici, dis-gonderim (curl POST, rclone, gh pr…), indir-calistir,
+  yayinlama, sistem-ayari, surec-oldurme (orta), izin-atlatma, gizli-ortam (orta), kok-disi-yazma (worktree
+  dışına Write/Edit; `~/.claude/projects` ve `Temp/claude` serbest), gizli-dosya, kafes (ajanın kendi
+  ayarı/hook'u/bekçi). Diff katmanında ayrıca gizli-deger, ci-degisikligi.
+- **Mod** (`logs/bekci/mod.json`): `uyar` varsayılan — her araç çağrısı `logs/bekci/<iş>.jsonl`'e yazılır
+  (öğrenme verisi), takılan kural kartta "Bekçi" kutusunda. `engelle` — yalnız `yuksek` kural reddedilir,
+  Claude gerekçeyi görür ve `ONAY_GEREKLI:` ile durur (gerçek işte denendi, kart "onay"a düştü).
+  Mod Pano'daki Bekçi şeridinden değişir; engellemeyi kapatmak onaylı; **telefondan değişmez** (403).
+- **Hata davranışı:** bekçinin kendi hatası işi durdurmaz (çıkış 0, `logs/bekci/hata.log`). Hook 10 sn'de
+  cevap vermezse Claude Code adımı geçirir — yani engelleme "fail-open".
+- **Sınırlar:** kurallar desen eşleşmesi; kabukta dolaylı yazma (`> dosya`, python -c) kök kuralına takılmaz.
+  Telefon işlerinde de hook çalışır ama uyarı yalnız `Job.bekci`'de, telefon arayüzü göstermiyor.
+  Kart Airon'un kendi bekçisini düzenlemek isterse `kafes`'e takılır (bilerek).
+
+Testler: `tests/test_bekci.py` (41). Paket 226/226. Çapraz inceleme yapılamadı (Codex kotası yok); Claude kendi inceledi.
+
+## 7/24 döngü (2026-10-26, adım 8)
+
+Kod: `backend/core/dongu.py`; durum `config/dongu.json`, raporlar `logs/dongu/rapor-YYYY-MM-DD.md` (ikisi de gitignore).
+Thread Aıron'la açılır (`main.py` lifespan), **döngü varsayılan kapalı**; Pano'daki "7/24" şeridinden açılır.
+Telefondan da açılıp kapanır (açmak korumayı gevşetmez; bekçi ve kota freni aynen geçerli).
+
+- **Ne yapar:** açıkken "Bekliyor" sütunu kuyruktur — hiçbir kart çalışmıyorsa en eski hazır kartı (bağımlılıkları
+  `bitti`) başlatır, tek seferde tek iş. Jarvis'in alt kartları sırayla kendiliğinden yürür. Her tikte
+  `pano.snapshot()` → proje kartının doğrulaması (commit + test) arayüz kapalıyken de koşar (önceden yalnız
+  arayüz yoklayınca koşuyordu).
+- **Tik:** boşta 60 sn, kart çalışırken 10 sn; yeni kart açılınca (`POST /api/pano`) hemen uyanır. Tik yerel,
+  API çağrısı yok. Ölçüldü: biten karttan sonrakine ~7 sn, yeni karta ~2 sn.
+- **Kota:** Claude `stop` basamağında Claude kartları atlanır, durum `uyuyor` + sıfırlanma saati; pencere geçince
+  kendiliğinden devam. Codex kotası doluysa Codex kartı atlanır, Gemini yürür.
+- **Fren:** günde en fazla `DAILY_LIMIT` (20) kart. Başlatılamayan kart (PanoError ya da başka hata, ör. deposu
+  silinmiş → NotADirectoryError) 30 dk atlanır, döngü sıradakine geçer — testte yakalandı, önceden aynı kartta
+  kilitlenirdi.
+- **Yapmaz:** kart bölmez, hata vereni yeniden denemez, onay/birleştirme vermez — o kartlar Yunus'u bekler.
+- **Sabah raporu:** her gün 08:00 (yerel), son rapordan beri: bitenler, Yunus'u bekleyenler, hatalar, bekçi
+  uyarıları, yaklaşık harcama, kota. Aıron 08:00'de kapalıysa ilk açılışta yazılır (denendi). Pano'da 18 saat
+  görünür, "Tamam" ile kapanır.
+- **Uyarı:** döngü açık ve bekçi `uyar` modundaysa şerit "Gözetimsiz çalışıyor ama bekçi yalnız uyarıyor" der.
+- **Sınır:** PC uyursa döngü de uyur (Windows uyku ayarına dokunulmadı). Rapor maliyeti kartın toplam
+  maliyetinden; rapor aralığından önceki harcamayı da içerebilir (~ işareti bu yüzden).
+
+Testler: `tests/test_dongu.py` (9). Paket 235/235. Canlı: 2 Claude + 4 Gemini kartı döngüyle sırayla yürüdü.
