@@ -38,6 +38,8 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+from backend.core import bekci
+
 logger = logging.getLogger("airon.claude_jobs")
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -127,6 +129,7 @@ class Job:
     cwd: str | None = None  # Claude'un açıldığı klasör; boşsa WORK_DIR (pano kartının worktree'si)
     engine: str = "claude"  # claude | codex | gemini
     mode: str = "auto"  # Claude izin modu: auto | plan (salt okunur, lider ajan)
+    bekci: list[dict[str, Any]] = field(default_factory=list)  # bekçinin uyarıları (yalnız Claude işleri)
 
     def public(self) -> dict[str, Any]:
         data = asdict(self)
@@ -524,6 +527,8 @@ class ClaudeJobs:
     def _finish(self, job: Job, status: str, error: str = "") -> None:
         job.status = status
         job.finished_at = time.time()
+        if job.engine == "claude":
+            job.bekci = bekci.job_hits(job.id)
         if error:
             job.error = error
         self._save(job)
@@ -562,6 +567,9 @@ class ClaudeJobs:
                 job.mode if job.mode == "plan" else PERMISSION_MODE,
                 "--append-system-prompt",
                 PANO_NOTE if job.origin == "pano" else SYSTEM_NOTE,
+                # Bekçi (adım 7): PreToolUse hook'u yalnız bu oturuma; global ayara dokunulmaz.
+                "--settings",
+                str(bekci.settings_path()),
             ]
             if job.resume_of and job.session_id:
                 args += ["--resume", job.session_id]
@@ -586,6 +594,10 @@ class ClaudeJobs:
         # Aıron bir Claude oturumundan başlatıldıysa iç içe oturum işareti taşınmasın.
         env.pop("CLAUDECODE", None)
         env["AIRON_CLAUDE_JOB"] = job.id
+        # Pano worktree'si: bekçi bu kökün dışına yazmayı yakalar. Kökü olmayan işte (WORK_DIR) bakılmaz.
+        env.pop(bekci.ROOT_ENV, None)
+        if job.cwd:
+            env[bekci.ROOT_ENV] = job.cwd
         # Askıda başlar; _run Job Object'e atayıp uyandırır (bkz. ProcessTree).
         return subprocess.Popen(
             args,

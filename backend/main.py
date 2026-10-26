@@ -21,6 +21,7 @@ from fastapi.staticfiles import StaticFiles
 
 from backend.api import automation, memory, office, pano, remote, settings, system, vision, voice
 from backend.core import claude_jobs
+from backend.core.dongu import dongu
 from backend.core.config import CORS_ORIGINS
 from backend.core.ofis import OfficeWatcher, office as office_state
 from backend.models.events import WSEvent
@@ -54,7 +55,10 @@ async def lifespan(_: FastAPI):
 
     watcher = OfficeWatcher(office_state, on_change=_office_changed)
     watcher.start()
+    # 7/24 döngü (Ajan İstasyonu adım 8): thread hep ayakta, kapalıyken tik hiçbir şey yapmaz.
+    dongu.start()
     yield
+    dongu.stop()
     watcher.stop()
     # Telefondan verilen Claude işi Aıron'la birlikte kapanır (süreç ağacıyla).
     claude_jobs.jobs.shutdown()

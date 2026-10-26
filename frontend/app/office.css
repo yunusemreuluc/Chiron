@@ -1211,3 +1211,279 @@
 .pano-quota.is-stop .pano-quota__note {
   color: var(--office-err);
 }
+
+/* Bekçi (Ajan İstasyonu adım 7): mod şeridi ve karttaki uyarı listesi. */
+.pano-guard {
+  margin-top: -4px;
+}
+.pano-guard__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.pano-guard__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--office-wait);
+  box-shadow: 0 0 8px rgba(255, 176, 32, 0.55);
+}
+.pano-guard.is-blocking {
+  border-color: rgba(126, 224, 181, 0.35);
+}
+.pano-guard.is-blocking .pano-guard__dot {
+  background: var(--office-ok);
+  box-shadow: 0 0 8px rgba(126, 224, 181, 0.6);
+}
+.pano-guard__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.pano-guard-hits {
+  border-radius: 10px;
+  background: rgba(255, 176, 32, 0.06);
+  border: 1px solid rgba(255, 176, 32, 0.25);
+}
+.pano-guard-hits.is-high {
+  background: rgba(255, 93, 108, 0.06);
+  border-color: rgba(255, 93, 108, 0.32);
+}
+.pano-guard-hits__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  font-size: 11.5px;
+  color: var(--foreground-secondary);
+  text-align: left;
+}
+.pano-guard-hits__head > span:nth-child(2) {
+  flex: 1;
+}
+.pano-guard-hits__head .label-micro {
+  color: var(--office-wait);
+}
+.pano-guard-hits.is-high .pano-guard-hits__head .label-micro {
+  color: var(--office-err);
+}
+.pano-guard-hits__head:focus-visible {
+  outline: 2px solid rgba(127, 178, 255, 0.7);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+.pano-guard-hits ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 10px 9px;
+}
+.pano-guard-hits li {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding-left: 9px;
+  border-left: 2px solid var(--office-wait);
+}
+.pano-guard-hits li.is-yuksek {
+  border-left-color: var(--office-err);
+}
+.pano-guard-hits__rule {
+  font-size: 11.5px;
+  color: var(--foreground);
+}
+.pano-guard-hits__rule em {
+  margin-left: 6px;
+  font-style: normal;
+  font-size: 10.5px;
+  color: var(--foreground-disabled);
+}
+.pano-guard-hits code {
+  font-family: var(--font-mono-ui);
+  font-size: 10.5px;
+  color: var(--foreground-secondary);
+  word-break: break-all;
+}
+
+/* 7/24 döngü (Ajan İstasyonu adım 8): şerit, günlük ve sabah raporu. */
+.pano-loop {
+  margin-top: -4px;
+}
+.pano-loop__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--foreground-disabled);
+}
+.pano-loop.is-calisiyor {
+  border-color: rgba(127, 178, 255, 0.35);
+}
+.pano-loop.is-calisiyor .pano-loop__dot {
+  background: #7fb2ff;
+  box-shadow: 0 0 8px rgba(127, 178, 255, 0.7);
+  animation: pano-loop-pulse 1.8s var(--ease-out-quint) infinite;
+}
+.pano-loop.is-bekliyor .pano-loop__dot {
+  background: var(--office-ok);
+  box-shadow: 0 0 8px rgba(126, 224, 181, 0.55);
+}
+.pano-loop.is-uyuyor .pano-loop__dot,
+.pano-loop.is-sinir .pano-loop__dot {
+  background: #b59cff;
+  box-shadow: 0 0 8px rgba(181, 156, 255, 0.55);
+}
+.pano-loop.is-uyuyor,
+.pano-loop.is-sinir {
+  border-color: rgba(181, 156, 255, 0.3);
+}
+@keyframes pano-loop-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pano-loop.is-calisiyor .pano-loop__dot {
+    animation: none;
+  }
+}
+.pano-loop__why {
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--foreground-disabled);
+}
+.pano-loop__warn {
+  font-size: 10.5px;
+  color: var(--office-wait);
+}
+.pano-loop__log {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 140px;
+  overflow-y: auto;
+  padding-top: 6px;
+  border-top: 1px solid var(--border-subtle);
+  font-size: 11px;
+}
+.pano-loop__log li {
+  display: flex;
+  gap: 10px;
+}
+.pano-loop__log li span {
+  flex: none;
+  width: 104px;
+  white-space: nowrap;
+  font-family: var(--font-mono-ui);
+  font-size: 10px;
+  color: var(--foreground-disabled);
+}
+.pano-report {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(127, 178, 255, 0.08), rgba(181, 156, 255, 0.05)), rgba(8, 12, 20, 0.62);
+  border: 1px solid rgba(127, 178, 255, 0.28);
+  backdrop-filter: blur(18px);
+  font-size: 11px;
+  color: var(--foreground-secondary);
+}
+.pano-report header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+.pano-report header .label-micro {
+  color: #9db8ff;
+}
+.pano-report header .pano-btn {
+  margin-left: auto;
+}
+.pano-report__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+.pano-report__group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid var(--foreground-disabled);
+}
+.pano-report__group.is-ok {
+  border-left-color: var(--office-ok);
+}
+.pano-report__group.is-wait {
+  border-left-color: var(--office-wait);
+}
+.pano-report__group.is-err {
+  border-left-color: var(--office-err);
+}
+.pano-report__group ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+.pano-report__group li {
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+.pano-report__empty,
+.pano-report__guard {
+  font-size: 11.5px;
+  color: var(--foreground-secondary);
+}
+
+/* Telefon genişliği (2026-10-26): üst şerit tek satıra sığmıyordu — marka ve sayaç kutusu
+   sekmelerin üstüne biniyordu. Dar ekranda yalnız sekmeler + kapat kalır (kota zaten Pano
+   şeridinde), pano kaydırılabilir olur ki şeritler sütunları ezmesin. */
+@media (max-width: 760px) {
+  .office-top {
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    gap: 8px;
+  }
+  .office-top__brand,
+  .office-kpis {
+    display: none;
+  }
+  .office-top .office-tabs {
+    flex: 1;
+    justify-content: center;
+  }
+  .office-tabs__tab {
+    padding: 7px 12px;
+  }
+  .office-board-layer {
+    inset: 68px 12px 12px;
+  }
+  .pano {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .pano > .office-board {
+    flex: none;
+    height: 72vh;
+  }
+  .pano-loop__why {
+    max-width: 100%;
+    white-space: normal;
+  }
+}

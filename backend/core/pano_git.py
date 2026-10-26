@@ -36,6 +36,7 @@ PYTEST_TMP = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "airon" / "pa
 GIT_TIMEOUT = 120
 TEST_TIMEOUT = 15 * 60
 TAIL_CHARS = 1500
+DIFF_SCAN_CHARS = 2_000_000
 BRANCH_PREFIX = "pano/"
 
 _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
@@ -125,6 +126,11 @@ def diff_stat(repo_or_worktree: Path, base_sha: str) -> str:
     """`3 files changed, 40 insertions(+), 2 deletions(-)` — kartta gösterilen özet."""
     out = git(["diff", "--shortstat", f"{base_sha}..HEAD"], repo_or_worktree)
     return out.strip()
+
+
+def diff_text(repo_or_worktree: Path, base_sha: str, limit: int = DIFF_SCAN_CHARS) -> str:
+    """Bekçinin taradığı tam diff (bağlamsız); çok büyükse baştan kesilir."""
+    return git(["diff", "--unified=0", "--no-color", f"{base_sha}..HEAD"], repo_or_worktree)[:limit]
 
 
 def has_commits(worktree: Path, base_sha: str) -> bool:

@@ -61,6 +61,27 @@ export interface PanoCard {
   after?: string[];
   planning?: boolean;
   plan_summary?: string;
+  // Bekçi (adım 7): Claude'un takıldığı kurallar (katman "arac") + birleştirme öncesi diff taraması ("diff").
+  bekci?: BekciHit[];
+}
+
+export interface BekciHit {
+  kural: string;
+  seviye: 'yuksek' | 'orta';
+  ad: string;
+  arac: string;
+  girdi: string;
+  engellendi: boolean;
+  at: number | null;
+  katman: 'arac' | 'diff';
+  job_id?: string;
+}
+
+/** uyar: yalnız kaydeder · engelle: yüksek seviyeli adımı reddeder (yalnız PC'den değişir). */
+export type BekciMode = 'uyar' | 'engelle';
+export interface BekciState {
+  mod: BekciMode;
+  modes: BekciMode[];
 }
 
 export interface PanoRepo {
@@ -88,7 +109,47 @@ export interface PanoAgents {
   claude?: ClaudeQuota;
 }
 
-export const fetchPano = () => fetchData<{ cards: PanoCard[]; agents?: PanoAgents }>('/api/pano');
+// 7/24 döngü (adım 8): bekleyen kartları sırayla kendisi başlatır, kotada uyur, sabah rapor yazar.
+export type LoopStatus = 'kapali' | 'bekliyor' | 'calisiyor' | 'uyuyor' | 'sinir';
+
+export interface ReportLine {
+  id: string;
+  baslik: string;
+  not: string;
+  durum: CardStatus;
+}
+
+export interface MorningReport {
+  at: number;
+  since: number;
+  bitti: ReportLine[];
+  bekliyor_yunus: ReportLine[];
+  hata: ReportLine[];
+  sirada: number;
+  bekci: { kart: string; ad: string; engellendi: boolean }[];
+  maliyet_usd: number;
+  kota: string;
+}
+
+export interface LoopState {
+  acik: boolean;
+  durum: LoopStatus;
+  neden: string;
+  baslatilan: number;
+  gunluk_sinir: number;
+  son_rapor: number;
+  sonraki_rapor: number;
+  rapor: MorningReport | null;
+  olaylar: { at: number; metin: string }[];
+}
+
+export type PanoSnapshot = { cards: PanoCard[]; agents?: PanoAgents; bekci?: BekciState; dongu?: LoopState };
+
+export const switchLoop = (acik: boolean) => post<{ dongu: LoopState }>('/api/pano/dongu', { acik });
+
+export const fetchPano = () => fetchData<PanoSnapshot>('/api/pano');
+
+export const setBekciMode = (mod: BekciMode) => post<{ mod: BekciMode }>('/api/pano/bekci', { mod });
 
 export const setCardAgent = (id: string, agent: CardAgent) =>
   request<{ card: PanoCard }>(`/api/pano/${encodeURIComponent(id)}`, { method: 'PATCH', body: JSON.stringify({ agent }) });

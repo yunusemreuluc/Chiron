@@ -48,5 +48,11 @@ logs/claude-jobs/
 
 # Görev panosu kartları — canlı veri (backend/core/pano.py)
 config/pano.json
+# 7/24 döngünün durumu ve son raporu (dongu.py) — kart başlıkları içerir
+config/dongu.json
 # Claude işlerinin tam akışı (claude_jobs.py) — konuşma kaydı, depoya girmez
 logs/claude-jobs/
+# Bekçinin araç günlüğü ve modu (bekci.py) — komut metinleri, depoya girmez
+logs/bekci/
+# 7/24 döngünün sabah raporları (dongu.py)
+logs/dongu/

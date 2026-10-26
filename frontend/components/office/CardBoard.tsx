@@ -12,13 +12,20 @@ import {
   fetchRepos,
   mergeCard,
   planCard,
+  setBekciMode,
   setCardAgent,
+  switchLoop,
+  type BekciHit,
+  type BekciState,
+  type LoopState,
+  type MorningReport,
   type CardAgent,
   type ClaudeQuota,
   type PanoAgents,
   type PanoRepo,
   type CardStatus,
   type PanoCard,
+  type PanoSnapshot,
 } from '@/services/panoApi';
 import { ago, duration } from './format';
 
@@ -79,14 +86,18 @@ function useNow(): number {
 export function CardBoard() {
   const [cards, setCards] = useState<PanoCard[] | null>(null);
   const [agents, setAgents] = useState<PanoAgents>({});
+  const [guard, setGuard] = useState<BekciState | null>(null);
+  const [loop, setLoop] = useState<LoopState | null>(null);
   const [offline, setOffline] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const now = useNow();
 
-  const apply = useCallback((data: { cards: PanoCard[]; agents?: PanoAgents } | null) => {
+  const apply = useCallback((data: PanoSnapshot | null) => {
     if (data) {
       setCards(data.cards);
       setAgents(data.agents ?? {});
+      setGuard(data.bekci ?? null);
+      setLoop(data.dongu ?? null);
       setOffline(false);
     } else {
       setOffline(true);
@@ -155,6 +166,9 @@ export function CardBoard() {
         )}
       </AnimatePresence>
       {agents.claude && <QuotaStrip quota={agents.claude} codexUntil={codexUntil} />}
+      {guard && <GuardStrip guard={guard} run={run} />}
+      {loop && <LoopStrip loop={loop} guardBlocking={guard?.mod === 'engelle'} run={run} now={now} />}
+      {loop?.rapor && <ReportPanel report={loop.rapor} now={now} />}
       <div className="office-board">
         {COLUMNS.map((col) => {
           const items = cards.filter((c) => col.accepts.includes(c.status));
@@ -209,6 +223,204 @@ function QuotaStrip({ quota, codexUntil }: { quota: ClaudeQuota; codexUntil: num
       {bar('hafta', quota.seven_day)}
       <span className="pano-quota__note">{quota.level === 'stop' && quota.reason ? quota.reason : QUOTA_TEXT[quota.level]}</span>
       {codexUntil !== null && <span className="pano-quota__note is-muted">Terra uyuyor · kota {untilText(codexUntil)}</span>}
+    </div>
+  );
+}
+
+// Bekçi şeridi (adım 7): mod düğmesi. "Engelle"ye geçiş tek tıkla, geri dönüş onaylı —
+// korumayı gevşetmek bilinçli olsun. Telefondan değişmez (backend 403 verir).
+function GuardStrip({ guard, run }: { guard: BekciState; run: Run }) {
+  const [confirm, setConfirm] = useState(false);
+  const blocking = guard.mod === 'engelle';
+  const flip = () => {
+    if (blocking && !confirm) return setConfirm(true);
+    setConfirm(false);
+    void run(() => setBekciMode(blocking ? 'uyar' : 'engelle'));
+  };
+  return (
+    <div className={`pano-quota pano-guard ${blocking ? 'is-blocking' : ''}`} role="status">
+      <span className="label-micro">Bekçi</span>
+      <span className="pano-guard__state">
+        <span className="pano-guard__dot" aria-hidden />
+        {blocking ? 'Engelliyor · yüksek riskli adım durur' : 'Uyarıyor · kaydeder, durdurmaz'}
+      </span>
+      <span className="pano-guard__actions">
+        {confirm && <span className="pano-quota__note">Yalnız uyarıya dönülsün mü?</span>}
+        <button type="button" className={`pano-btn ${blocking ? '' : 'is-primary'}`} onClick={flip}>
+          {blocking ? (confirm ? 'Evet, uyar' : 'Uyarıya dön') : 'Engellemeyi aç'}
+        </button>
+        {confirm && (
+          <button type="button" className="pano-btn" onClick={() => setConfirm(false)}>
+            Vazgeç
+          </button>
+        )}
+      </span>
+    </div>
+  );
+}
+
+// 7/24 döngü şeridi (adım 8). Açıkken "Bekliyor" sütunu bir kuyruktur: en eski hazır kart başlar.
+const LOOP_TEXT: Record<LoopState['durum'], string> = {
+  kapali: 'Kapalı · kartları sen başlatırsın',
+  bekliyor: 'Açık · başlatılacak kart yok',
+  calisiyor: 'Çalışıyor',
+  uyuyor: 'Uyuyor',
+  sinir: 'Günlük sınır doldu',
+};
+
+function LoopStrip({ loop, guardBlocking, run, now }: { loop: LoopState; guardBlocking: boolean; run: Run; now: number }) {
+  const [log, setLog] = useState(false);
+  const detail = loop.acik && loop.neden && loop.durum !== 'bekliyor' ? loop.neden : '';
+  return (
+    <div className={`pano-quota pano-loop is-${loop.durum}`} role="status">
+      <span className="label-micro">7/24</span>
+      <span className="pano-guard__state">
+        <span className="pano-loop__dot" aria-hidden />
+        {LOOP_TEXT[loop.durum]}
+        {detail && <span className="pano-loop__why">· {detail}</span>}
+      </span>
+      {loop.acik && (
+        <span className="pano-quota__note is-muted">
+          bugün {loop.baslatilan}/{loop.gunluk_sinir} · rapor {reportTime(loop.sonraki_rapor, now)}
+        </span>
+      )}
+      {loop.acik && !guardBlocking && <span className="pano-loop__warn">Gözetimsiz çalışıyor ama bekçi yalnız uyarıyor</span>}
+      <span className="pano-guard__actions">
+        {loop.olaylar.length > 0 && (
+          <button type="button" className="pano-btn" onClick={() => setLog((v) => !v)} aria-expanded={log}>
+            Günlük
+          </button>
+        )}
+        <button
+          type="button"
+          className={`pano-btn ${loop.acik ? '' : 'is-primary'}`}
+          onClick={() => void run(() => switchLoop(!loop.acik))}
+        >
+          {loop.acik ? 'Döngüyü kapat' : 'Döngüyü aç'}
+        </button>
+      </span>
+      {log && (
+        <ul className="pano-loop__log">
+          {loop.olaylar
+            .slice()
+            .reverse()
+            .map((e, i) => (
+              <li key={`${e.at}-${i}`}>
+                <span>{ago(e.at, now)}</span>
+                {e.metin}
+              </li>
+            ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function reportTime(ts: number, now: number): string {
+  const d = new Date(ts * 1000);
+  const hm = d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+  return ts - now < 86400 && d.getDate() !== new Date(now * 1000).getDate() ? `yarın ${hm}` : hm;
+}
+
+// Sabah raporu: son rapor 18 saatten yeniyse açık gelir, kapatılınca o rapor bir daha açılmaz.
+function ReportPanel({ report, now }: { report: MorningReport; now: number }) {
+  const key = `pano-rapor-${report.at}`;
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem(key) === '1';
+    } catch {
+      return false;
+    }
+  });
+  if (hidden || now - report.at > 18 * 3600) return null;
+  const close = () => {
+    setHidden(true);
+    try {
+      localStorage.setItem(key, '1');
+    } catch {
+      /* özel pencere: yalnız bu oturumda kapanır */
+    }
+  };
+  const group = (title: string, rows: MorningReport['bitti'], tone: string) =>
+    rows.length > 0 && (
+      <section className={`pano-report__group is-${tone}`}>
+        <span className="label-micro">
+          {title} · {rows.length}
+        </span>
+        <ul>
+          {rows.map((r) => (
+            <li key={r.id}>
+              <span className="office-task__id">{r.id}</span>
+              <span className="truncate">{r.baslik}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
+    );
+  const empty = !report.bitti.length && !report.bekliyor_yunus.length && !report.hata.length;
+  return (
+    <motion.div className="pano-report" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
+      <header>
+        <span className="label-micro">Sabah raporu</span>
+        <span className="pano-quota__note is-muted">
+          {new Date(report.since * 1000).toLocaleString('tr-TR', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}’den beri ·
+          ~{report.maliyet_usd} $ · sırada {report.sirada}
+        </span>
+        <button type="button" className="pano-btn" onClick={close}>
+          Tamam
+        </button>
+      </header>
+      {empty ? (
+        <p className="pano-report__empty">Gece iş olmadı.</p>
+      ) : (
+        <div className="pano-report__grid">
+          {group('Bitti', report.bitti, 'ok')}
+          {group('Seni bekliyor', report.bekliyor_yunus, 'wait')}
+          {group('Hata', report.hata, 'err')}
+        </div>
+      )}
+      {report.bekci.length > 0 && (
+        <p className="pano-report__guard">
+          Bekçi {report.bekci.length} kez uyardı
+          {report.bekci.some((b) => b.engellendi) ? `, ${report.bekci.filter((b) => b.engellendi).length} adımı durdurdu` : ''}.
+        </p>
+      )}
+    </motion.div>
+  );
+}
+
+const RISK_TEXT: Record<BekciHit['seviye'], string> = { yuksek: 'yüksek', orta: 'orta' };
+
+function GuardHits({ hits }: { hits: BekciHit[] }) {
+  const [open, setOpen] = useState(false);
+  const blocked = hits.filter((h) => h.engellendi).length;
+  const high = hits.some((h) => h.seviye === 'yuksek');
+  return (
+    <div className={`pano-guard-hits ${high ? 'is-high' : ''}`}>
+      <button type="button" className="pano-guard-hits__head" onClick={() => setOpen((v) => !v)} aria-expanded={open}>
+        <span className="label-micro">Bekçi</span>
+        <span>
+          {hits.length} uyarı{blocked ? ` · ${blocked} durduruldu` : ''}
+        </span>
+        <span aria-hidden>{open ? '−' : '+'}</span>
+      </button>
+      {open && (
+        <ul>
+          {hits.map((h, i) => (
+            <li key={`${h.at}-${i}`} className={`is-${h.seviye}`}>
+              <span className="pano-guard-hits__rule">
+                {h.ad}
+                <em>
+                  {RISK_TEXT[h.seviye]}
+                  {h.engellendi ? ' · durduruldu' : ''}
+                  {h.katman === 'diff' ? ' · diff' : ''}
+                </em>
+              </span>
+              {h.girdi && <code>{h.girdi}</code>}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -473,6 +685,8 @@ function CardItem({
       )}
 
       {live && card.last_step && <span className="pano-card__step">{card.last_step}</span>}
+
+      {card.bekci && card.bekci.length > 0 && <GuardHits hits={card.bekci} />}
 
       {s === 'birlestir' && (
         <div className={`pano-merge ${card.test ? 'is-tested' : ''}`}>

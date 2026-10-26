@@ -46,7 +46,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from backend.core import claude_jobs, pano_git
+from backend.core import bekci, claude_jobs, pano_git
 from backend.core.pano_git import GitError
 
 logger = logging.getLogger("airon.pano")
@@ -250,9 +250,10 @@ class Pano:
                 "codex": {"available": self._codex_ok(), "until": self._codex_blocked_until or None},
                 "claude": self._claude_quota(),
             }
+            guard = {"mod": bekci.get_mode(), "modes": list(bekci.MODES)}
         self._kick_verifications()
         cards.sort(key=lambda c: c["updated"], reverse=True)
-        return {"cards": cards, "agents": agents}
+        return {"cards": cards, "agents": agents, "bekci": guard}
 
     def get(self, card_id: str) -> dict[str, Any] | None:
         with self._lock:
@@ -340,6 +341,8 @@ class Pano:
             "after": list(after or []),
             "planning": False,
             "plan_summary": "",
+            # Bekçi (adım 7): Claude'un takıldığı kurallar + birleştirme öncesi diff taraması.
+            "bekci": [],
         }
         self._cards.append(card)
         self._next += 1
@@ -549,17 +552,20 @@ class Pano:
                 pano_git.commit_all(worktree, message)
                 changed = pano_git.has_commits(worktree, base_sha)
                 diff = pano_git.diff_stat(worktree, base_sha) if changed else ""
+                # Bekçi'nin ikinci katmanı: hook'u olmayan Codex/Gemini'yi de görür.
+                guard = bekci.scan_diff(pano_git.diff_text(worktree, base_sha)) if changed else []
                 result = pano_git.run_test(worktree, test_cmd) if changed and test_cmd else None
                 if result:
                     pano_git.reset_after_test(worktree)
                 failure = None
             except GitError as error:
-                changed, diff, result, failure = True, "", None, str(error)
+                changed, diff, result, failure, guard = True, "", None, str(error), []
             with self._lock:
                 card = self._find(card_id)
                 if not card or card["status"] != "dogrulaniyor":
                     return
                 card["diff"] = diff
+                card["bekci"] = [h for h in card.get("bekci") or [] if h.get("katman") != "diff"] + guard
                 card["test"] = (
                     {"ok": result.ok, "code": result.code, "tail": result.tail, "cmd": result.cmd, "at": _now()}
                     if result
@@ -730,6 +736,8 @@ class Pano:
             card["session_job"] = job_id
         card["cost_usd"] = round(float(card.get("cost_usd") or 0) + float(job.get("cost_usd") or 0), 4)
         card["queue_position"] = None
+        if job.get("bekci"):
+            card["bekci"] = (list(card.get("bekci") or []) + [dict(h, job_id=job_id) for h in job["bekci"]])[-bekci.MAX_HITS:]
         if status == "done" and card.get("planning"):
             card["summary"] = job.get("summary") or ""
             self._apply_plan(card, card["summary"])

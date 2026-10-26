@@ -12,7 +12,8 @@ from typing import Callable
 from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 
-from backend.core import pano_git, remote_auth
+from backend.core import bekci, pano_git, remote_auth
+from backend.core.dongu import dongu
 from backend.core.pano import MAX_DETAIL, MAX_TEST_CMD, MAX_TITLE, PanoError, pano
 
 router = APIRouter(prefix="/api/pano", tags=["pano"])
@@ -51,9 +52,41 @@ class CardAnswer(BaseModel):
     approved: bool
 
 
+class GuardMode(BaseModel):
+    mod: str = Field(max_length=16)
+
+
+class LoopSwitch(BaseModel):
+    acik: bool
+
+
 @router.get("")
 async def list_cards() -> dict:
-    return _ok(await asyncio.to_thread(pano.snapshot))
+    data = await asyncio.to_thread(pano.snapshot)
+    data["dongu"] = dongu.public()
+    return _ok(data)
+
+
+@router.post("/dongu")
+async def switch_loop(body: LoopSwitch) -> dict:
+    """7/24 döngüyü aç/kapat. Telefondan da olur: açmak korumayı gevşetmez (bekçi ve kota freni
+    aynen geçerli), kapatmak her yerden yapılabilmeli. Kapatmak çalışan işi kesmez."""
+    state = await asyncio.to_thread(dongu.set_open, body.acik)
+    return _ok({"dongu": state}, "7/24 döngü açık." if body.acik else "7/24 döngü kapandı.")
+
+
+@router.post("/bekci")
+async def set_guard_mode(body: GuardMode, request: Request, response: Response) -> dict:
+    """Bekçi modu: uyar (yalnız kaydeder) | engelle (yüksek seviyeli adımı reddeder).
+    Yalnızca PC'den — telefon korumayı gevşetemesin (test komutu kuralıyla aynı gerekçe)."""
+    if remote_auth.is_remote_scope(request.scope):
+        response.status_code = 403
+        return {"success": False, "message": "Bekçi modu yalnızca PC'den değiştirilir.", "data": {}}
+    if body.mod not in bekci.MODES:
+        response.status_code = 400
+        return {"success": False, "message": f"Bilinmeyen mod: {body.mod}", "data": {}}
+    mode = await asyncio.to_thread(bekci.set_mode, body.mod)
+    return _ok({"mod": mode}, "Bekçi engelliyor." if mode == "engelle" else "Bekçi yalnız uyarıyor.")
 
 
 @router.get("/repos")
@@ -79,11 +112,13 @@ async def create_card(body: CardCreate, request: Request, response: Response) ->
                 "message": "Özel test komutu yalnızca PC'den girilebilir; telefondan önerilen komut ya da boş.",
                 "data": {},
             }
-    return await _run(
+    result = await _run(
         response,
         lambda: pano.create(body.title, body.detail, body.repo, body.test_cmd, body.agent),
         "Kart açıldı.",
     )
+    dongu.wake()  # döngü açıksa yeni kart bir dakika beklemesin
+    return result
 
 
 @router.patch("/{card_id}")
