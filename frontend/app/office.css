@@ -1091,3 +1091,66 @@
   background: rgba(5, 8, 14, 0.6);
   border: 1px solid var(--border-subtle);
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Ajan İstasyonu (adım 5, 2026-10-26) — components/office/station/*.
+   2D pixel-art uzay istasyonu, 3D hologram ofisin yerine. Tuval tam sayı katla
+   büyür (pikseller keskin); etiketler DOM'da, transform ile taşınır.
+   ══════════════════════════════════════════════════════════════════════════ */
+.station {
+  position: absolute;
+  inset: 92px 16px 16px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(140, 160, 255, 0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 70% 80%, rgba(140, 160, 255, 0.35) 50%, transparent 51%),
+    radial-gradient(1px 1px at 85% 15%, rgba(140, 160, 255, 0.5) 50%, transparent 51%);
+  background-size: 180px 180px, 240px 240px, 300px 300px;
+}
+.station__box {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 2px solid rgba(90, 101, 150, 0.6);
+  box-shadow: 0 0 80px -20px rgba(75, 86, 200, 0.6);
+  cursor: pointer;
+}
+.station__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.station__tag,
+.station__bub {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: var(--font-mono-ui);
+  will-change: transform;
+}
+.station__tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow: 1px 1px 0 #000, -1px 1px 0 #000, 1px -1px 0 #000, -1px -1px 0 #000;
+}
+.station__bub {
+  max-width: 260px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 3px 7px;
+  font-size: 10.5px;
+  color: #14163a;
+  background: #e9ecff;
+  border: 2px solid #14163a;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+}
+.station__bub[data-mood='wait'] { background: #ffe3a3; }
+.station__bub[data-mood='fail'] { background: #ffc7cd; }
+.station__bub[data-mood='done'] { background: #c9f5e2; }

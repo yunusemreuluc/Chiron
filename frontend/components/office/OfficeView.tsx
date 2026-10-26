@@ -23,7 +23,8 @@ import { ago } from './format';
 // Ofis açıkken ana sahne durur (three/Scene.tsx frameloop) — GPU iki sahneyi
 // birden çizmesin (Faz 0 performans hedefi).
 
-const OfficeScene = dynamic(() => import('@/three/office/OfficeScene').then((m) => m.OfficeScene), {
+// 2D uzay istasyonu (adım 5, 2026-10-26) — eski 3D hologram sahnenin (three/office) yerine.
+const StationScene = dynamic(() => import('./station/StationScene').then((m) => m.StationScene), {
   ssr: false,
 });
 
@@ -109,7 +110,7 @@ export function OfficeView() {
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
           <div className="office-view__stage">
-            <OfficeScene paused={tab !== 'ofis'} />
+            <StationScene paused={tab !== 'ofis'} />
           </div>
 
           {/* Üst şerit */}
