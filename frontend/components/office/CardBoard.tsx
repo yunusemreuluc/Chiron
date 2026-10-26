@@ -14,6 +14,7 @@ import {
   planCard,
   setCardAgent,
   type CardAgent,
+  type ClaudeQuota,
   type PanoAgents,
   type PanoRepo,
   type CardStatus,
@@ -153,6 +154,7 @@ export function CardBoard() {
           </motion.div>
         )}
       </AnimatePresence>
+      {agents.claude && <QuotaStrip quota={agents.claude} codexUntil={codexUntil} />}
       <div className="office-board">
         {COLUMNS.map((col) => {
           const items = cards.filter((c) => col.accepts.includes(c.status));
@@ -180,6 +182,36 @@ export function CardBoard() {
 }
 
 type Run = (work: () => Promise<{ success: boolean; message: string }>) => Promise<boolean>;
+
+// Kota şeridi (adım 6): Claude'un gerçek doluluğu, %90'da yeni iş durur; Terra'nın kotası.
+const QUOTA_TEXT: Record<ClaudeQuota['level'], string> = {
+  ok: 'Kota rahat',
+  info: 'Kotanın yarısı kullanıldı',
+  warn: 'Kota azalıyor',
+  stop: 'Yeni Claude işi durdu',
+};
+
+function QuotaStrip({ quota, codexUntil }: { quota: ClaudeQuota; codexUntil: number | null }) {
+  const bar = (label: string, w?: { used: number; resets_at: number | null }) =>
+    w && (
+      <span className="pano-quota__win" title={w.resets_at ? `Sıfırlanma: ${new Date(w.resets_at * 1000).toLocaleString('tr-TR')}` : undefined}>
+        <span>{label}</span>
+        <span className="office-quota__track">
+          <span className="office-quota__fill" style={{ width: `${Math.min(100, w.used * 100)}%` }} />
+        </span>
+        <span>%{Math.round(w.used * 100)}</span>
+      </span>
+    );
+  return (
+    <div className={`pano-quota is-${quota.level}`} role="status">
+      <span className="label-micro">Claude</span>
+      {bar('5 sa', quota.five_hour)}
+      {bar('hafta', quota.seven_day)}
+      <span className="pano-quota__note">{quota.level === 'stop' && quota.reason ? quota.reason : QUOTA_TEXT[quota.level]}</span>
+      {codexUntil !== null && <span className="pano-quota__note is-muted">Terra uyuyor · kota {untilText(codexUntil)}</span>}
+    </div>
+  );
+}
 
 function untilText(ts: number): string {
   return ts ? new Date(ts * 1000).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) : 'bir süre';

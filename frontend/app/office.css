@@ -1154,3 +1154,60 @@
 .station__bub[data-mood='wait'] { background: #ffe3a3; }
 .station__bub[data-mood='fail'] { background: #ffc7cd; }
 .station__bub[data-mood='done'] { background: #c9f5e2; }
+
+/* Kota (adım 6) — Claude'un gerçek doluluğu; %75 kehribar, %90 mercan */
+.pano {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pano > .office-board {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+}
+.pano-quota {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 14px;
+  border-radius: 14px;
+  font-size: 11px;
+  color: var(--foreground-secondary);
+  background: rgba(8, 12, 20, 0.62);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(18px);
+}
+.pano-quota__win {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono-ui);
+  font-size: 10.5px;
+}
+.pano-quota__win .office-quota__track {
+  width: 90px;
+}
+.pano-quota__note.is-muted {
+  color: var(--foreground-disabled);
+}
+.pano-quota.is-warn,
+.office-quota.is-warn {
+  border-color: rgba(255, 176, 32, 0.35);
+}
+.pano-quota.is-warn .office-quota__fill,
+.office-quota.is-warn .office-quota__fill {
+  background: var(--office-wait);
+}
+.pano-quota.is-stop,
+.office-quota.is-stop {
+  border-color: rgba(255, 93, 108, 0.45);
+}
+.pano-quota.is-stop .office-quota__fill,
+.office-quota.is-stop .office-quota__fill {
+  background: var(--office-err);
+}
+.pano-quota.is-stop .pano-quota__note {
+  color: var(--office-err);
+}

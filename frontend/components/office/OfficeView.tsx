@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LuX } from 'react-icons/lu';
 import { fetchOfficeState } from '@/services/officeApi';
+import { fetchPano, type ClaudeQuota } from '@/services/panoApi';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { isActive, useOfficeStore } from '@/stores/officeStore';
 import { AgentCard } from './AgentCard';
@@ -47,6 +48,23 @@ export function OfficeView() {
   const tab = useOfficeStore((s) => s.tab);
   const setTab = useOfficeStore((s) => s.setTab);
   const [offline, setOffline] = useState(false);
+  const [claudeQuota, setClaudeQuota] = useState<ClaudeQuota | null>(null);
+
+  // Claude kotası panodan (adım 6): Claude Code'un kendi rate_limit_event'i, 30 sn'de bir.
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    const load = () =>
+      void fetchPano().then((data) => {
+        if (!cancelled && data?.agents?.claude) setClaudeQuota(data.agents.claude);
+      });
+    load();
+    const id = setInterval(load, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [open]);
   const now = useNow();
 
   // Açılışta bir kez tam görüntü — WebSocket yalnız değişiklikte yayınlıyor,
@@ -145,6 +163,16 @@ export function OfficeView() {
                 <Kpi label="Oturum" value={stats.sessions} />
                 <Kpi label="Bugün" value={stats.tasksToday} />
                 <Kpi label="Onay" value={stats.approvals} warn={stats.approvals > 0} />
+                {claudeQuota && (claudeQuota.five_hour || claudeQuota.seven_day) && (
+                  <div
+                    className={`office-quota is-${claudeQuota.level}`}
+                    title={claudeQuota.reason || 'Claude aboneliğinin doluluğu (Claude Code bildiriyor) · %90’da yeni iş durur'}
+                  >
+                    <span className="label-micro">Claude kota</span>
+                    {claudeQuota.five_hour && <QuotaBar label="5 sa" pct={claudeQuota.five_hour.used * 100} />}
+                    {claudeQuota.seven_day && <QuotaBar label="hafta" pct={claudeQuota.seven_day.used * 100} />}
+                  </div>
+                )}
                 {quota?.primary && (
                   <div className="office-quota" title="Codex kullanım sınırı (Codex'in kendi kaydından)">
                     <span className="label-micro">Codex kota</span>

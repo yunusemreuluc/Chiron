@@ -70,8 +70,22 @@ export interface PanoRepo {
 }
 
 /** Ajanların şu anki durumu — Terra'nın (Codex) kotası dolunca `available: false`. */
+export interface QuotaWindowState {
+  used: number; // 0..1
+  resets_at: number | null;
+}
+
+export interface ClaudeQuota {
+  five_hour?: QuotaWindowState;
+  seven_day?: QuotaWindowState;
+  level: 'ok' | 'info' | 'warn' | 'stop'; // %50 bilgi · %75 uyarı · %90 dur
+  reason: string;
+  seen: number | null;
+}
+
 export interface PanoAgents {
   codex?: { available: boolean; until: number | null };
+  claude?: ClaudeQuota;
 }
 
 export const fetchPano = () => fetchData<{ cards: PanoCard[]; agents?: PanoAgents }>('/api/pano');

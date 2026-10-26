@@ -116,6 +116,13 @@ _CODEX_LIMIT = re.compile(r"usage limit", re.IGNORECASE)
 _CODEX_RETRY = re.compile(r"try again at ([A-Z][a-z]{2})[a-z]* (\d{1,2})(?:st|nd|rd|th)?, (\d{4}) (\d{1,2}:\d{2} [AP]M)")
 CODEX_BLOCK_FALLBACK = 24 * 3600  # tarih okunamazsa bir gün bekle
 
+# Claude kotası (adım 6, fikir: ruvnet/ruflo plugins/ruflo-cost-tracker — kod alınmadı). Sayı
+# claude_jobs.limits()'ten: Claude Code'un rate_limit_event'i, aboneliğin gerçek doluluğu (0..1).
+# Basamaklar: %50 bilgi, %75 uyarı, %90 DUR. Dur %100 değil %90: Yunus'un terminalde kendi işine
+# pay kalsın (kullanıcı kararı, plan § 6). Çalışan iş kesilmez; yalnız YENİ Claude işi başlamaz.
+QUOTA_INFO, QUOTA_WARN, QUOTA_STOP = 0.5, 0.75, 0.9
+QUOTA_WINDOWS = {"five_hour": "5 saatlik pencere", "seven_day": "haftalık pencere"}
+
 
 def codex_retry_at(text: str) -> float | None:
     """Kota hatası metnindeki "try again at ..." zamanı (yerel saat). Kota hatası değilse None."""
@@ -239,7 +246,10 @@ class Pano:
             if changed:
                 self._save()
             cards = [self._public(c) for c in self._cards]
-            agents = {"codex": {"available": self._codex_ok(), "until": self._codex_blocked_until or None}}
+            agents = {
+                "codex": {"available": self._codex_ok(), "until": self._codex_blocked_until or None},
+                "claude": self._claude_quota(),
+            }
         self._kick_verifications()
         cards.sort(key=lambda c: c["updated"], reverse=True)
         return {"cards": cards, "agents": agents}
@@ -617,6 +627,8 @@ class Pano:
         return text
 
     def _submit(self, card: dict[str, Any], note: str | None, kind: str) -> None:
+        if card.get("agent", "claude") == "claude":
+            self._guard_claude()
         job = None
         if note and card["session_job"]:
             try:
@@ -651,6 +663,7 @@ class Pano:
         card["history"] = (card["history"] + [{"job_id": job.id, "kind": kind, "at": card["updated"]}])[-MAX_HISTORY:]
 
     def _submit_plan(self, card: dict[str, Any]) -> None:
+        self._guard_claude()
         unavailable = "" if self._codex_ok() else CODEX_BLOCKED_NOTE.format(until=_when(self._codex_blocked_until))
         task = LEADER_NOTE.format(card=self._task_text(card), unavailable=unavailable)
         try:
@@ -739,6 +752,42 @@ class Pano:
                     )
         card.update(job_id=None, intent=None, updated=_now())
         return True
+
+    def _claude_quota(self) -> dict[str, Any]:
+        """Claude kotasının şu anki durumu: pencereler, basamak ve dur gerekçesi."""
+        limits = getattr(self.jobs, "limits", None)
+        data = limits() if callable(limits) else {}
+        now = _now()
+        windows: dict[str, Any] = {}
+        for name in QUOTA_WINDOWS:
+            w = data.get(name) if isinstance(data, dict) else None
+            if not isinstance(w, dict):
+                continue
+            resets = float(w.get("resets_at") or 0)
+            # Pencere sıfırlandıysa eski doluluk geçersiz.
+            used = float(w.get("used") or 0) if not resets or resets > now else 0.0
+            windows[name] = {"used": used, "resets_at": resets or None}
+        top = max(windows.items(), key=lambda kv: kv[1]["used"], default=(None, {"used": 0.0, "resets_at": None}))
+        used = top[1]["used"]
+        level = "stop" if used >= QUOTA_STOP else "warn" if used >= QUOTA_WARN else "info" if used >= QUOTA_INFO else "ok"
+        reason = ""
+        blocked_until = float(data.get("blocked_until") or 0) if isinstance(data, dict) else 0.0
+        if blocked_until > now:
+            level, reason = "stop", f"Claude kotası doldu; {_when(blocked_until)} sıfırlanıyor."
+        elif level == "stop" and top[0]:
+            resets = top[1]["resets_at"]
+            reason = (
+                f"Claude kotası %{round(used * 100)} ({QUOTA_WINDOWS[top[0]]})"
+                + (f", {_when(resets)} sıfırlanıyor" if resets else "")
+                + ". Yeni Claude işi başlatılmadı; terminale pay kalsın diye sınır %"
+                + f"{round(QUOTA_STOP * 100)}."
+            )
+        return {**windows, "level": level, "reason": reason, "seen": float(data.get("ts") or 0) or None}
+
+    def _guard_claude(self) -> None:
+        quota = self._claude_quota()
+        if quota["level"] == "stop":
+            raise PanoError(quota["reason"])
 
     def _codex_ok(self) -> bool:
         return _now() >= self._codex_blocked_until

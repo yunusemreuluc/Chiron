@@ -96,6 +96,11 @@ _GEMINI_NOISE = re.compile(
 )
 GEMINI_JS = NPM_DIR / "@google" / "gemini-cli" / "bundle" / "gemini.js"
 
+# Claude aboneliğinin doluluğu (Ajan İstasyonu adım 6, 2026-10-26). Claude Code stream-json her işte
+# `rate_limit_event` gönderiyor: {status, unifiedWindows: {five_hour|seven_day: {utilization 0..1,
+# resetsAt epoch}}}. Tahmin değil, Anthropic'in kendi sayısı. Son görülen diske yazılır (LIMITS_FILE).
+LIMITS_FILE = "limits.json"
+
 ACTIVE = ("queued", "running")
 # Telefona haber verilecek sonuçlar. `cancelled` yok: iptali kullanıcı kendisi yaptı.
 NOTIFY = ("done", "needs_approval", "failed", "timeout", "interrupted")
@@ -333,13 +338,16 @@ class ClaudeJobs:
         self._closed = False
         self._worker: threading.Thread | None = None
         self._codex_text: dict[str, str] = {}  # iş başına Codex'in son mesajı (sonuç metni)
+        self._limits: dict[str, Any] = self._load_limits()
         self._load()
 
     # ── Kalıcılık ────────────────────────────────────────────────────────
     def _load(self) -> None:
         if not self.jobs_dir.exists():
             return
-        metas = sorted(self.jobs_dir.glob("*.json"), key=lambda p: p.stat().st_mtime)
+        metas = sorted(
+            (p for p in self.jobs_dir.glob("*.json") if p.name != LIMITS_FILE), key=lambda p: p.stat().st_mtime
+        )
         for path in metas[-KEEP_JOBS:]:
             try:
                 data = json.loads(path.read_text(encoding="utf-8"))
@@ -371,7 +379,7 @@ class ClaudeJobs:
         """Bellekte tutulmayan eski işlerin dosyalarını siler (yalnız kendi klasörü)."""
         try:
             for path in self.jobs_dir.iterdir():
-                match = re.fullmatch(r"([0-9a-f]{8})\.(?:json|jsonl|json\.tmp)", path.name)
+                match = re.fullmatch(r"([0-9a-f]{8})\.(?:json|jsonl|json\.tmp)", path.name)  # limits.json eşleşmez
                 if match and match.group(1) not in self._jobs:
                     path.unlink(missing_ok=True)
         except Exception:
@@ -782,9 +790,44 @@ class ClaudeJobs:
                     "result": str(message or event.get("message") or kind)}
         return None
 
+    # ── Claude kotası ────────────────────────────────────────────────────
+    def limits(self) -> dict[str, Any]:
+        """Son görülen Claude kota durumu: {status, five_hour, seven_day, ts} — hiç görülmediyse {}."""
+        with self._lock:
+            return json.loads(json.dumps(self._limits))
+
+    def _load_limits(self) -> dict[str, Any]:
+        try:
+            data = json.loads((self.jobs_dir / LIMITS_FILE).read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
+
+    def _note_limits(self, info: dict[str, Any]) -> None:
+        """`rate_limit_event`'i saklar (kilit ALTINDA çağrılır)."""
+        windows = info.get("unifiedWindows") if isinstance(info.get("unifiedWindows"), dict) else {}
+        limits: dict[str, Any] = {"status": str(info.get("status") or ""), "ts": time.time()}
+        for name in ("five_hour", "seven_day"):
+            w = windows.get(name)
+            if isinstance(w, dict) and w.get("utilization") is not None:
+                limits[name] = {"used": float(w["utilization"]), "resets_at": float(w.get("resetsAt") or 0)}
+        if info.get("status") == "rejected" and info.get("resetsAt"):
+            limits["blocked_until"] = float(info["resetsAt"])
+        self._limits = limits
+        try:
+            self.jobs_dir.mkdir(parents=True, exist_ok=True)
+            tmp = self.jobs_dir / f"{LIMITS_FILE}.tmp"
+            tmp.write_text(json.dumps(limits), encoding="utf-8")
+            os.replace(tmp, self.jobs_dir / LIMITS_FILE)
+        except Exception:
+            logger.exception("Claude kota durumu yazılamadı")
+
     def _on_event(self, job: Job, event: dict[str, Any]) -> dict[str, Any] | None:
         kind = event.get("type")
         with self._lock:
+            if kind == "rate_limit_event" and isinstance(event.get("rate_limit_info"), dict):
+                self._note_limits(event["rate_limit_info"])
+                return None
             if event.get("session_id") and not job.session_id:
                 job.session_id = str(event["session_id"])
             if kind == "result":
