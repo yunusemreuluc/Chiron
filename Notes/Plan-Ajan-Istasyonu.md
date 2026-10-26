@@ -41,8 +41,8 @@ alınan koda kaynak notu düşülüyor.
 | 2 | Panodan iş başlatma (`claude_jobs.py`'ye bağla) | — | yapıldı 2026-10-26 (1 ile birlikte) |
 | 3 | Her iş ayrı worktree + test; birleştirme Yunus onayıyla | — | yapıldı 2026-10-26 → [[Ajan-Ofisi]] § Proje kartı |
 | 4 | Lider ajan Jarvis: kartı böler, kime gideceğini yazar | — | yapıldı 2026-10-26 → [[Ajan-Ofisi]] § Lider ajan |
-| 5 | 2D uzay istasyonu ofisi (mevcut `three/office` yerine) | ruflo-console "Oda" (incele/kes/sonlandır) | sırada |
-| 6 | Kota takibi: %50/75/90 uyarı, %100 dur | ruflo-cost-tracker | |
+| 5 | 2D uzay istasyonu ofisi (mevcut `three/office` yerine) | ruflo-console "Oda" (incele/kes/sonlandır) | yapıldı 2026-10-26 → [[Ajan-Ofisi]] § Uzay istasyonu |
+| 6 | Kota takibi: %50/75/90 uyarı, %100 dur | ruflo-cost-tracker | sırada (Terra kotası adım 4'te kısmen) |
 | 7 | Bekçi: 13 kural, önce öğren → uyar; engelleme modunu Yunus açar | ruflo-protector | |
 | 8 | 7/24 döngü: kotada dur, sıfırlanınca devam, sabah rapor | — | 6 ve 7 bitmeden açılmaz |
 

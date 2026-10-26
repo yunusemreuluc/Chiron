@@ -7,6 +7,16 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-10-26 (4) — 2D uzay istasyonu ofisi (adım 5)
+
+**Ne yapıldı:** Adım 4 commit'lendi (`1b10cb8`, `e6553de`). `components/office/station/` (stationArt.ts +
+StationScene.tsx) 3D sahnenin yerine; karakterler ofisin gerçek masa durumundan yürüyor, tıklayınca AgentCard.
+`three/office/` silindi. Masaüstü + telefon genişliğinde ekran görüntüsüyle denendi; etiket çakışması düzeltildi.
+Adım 5 commit'siz.
+
+**Nerede kalındı:** Sıradaki adım 6 kota takibi (Claude kotası %50/75/90, %100 dur), sonra 7 bekçi, 8 7/24 döngü.
+Telefonda ofisin üst şeridi dar ekranda sıkışıyor (eski sorun, istasyona özgü değil).
+
 ## Oturum: 2026-10-26 (3) — Lider ajan Jarvis + üç motor (adım 4)
 
 **Ne yapıldı:** Adım 1-3 commit'lendi (`d11a068`, `9cb4638`). `claude_jobs` motorları: claude/codex/gemini

@@ -13,7 +13,7 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 **Durum:** Plan yazıldı (2026-10-14, [[Plan-Play-Yayini]]); hedef "benim telefonumdaki gibi": özellik kesilmeyecek, kod başlamadı
 
 ### Ajan İstasyonu — ofisten iş verme, 7/24 döngü
-**Durum:** Adım 1-4 bitti (pano, proje kartı, lider ajan Jarvis + codex/gemini motorları; 2026-10-26, 174/174; 1-3 commit'li, 4 commit'siz); sırada adım 5 2D uzay ofisi
+**Durum:** Adım 1-5 bitti (pano, proje kartı, Jarvis + motorlar, 2D uzay istasyonu; 2026-10-26; 1-4 commit'li, 5 commit'siz); sırada adım 6 kota takibi
 
 ### Ajan Ofisi — kim ne yapıyor (Faz A)
 **Durum:** Commit'lendi (`0506718`, `feature/ajan-ofisi`); kullanıcı "güzel, görseli sonra ayarlarız" dedi → [[Ajan-Ofisi]]

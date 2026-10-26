@@ -6,6 +6,9 @@ tags: [airon, ajan-ofisi, claude-code, codex, arayuz]
 
 Bağlı: [[Home]] · [[Plan-Claude-Entegrasyonu]] · [[Arayuz]] · [[MCP-Server]] · [[Bilinen-Tuzaklar]]
 
+> **2026-10-26:** 3D hologram sahne kaldırıldı; yerine 2D pixel-art **uzay istasyonu** (§ Uzay istasyonu,
+> en altta). Aşağıdaki 3D sahne / EffectComposer notları tarihçe olarak duruyor.
+
 Kenar çubuğundaki **Ajanlar** modülü tam ekran bir hologram ofis açar: Claude
 (şef), alt ajanlar, Codex Sol/Astra, Space Bunny, Gemini ve OpenCode birer
 masada. Masaya tıklayınca kim olduğu, rolü, şu an hangi işte olduğu, işi kimin
@@ -25,7 +28,7 @@ Codex exec ──kendi kaydı───> ~/.codex/sessions/YYYY/MM/DD/rollout-*.j
                                    │  OfficeState (saf durum makinesi)
                      WS office_update ─┤── GET /api/office/state | workers/{id} | desks/{id}
                                    ▼
-             frontend/components/office/*  +  three/office/* (ayrı Canvas)
+             frontend/components/office/*  +  office/station/* (2D tuval; eskiden three/office)
 ```
 
 - **Hook:** `~/.claude/hooks/ofis-olay.py` — repo DIŞINDA, `~/.claude/settings.json`'da
@@ -179,3 +182,27 @@ Canlı deneme: Jarvis küçük bir kartı iki Terra görevine böldü (README ik
 yaptı, kendi sandbox'ında testi koşamadı (venv) ama Aıron koştu → geçti → birleşti. Testler:
 `tests/test_pano_leader.py` (Terra 19, kotası dolarken yazdı + Claude 5 kota testi); paket 174/174.
 Çapraz inceleme YAPILAMADI: Terra kotası dolu, Astra yok, özel kod Gemini'ye gitmez — Claude kendi inceledi.
+
+## Uzay istasyonu (2026-10-26, adım 5)
+
+Kullanıcı kararı: ofis 3D hologram yerine **2D pixel-art uzay istasyonu** (sebep GPU/CPU: 7/24 açık ekran,
+telefonda okunurluk). Taslak `Docs/onizleme/ajan-istasyonu.html` → `components/office/station/`:
+`stationArt.ts` (piksel çizimler, 224×160 tuval, 1 birim = 16 px) + `StationScene.tsx` (canlı veri → hareket).
+`three/office/*` silindi (git geçmişinde).
+
+| Karakter | Masa (ofis.py) | Görünüm |
+|---|---|---|
+| Jarvis | `claude` | kaptan (mavi üniforma, pelerin), kaptan koltuğu |
+| Terra | `sol` / `astra` | robot; Codex kotası doluyken (pano `agents.codex`) kapsülde uyur "zzz" |
+| Gemini | `gemini` | uzaylı |
+| Alt ajan | `subagents` | astronot |
+
+- **Davranış** (`goalOf`): masada `onay_bekliyor` işçi → onay terminaline yürür, "?" (öncelikli);
+  `calisiyor` → konsoluna yürür, yazar, balonda işçinin `current`'ı; son 3 dk içinde `hata` → konsol kırmızı;
+  son 1 dk içinde `bitti` → konsol yeşil; yoksa dinlenme köşesindeki ev konumu. Yürüme koridordan (z=0,7).
+- **Tıklama:** karaktere ya da konsoluna tıkla → `selectDesk` → var olan `AgentCard` (canlı akış).
+- **Performans:** 15 fps, `document.hidden`'da ve Pano/Etkinlik sekmesinde hiç çizilmez; tuval tam sayı
+  katla büyür (keskin piksel). Etiketler React'e değil doğrudan DOM'a (`transform`) yazılır.
+- **Tuzak (yaşandı):** ev konumları dikeyde 1,5 birimden yakınsa isim etiketleri üst üste biniyordu.
+- Bilinçli eksik: Bunny/OpenCode masaları sahnede yok (araçlar kaldırıldı); "Jarvis kart dağıtıyor"
+  animasyonu, kart sayısına göre yoğunluk ve gece modu sonraya.
