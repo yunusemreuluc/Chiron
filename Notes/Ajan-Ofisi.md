@@ -206,3 +206,23 @@ telefonda okunurluk). Taslak `Docs/onizleme/ajan-istasyonu.html` → `components
 - **Tuzak (yaşandı):** ev konumları dikeyde 1,5 birimden yakınsa isim etiketleri üst üste biniyordu.
 - Bilinçli eksik: Bunny/OpenCode masaları sahnede yok (araçlar kaldırıldı); "Jarvis kart dağıtıyor"
   animasyonu, kart sayısına göre yoğunluk ve gece modu sonraya.
+
+## Claude kotası — fren (2026-10-26, adım 6)
+
+Fikir: ruvnet/ruflo `ruflo-cost-tracker` (basamaklı uyarı; kod alınmadı). Ama sayı tahmin değil: Claude Code
+stream-json her işte `rate_limit_event` gönderiyor → `rate_limit_info.unifiedWindows.{five_hour,seven_day}
+.utilization` (0..1) + `resetsAt`. `claude_jobs._note_limits` son değeri `logs/claude-jobs/limits.json`'a yazar
+(iş kaydı sanılmaz, budanmaz); `jobs.limits()`.
+
+- **Basamaklar** (`pano._claude_quota`, en dolu pencereye göre): %50 bilgi · %75 uyarı (kehribar) ·
+  **%90 dur** (mercan). Dur %100 değil %90: Yunus'un terminaldeki kendi işine pay kalsın.
+  `status: rejected` gelirse `resetsAt`'e kadar dur. Sıfırlanmış pencerenin eski doluluğu 0 sayılır.
+- **Dur ne yapar:** yeni Claude işi (Başlat, Jarvis'e böldür, Onayla) PanoError ile reddedilir, mesajda yüzde,
+  pencere ve sıfırlanma saati. Çalışan iş KESİLMEZ. Gemini/Codex kartları Claude kotasından etkilenmez.
+- **Görünüm:** Pano'nun üstünde kota şeridi (+ Terra uyuyor notu); ofis üst şeridinde "Claude kota" çubukları
+  (`OfficeView`, 30 sn'de bir `/api/pano`).
+- **Sınır:** sayı yalnız Aıron'un başlattığı Claude işlerinden geliyor; terminal oturumları bildirmez. Aıron
+  uzun süre iş başlatmazsa gösterilen değer bayatlar (`seen` zamanı tutuluyor). İlk değer 2026-10-26'da
+  bugünkü iş kayıtlarından yazıldı.
+
+Testler: `tests/test_pano_quota.py` (11; Claude yazdı — Codex kotası dolu). Paket 185/185.

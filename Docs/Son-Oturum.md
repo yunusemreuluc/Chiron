@@ -7,6 +7,16 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-10-26 (5) — Claude kota freni (adım 6)
+
+**Ne yapıldı:** Adım 5 commit'lendi (`a043f5f`, `e11111c`; ilk denemede silme notlar commit'ine kaçtı, yerel
+olarak bölündü). Claude Code'un `rate_limit_event`'i okunuyor (`claude_jobs.limits()`, `limits.json`); pano
+%90'da yeni Claude işini durduruyor, %75 uyarı; Pano'da kota şeridi, ofis üst şeridinde Claude çubukları.
+Testler `test_pano_quota.py` (11), paket 185/185. Ekran görüntüsüyle doğrulandı. Adım 6 commit'siz.
+
+**Nerede kalındı:** Sıradaki adım 7 bekçi (ruflo-protector fikri: 13 kural, öğren → uyar, engelleme Yunus'ta),
+sonra 8 7/24 döngü. Ofis şeridindeki "Codex kota %21" Codex'in 5 saatlik kaydı; aylık free kota dolu olduğunu göstermiyor.
+
 ## Oturum: 2026-10-26 (4) — 2D uzay istasyonu ofisi (adım 5)
 
 **Ne yapıldı:** Adım 4 commit'lendi (`1b10cb8`, `e6553de`). `components/office/station/` (stationArt.ts +
