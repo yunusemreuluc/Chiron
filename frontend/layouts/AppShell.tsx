@@ -59,7 +59,7 @@ export function AppShell() {
   // backend'in WebSocket'ine bağlanır; bağlanamazsa
   // (main.py kapalıysa) otomatik olarak demo döngüye düşer (bkz. useAIStateConnection.ts).
   useAIStateConnection();
-  // `SFX/Think.mp3` — Aıron düşündüğü sürece çalan arka plan dokusu.
+  // `SFX/Think.mp3` — Chiron düşündüğü sürece çalan arka plan dokusu.
   useThinkingSound();
 
   // Ses efektleri açılışta bir kez yapılandırılır (kullanıcı ayarlar panelini
@@ -78,7 +78,7 @@ export function AppShell() {
   // kullanıyor, aynı elemanda çakışırlardı) — bkz. aşağıdaki iç içe motion.div + ref yapısı.
   const sidebarParallax = useMouseParallax<HTMLDivElement>(3);
 
-  // Aıron uyurken HUD tamamen çekiliyor: geriye sadece karanlık ve çekirdeğin
+  // Chiron uyurken HUD tamamen çekiliyor: geriye sadece karanlık ve çekirdeğin
   // sönük nefesi kalıyor (bkz. components/SleepVeil.tsx). Panelleri yalnızca
   // perdenin altında karartmak yetmezdi — cam yüzeyler blur'ları yüzünden
   // karanlıkta bile "açık pencere" gibi okunuyor.

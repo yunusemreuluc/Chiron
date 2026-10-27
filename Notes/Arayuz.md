@@ -1,5 +1,5 @@
 ---
-tags: [airon, arayuz]
+tags: [chiron, arayuz]
 ---
 
 # Arayüz — frontend/ (Next.js + Three.js)
@@ -7,7 +7,7 @@ tags: [airon, arayuz]
 Bağlı: [[Home]] · [[Mimari]] · [[Kurulum-ve-Baslatma]] · [[Nesne-Tanima]] · [[OCR]] · [[Izleme-ve-Brifing]] · [[Bellek-ve-Config]]
 
 3D sahne + üzerinde yüzen cam paneller. Tasarım kuralları `CLAUDE.md` içinde;
-kalan işler `Docs/AIRON_UI_ROADMAP.md`. Bu not **ne yapıldığını ve neden öyle
+kalan işler `Docs/CHIRON_UI_ROADMAP.md`. Bu not **ne yapıldığını ve neden öyle
 yapıldığını** özetliyor.
 
 ## Yerleşim
@@ -15,7 +15,7 @@ yapıldığını** özetliyor.
 | Konum | Ne var |
 |---|---|
 | Sol kenar | Modül rayı (`Sidebar.tsx`) — Hafıza/Otomasyon/Ajanlar/Tarayıcı + ayarlar |
-| Sol üst | AIRON imzası + canlı durum (`BrandBadge.tsx`) |
+| Sol üst | CHIRON imzası + canlı durum (`BrandBadge.tsx`) |
 | Sol, rayın yanı | Açılan modül paneli (`LeftPanel.tsx`) |
 | Sol alt | Zaman çizelgesi şeridi (`Timeline.tsx`) |
 | Sağ üst | Telemetri şeridi + tepsi düğmesi (aynı satır) |
@@ -54,7 +54,7 @@ ayarlar ve ses efektleri onu sesli asistan modülünden import ediyordu.
 ## Açılış sahnelemesi — "Ateşleme"
 
 Kullanıcı isteğiyle (2026-07-31) yeniden tasarlandı. Önceki sürüm siyah ekranda
-AIRON yazısı ve **dolan bir ilerleme çubuğuydu** — bu bir yükleme ekranı dili ve
+CHIRON yazısı ve **dolan bir ilerleme çubuğuydu** — bu bir yükleme ekranı dili ve
 `CLAUDE.md § PROJECT`'in "gösterge paneli DEĞİLDİR" maddesiyle çelişiyordu.
 Sonrasındaki 3D kuruluş zaten iyiydi; sorun ondan öncesiydi.
 
@@ -64,7 +64,7 @@ Yeni akış tek bir fikir üzerine kurulu: **çekirdek ateşleniyor.**
 |---|---|---|
 | 0 – 0.3 sn | Karanlıkta tek bir ışık noktası | `BootOverlay.tsx` |
 | 0.3 – 0.8 sn | Nokta yanlara **enerji hattı** olarak açılır | " |
-| 0.6 – 1.2 sn | AIRON ışıktan **çözülür** (bulanıklık dağılır, harf aralığı toplanır) | " |
+| 0.6 – 1.2 sn | CHIRON ışıktan **çözülür** (bulanıklık dağılır, harf aralığı toplanır) | " |
 | 1.05 sn | Gerçek bağlantı durumu ("Bağlanıyor" / "Sistem hazır") | " |
 | 1.2 – 2.7 sn | **İsim durur** | " |
 | 2.5 – 3.5 sn | **Korona** — ısı yayan parçacıklar | `three/EnergyTendrils.tsx` |
@@ -121,7 +121,7 @@ Bu yüzden `fadeOnlyVariants` ile **yalnızca opacity** üzerinden beliriyorlar.
 
 ### Hareket azaltılmışsa
 
-Ateşleme, hat, delinme — hiçbiri yok. Statik AIRON yazısı 400 ms görünüp
+Ateşleme, hat, delinme — hiçbiri yok. Statik CHIRON yazısı 400 ms görünüp
 kayboluyor. Doğrulandı: `prefers-reduced-motion: reduce` ile hiçbir hareket
 çalışmıyor.
 
@@ -173,7 +173,7 @@ Sonuç, görev satırlarıyla birlikte **nedensel bir iz** oluşturuyor:
 
 Veri `LiveConnectConfig.thinking_config` ile isteniyor ve `model_turn.parts`
 içinde `thought=True` bayraklı parçalar olarak geliyor — normal metinle aynı
-listede, bayrakla ayrışıyorlar. **Sohbete yazılmıyor:** sohbet Aıron'un
+listede, bayrakla ayrışıyorlar. **Sohbete yazılmıyor:** sohbet Chiron'un
 söyledikleri için, muhakeme ne söyleyeceğine nasıl karar verdiği.
 
 Düşünceler transcript gibi parça parça akıyor. `_flush_reasoning` cümle
@@ -186,7 +186,7 @@ Modelin bu ayarı gerçekten desteklediği **canlı oturumda doğrulanmadı**
 
 ## Uyku modu
 
-Çekirdeğe tıklamak Aıron'u uyutuyor: ortam kararıyor, HUD çekiliyor, ağ soluk
+Çekirdeğe tıklamak Chiron'u uyutuyor: ortam kararıyor, HUD çekiliyor, ağ soluk
 iskelete düşüyor, çekirdek yavaş nefes almaya devam ediyor. Her yere tıklamak
 uyandırıyor.
 
@@ -199,7 +199,7 @@ Perde düz siyah değil, **merkezi açık** radyal gradyan; tam opak olsa uygula
 ## Sol panel modülleri
 
 - **Hafıza** — `memory.json`'ı doğrudan okuyor (`backend/api/memory.py`), yani
-  ses döngüsü kapalıyken de çalışıyor. Salt okunur: silme Aıron'a söylenerek
+  ses döngüsü kapalıyken de çalışıyor. Salt okunur: silme Chiron'a söylenerek
   yapılıyor, çünkü `delete_memory` iki adımlı onay istiyor ([[Bellek-ve-Config]]).
 - **Otomasyon** — aktif izlemeler ses döngüsünün belleğinde
   ([[Izleme-ve-Brifing]]), bu yüzden `commands.read_provider` üzerinden okunuyor.
@@ -270,7 +270,7 @@ Başlıkta tarih YOK bilerek: koddaki altı yorum `§ Beş tepki` diye atıf yap
 başlığa ek koymak o atıfları kırar.
 
 2026-07-31. Tasarım kuralı çekirdeğin beş şeye tepki vermesini istiyordu;
-gerçekte **üçü** çalışıyordu. Her araç çağrısı `THINKING` yayınlıyordu, yani Aıron'un ekranı ele
+gerçekte **üçü** çalışıyordu. Her araç çağrısı `THINKING` yayınlıyordu, yani Chiron'un ekranı ele
 geçirmesiyle hava durumuna bakması sahnede birebir aynı görünüyordu. `VISION`
 ise `STATE_MAP`'te duruyor ama `main.py` hiç göndermiyordu — **ölü bir daldı**.
 
@@ -283,7 +283,7 @@ ise `STATE_MAP`'te duruyor ama `main.py` hiç göndermiyordu — **ölü bir dal
 | `memory` | **Hatırlıyor** | mor (`DEEP_VIOLET`) | dönüş **0.4×**, derin nefes, dalgalı yüzey |
 
 Kehribar seçildi çünkü kullanılmayan tek aile oydu — ama asıl gerekçe anlamsal:
-kehribar her arayüzde "dikkat, makine hareket ediyor" demek. Aıron fareyi ele
+kehribar her arayüzde "dikkat, makine hareket ediyor" demek. Chiron fareyi ele
 aldığı an bunun **anında** fark edilmesi gerekiyor; bu dekorasyon değil uyarı.
 Kırmızıya kaçılmadı, kırmızı "hata" der.
 
@@ -320,7 +320,7 @@ birlikte büyürlerdi — `layoutId` ile animasyonlu hat, ölçeklenmiş bir kut
 da oynardı. Doğrulandı: hover'da buton 40 → 43.2 px, etiket `scale: none` ve
 11 px, hat 2×20 sabit.
 
-**Etiket çakışması — çözüldü (2026-08-01).** Ray etiketi ile sol üstteki AIRON
+**Etiket çakışması — çözüldü (2026-08-01).** Ray etiketi ile sol üstteki CHIRON
 imzası aynı yerde çiziliyordu (ilk düğmede 19×9 px; imzaya ambient bağlam satırı
 eklenince 37×30 px'e çıktı). Her ikisi de kendi bileşeninde yaşadığı için
 biri diğerinin varlığını bilmiyordu.
@@ -376,7 +376,7 @@ yukarı kaydırılmışken kendi mesajı alta çekiyor, başkasının mesajı `s
 
 ## Tepsi konuşma göstergesi
 
-`core/speaking_overlay.py`. Aıron tepsiye alındığında pencere görünmüyor, yani
+`core/speaking_overlay.py`. Chiron tepsiye alındığında pencere görünmüyor, yani
 konuştuğunu anlamanın hiçbir görsel yolu kalmıyordu. Artık sağ üstte küçük bir
 ses dalgası çıkıyor, susunca kapanıyor.
 
@@ -386,7 +386,7 @@ söylerse biri gürültü olur.
 
 **Dalga GERÇEK sesten besleniyor.** Süsleme amaçlı bir döngü değil: çubuklar
 `_play_audio` içindeki PCM parçasının genliğinden geliyor (`_mic_level` ile,
-mikrofonla aynı hesap — çıktı da 16-bit mono). Aıron susunca düzleşiyor,
+mikrofonla aynı hesap — çıktı da 16-bit mono). Chiron susunca düzleşiyor,
 yüksek sesle konuşurken yükseliyor. Sahte bir animasyon, bağlantı koptuğunda
 da neşeyle oynamaya devam ederdi ([[Bilinen-Tuzaklar]] § Arayüzde dürüstlük).
 
@@ -409,7 +409,7 @@ tutarlı olurdu ama küçücük bir gösterge için ayrı bir WebView2 örneği
 ([[Kurulum-ve-Baslatma]]).
 
 `tkinter` **tembel import**: modül açılışta değil, gösterge ilk kez
-etkinleştiğinde yükleniyor — Aıron tepsiye hiç alınmazsa hiç yüklenmiyor
+etkinleştiğinde yükleniyor — Chiron tepsiye hiç alınmazsa hiç yüklenmiyor
 ([[Bilinen-Tuzaklar]] § Ağır Python import'ları tembel olmalı).
 
 ### İş parçacığı kuralı
@@ -424,8 +424,8 @@ konuşurken çıkıyor, bitince kapanıyor.
 
 ## Ambient bağlam satırı
 
-`BrandBadge`'in üçüncü satırı: **AIRON → durum → kullanıcının ne yaptığı.**
-Durum satırından bir kademe daha kısık, çünkü bu Aıron'un değil kullanıcının
+`BrandBadge`'in üçüncü satırı: **CHIRON → durum → kullanıcının ne yaptığı.**
+Durum satırından bir kademe daha kısık, çünkü bu Chiron'un değil kullanıcının
 ne yaptığı — aynı vurguyla yazılsaydı ikisi tek cümle gibi okunurdu.
 
 Kaynak `GET /api/system/context`, `get_context` aracını besleyen fonksiyonun
@@ -467,7 +467,7 @@ Sahne 60 FPS hedefliyor, aynı ana iş parçacığında boş render biriktirilme
 ## Kare hızı — ölçüldü
 
 `three/FrameProbe.tsx` kalıcı bir sonda: kare başına tek `Float32Array` yazması,
-ayırma yok. `window.__aironFps()` ile okunuyor, `window.__aironFpsReset()` ile
+ayırma yok. `window.__chironFps()` ile okunuyor, `window.__chironFpsReset()` ile
 sıfırlanıyor.
 
 **Ölçüm (2026-07-31, gerçek WebView2 penceresi, 1540×844 @ 1.25 DPR, 144 Hz):**
@@ -499,7 +499,7 @@ WebView2 GPU süreci 3D motoru %69,5. Kimse bakmazken ve hiçbir şey olmazken.
 
 | Durum | FPS |
 |---|---|
-| Açılış sahnelemesi (ilk 9 sn), Aıron dinliyor/düşünüyor/konuşuyor, fare/klavye girdisi (2,5 sn tutar) | 60 |
+| Açılış sahnelemesi (ilk 9 sn), Chiron dinliyor/düşünüyor/konuşuyor, fare/klavye girdisi (2,5 sn tutar) | 60 |
 | Boşta, pencere odakta | 30 |
 | Pencere odakta değil | 20 |
 | Uyku perdesi | 15 |
@@ -511,16 +511,16 @@ Sonuç (görünür Edge, gerçek GPU, 45 sn boşta): GPU %69,5 → **%22,5**, ta
   oluyordu. Şimdi bir sonraki kare zamanı `son + aralık`, uzun vadede ortalama tam hedef.
 - **Bütün useFrame'ler zamana bağlı olmalı** (`delta` / `elapsedTime`). 2026-10-02'de hepsi
   kontrol edildi. Kare başına sabit artış yapan yeni bir animasyon, düşük FPS'te yavaşlar.
-- Tanı: `window.__aironGovernor()` → `{rule, target, ticks, requested}`. FrameProbe artık
+- Tanı: `window.__chironGovernor()` → `{rule, target, ticks, requested}`. FrameProbe artık
   gerçek çizim hızını ölçüyor — boşta ~30 görmek beklenen, hata değil.
 - İlk denemede bir kez boşta 0,5 FPS görüldü; kök nedeni kesinleşmedi, birikimli zamanlama +
-  tanıdan sonra tekrar etmedi. Gerçek pencerede `__aironGovernor()` ile doğrulanmalı.
+  tanıdan sonra tekrar etmedi. Gerçek pencerede `__chironGovernor()` ile doğrulanmalı.
 
 ## Küçük parçalar
 
 - **Ses dalga formu** — veri tarayıcıdan değil backend'den (`mic_level`, ~12 FPS).
   `getUserMedia` ile ikinci bir mikrofon akışı açmak pyaudio ile yarışırdı;
-  seviye Aıron'un gerçekten duyduğu ham PCM'den hesaplanıyor.
+  seviye Chiron'un gerçekten duyduğu ham PCM'den hesaplanıyor.
 - **Telemetri** — CPU/RAM/Disk/Pil. GPU ve sıcaklık **yok**: Windows'ta psutil
   ikisini de güvenilir vermiyor, uydurmak yerine hiç gösterilmiyor.
 - **Think.mp3** — durum bazlı döngü (tek atış değil), %35 seste.

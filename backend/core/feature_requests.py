@@ -17,7 +17,7 @@ STATE_PATH = PROJECT_ROOT / "config" / "feature_requests_state.json"
 
 HEADER = """# İstek Listesi
 
-Telefondaki Aıron'un yapamadığı ve kullanıcının "listeye ekle" dediği istekler.
+Telefondaki Chiron'un yapamadığı ve kullanıcının "listeye ekle" dediği istekler.
 Durum değerleri: `yeni` → `bakıldı` → `yapıldı` / `yapılmayacak`. Durumu elle değiştirebilirsin;
 `yapıldı` olanı telefon bir sonraki konuşmada kullanıcıya haber verir.
 

@@ -35,7 +35,7 @@ async def _run(response: Response, action: Callable[[], dict], message: str) -> 
 class CardCreate(BaseModel):
     title: str = Field(max_length=MAX_TITLE)
     detail: str = Field(default="", max_length=MAX_DETAIL)
-    # Proje kartı: iş bu deponun ayrı bir worktree'sinde yapılır, test Aıron'da koşar.
+    # Proje kartı: iş bu deponun ayrı bir worktree'sinde yapılır, test Chiron'da koşar.
     repo: str | None = Field(default=None, max_length=400)
     test_cmd: str | None = Field(default=None, max_length=MAX_TEST_CMD)
     # Kartı kim yapacak: claude | codex (Terra) | gemini (yalnız okur).
@@ -98,7 +98,7 @@ async def list_repos() -> dict:
 @router.post("")
 async def create_card(body: CardCreate, request: Request, response: Response) -> dict:
     # Test komutu kabukta, Claude'un izin denetimi OLMADAN koşar (Terra incelemesi, kritik):
-    # uzaktan (telefon) yalnızca Aıron'un o depo için önerdiği komut kabul edilir.
+    # uzaktan (telefon) yalnızca Chiron'un o depo için önerdiği komut kabul edilir.
     # Özel komut ancak PC'nin kendi penceresinden girilir.
     if body.repo and body.test_cmd and remote_auth.is_remote_scope(request.scope):
         try:

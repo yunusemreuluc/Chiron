@@ -1,4 +1,4 @@
-// AIRON Energy Tendrils — çekirdek yüzeyinden dışarı doğru sürüklenen, sönümlenen
+// CHIRON Energy Tendrils — çekirdek yüzeyinden dışarı doğru sürüklenen, sönümlenen
 // ince enerji parçacıkları. Her parçacık kendi yönünde (aDirection) sabit bir
 // döngüyle (aOffset ile kaydırılmış) merkezden dışarı akıyor — GPU'da, CPU'da
 // her kare pozisyon güncellemeden (ucuz).

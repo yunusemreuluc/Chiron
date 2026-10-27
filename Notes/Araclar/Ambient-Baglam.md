@@ -1,16 +1,16 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # Ambient Bağlam — ambient_context.py
 
 Bağlı: [[Home]] · [[Arac-Tanimlari]] · [[Screen-Vision]] · [[Izleme-ve-Brifing]] · [[Arayuz]]
 
-Aıron'un "kullanıcı şu an ne yapıyor" farkındalığı. **Araç:** `get_context`.
+Chiron'un "kullanıcı şu an ne yapıyor" farkındalığı. **Araç:** `get_context`.
 
 ## Neden var
 
-Aıron "bunu kaydet", "şurayı kapat", "burada ne yazıyor" dendiğinde neyden
+Chiron "bunu kaydet", "şurayı kapat", "burada ne yazıyor" dendiğinde neyden
 bahsedildiğini bilmiyordu. Tek çare [[Screen-Vision]]'ın `analyze_screen`'ini
 çağırmaktı — o da Gemini kotası harcıyor, ki kota bu projede gerçek bir kısıt.
 
@@ -49,8 +49,8 @@ hemen üstünde uyarıyor:**
 > in the same conversation is not recommended and can lead to unexpected
 > results.
 
-Aıron'un TÜM ses döngüsü `send_realtime_input`. `turn_complete=False` ayrıca
-turu AÇIK bırakıyor — en kötü senaryoda model sese cevap veremez, yani **Aıron
+Chiron'un TÜM ses döngüsü `send_realtime_input`. `turn_complete=False` ayrıca
+turu AÇIK bırakıyor — en kötü senaryoda model sese cevap veremez, yani **Chiron
 susar.** [[Bilinen-Tuzaklar]] § Live oturum yapılandırmasına yeni alan eklemek
 riskli maddesindeki kural birebir geçerli: *bir arayüz özelliği, sesli
 asistanın çalışmasından önce gelmez.*
@@ -65,7 +65,7 @@ güvenlik valfiyle yapılmalı.
 
 ## Arayüzde
 
-Sol üstteki `BrandBadge`'in üçüncü satırı — AIRON / durum / **bağlam**.
+Sol üstteki `BrandBadge`'in üçüncü satırı — CHIRON / durum / **bağlam**.
 Uç nokta `GET /api/system/context`, aracı besleyen fonksiyonun **aynısını**
 kullanıyor; ayrı yazılsalardı biri bayatlar ve arayüz olmayan bir farkındalığı
 varmış gibi gösterirdi.
@@ -76,7 +76,7 @@ değilse `· 12 dk uzakta` ekleniyor.
 Yoklama 4 sn'de bir, WebSocket değil: bağlam olay değil **durum**, ve alt+tab
 sırasında saniyede birkaç olay arayüzü titretirdi.
 
-## Yan etki: AIRON imzası artık raya yer açıyor
+## Yan etki: CHIRON imzası artık raya yer açıyor
 
 Rozet üç satıra çıkınca sol raydaki hover etiketiyle çakışması büyüdü
 (19×9 → 37×30 px). Çözüm `stores/railHoverStore.ts`: raya yaklaşınca imza

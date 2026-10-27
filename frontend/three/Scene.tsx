@@ -39,7 +39,7 @@ function useAdaptiveMaxDpr(): number {
 export function Scene() {
   const maxDpr = useAdaptiveMaxDpr();
   // Ajan Ofisi tam ekranken çekirdek görünmüyor: kare üretmeyi tamamen durdur,
-  // GPU iki sahneyi birden çizmesin (Faz 0 — Aıron makineyi yormasın).
+  // GPU iki sahneyi birden çizmesin (Faz 0 — Chiron makineyi yormasın).
   const officeOpen = useNavigationStore((state) => state.activeModule === 'agents');
 
   return (
@@ -64,7 +64,7 @@ export function Scene() {
       <NodeConnections />
       <OrbitNodes />
       <PostProcessing />
-      {/* Kare süresi sondası — `window.__aironFps()` ile okunuyor. Kare başına
+      {/* Kare süresi sondası — `window.__chironFps()` ile okunuyor. Kare başına
           tek bir dizi yazması; sahneyi görsel olarak etkilemiyor. */}
       <FrameProbe />
       <FrameGovernor />

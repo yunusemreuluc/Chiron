@@ -19,7 +19,7 @@ from pydantic import BaseModel
 from app_config import load_app_config, save_app_config
 from backend.core import commands
 
-logger = logging.getLogger("airon.backend")
+logger = logging.getLogger("chiron.backend")
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -94,7 +94,7 @@ async def update_settings(update: SettingsUpdate) -> dict:
 
     save_app_config(changes)
 
-    # Ses değişimi anında geçerli olmalı: AironLive oturumu sessizce yeniden
+    # Ses değişimi anında geçerli olmalı: ChironLive oturumu sessizce yeniden
     # kurar (bkz. main.py _on_voice_change) — yoksa yeni ses ancak uygulama
     # yeniden başlatılınca duyulurdu.
     if "voice" in changes:

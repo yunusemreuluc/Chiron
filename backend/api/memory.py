@@ -8,7 +8,7 @@ duruyor ve doğrudan buradan okunuyor. Yani Hafıza paneli, arayüz tek başına
 açıldığında da (desktop.py --sadece-arayuz) gerçek veriyi gösteriyor. Vision ya
 da Otomasyon için bu geçerli değil — onların verisi ses döngüsünün belleğinde.
 
-SALT OKUNUR. Silme işlemi bilinçli olarak yok: hafızayı silmenin yolu Aıron'a
+SALT OKUNUR. Silme işlemi bilinçli olarak yok: hafızayı silmenin yolu Chiron'a
 söylemek (`delete_memory` aracı iki adımlı onay istiyor, bkz.
 memory/memory_manager.py). Panele bir çöp kutusu koymak, o onay akışını
 atlatan ikinci bir yol açardı.

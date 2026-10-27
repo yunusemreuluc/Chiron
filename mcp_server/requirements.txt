@@ -1,4 +1,4 @@
-# Airon MCP server — Airon'un kendi requirements.txt'sine EK olarak kurulur
+# Chiron MCP server — Chiron'un kendi requirements.txt'sine EK olarak kurulur
 # (easyocr, mss, psutil, winsdk, Pillow oradan geliyor).
 #   venv\Scripts\python.exe -m pip install -r mcp_server\requirements.txt
 mcp==2.2.0

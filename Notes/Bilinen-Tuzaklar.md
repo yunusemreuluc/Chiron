@@ -1,5 +1,5 @@
 ---
-tags: [airon, tuzak]
+tags: [chiron, tuzak]
 ---
 
 # Bilinen Tuzaklar
@@ -33,7 +33,7 @@ ile bu kümenin **aynı** kalması şart (2026-07-31, beş tepki çalışması).
 
 `assistant_status` (muted/paused/remote) yalnızca DEĞİŞTİĞİ an yayınlanıyordu.
 Telefondan uzak mod açıldıktan sonra açılan PC penceresi bayrağı hiç öğrenmedi,
-dock "uzak mod" göstermedi ve Aıron sebepsiz susmuş gibi göründü (2026-09-15,
+dock "uzak mod" göstermedi ve Chiron sebepsiz susmuş gibi göründü (2026-09-15,
 görsel testte yakalandı). Artık `backend/websocket/router.py` her yeni bağlantıya
 o anki durumu ilk mesaj olarak yolluyor.
 
@@ -95,7 +95,7 @@ durum değişikliği gibi değil, **hata** gibi okunur.
 
 `LiveConnectConfig`'e model desteklemediği bir alan koyarsan oturum **hiç
 kurulamaz** — ve bağlantı döngüsü sonsuza kadar aynı sebeple yeniden dener,
-yani Aıron tamamen susar. Sessiz bir kayıp değil, tam bir arıza.
+yani Chiron tamamen susar. Sessiz bir kayıp değil, tam bir arıza.
 
 `thinking_config` (muhakeme akışı, 2026-07-31) bu yüzden güvenlik valfiyle
 eklendi: `_is_thinking_rejection` hatayı inceleyip yapılandırma reddi mi ağ
@@ -109,7 +109,7 @@ ihtimaline karşı kapatılabilir olmalı. Bir arayüz özelliği, sesli asistan
 ## easyocr kurulumu cv2'yi ezmeye çalışır
 
 `pip install easyocr` bağımlılık olarak `opencv-python-headless` çekiyor ve
-mevcut `opencv-python`'un `cv2`'sini üzerine yazmaya çalışıyor. Aıron açıkken
+mevcut `opencv-python`'un `cv2`'sini üzerine yazmaya çalışıyor. Chiron açıkken
 dosya kilitli olduğu için kurulum `WinError 5` ile patlıyor.
 
 Projenin kullandığı cv2 API'leri (`VideoCapture`, `resize`, `flip`, `imencode`,
@@ -240,7 +240,7 @@ Gemini **ücretsiz katmanı günde 1500 istek** veriyor (Flash).
 3600 / 25 = saatte 144 çağrı   →   1500 / 144 = 10.4 saat
 ```
 
-Yani Aıron ~10 saat açık kalınca günlük kota, **kullanıcı tek kelime etmeden**
+Yani Chiron ~10 saat açık kalınca günlük kota, **kullanıcı tek kelime etmeden**
 biterdi. `gemini_desktop_task`, `search_files` ve `activity_log` maddelerinin
 üçünde de "test ederken kota dolmuştu" notu var — suçlu test edilen araç değil,
 arka planda sessizce dönen bekçiydi.
@@ -318,7 +318,7 @@ Ayrıntı: [[Otonom-Duzeltme]].
 
 ## Mikrofon: host API'yi de ölç, yalnızca cihazı değil
 
-2026-08-06'da Aıron kullanıcıyı duymuyordu (`karar=silent medyan=0.5`). Bu
+2026-08-06'da Chiron kullanıcıyı duymuyordu (`karar=silent medyan=0.5`). Bu
 makinedeki HER giriş cihazı, HER host API üzerinden ayrı ayrı ölçüldü
 (`probe_input` ile — uygulamanın kendi ölçüsü, ayrı bir ölçüt uydurulmadı):
 
@@ -390,7 +390,7 @@ aynı cümle değil.
 `_listen_audio` kapanış yarışında `RuntimeError: cannot schedule new futures
 after shutdown` fırlatıyor: sohbet sıfırlanırken event loop'un thread havuzu
 mikrofon döngüsünden önce kapanıyor. Bu ERROR seviyesinde, tam traceback ile,
-`[AIRON] Mikrofon hatasi` başlığıyla loglanıyordu.
+`[CHIRON] Mikrofon hatasi` başlığıyla loglanıyordu.
 
 2026-08-06'da gerçek bir mikrofon sessizliği araştırılırken bu satıra takılıp
 yanlış yere bakıldı — normal bir yeniden bağlanma, donanım arızası gibi
@@ -540,7 +540,7 @@ bitmiş" deyip hiçbir şey yapmaz — kuyruk sonsuza dek `running` kalır.
 
 Çözüm **Windows Job Object**: süreç `CREATE_SUSPENDED` başlatılır, job'a atanır, sonra
 uyandırılır (atamadan önce çocuk doğuramasın). `TerminateJobObject` bütün ağacı tek
-çağrıda öldürür; `KILL_ON_JOB_CLOSE` sayesinde Aıron çökse bile Windows ağacı temizler.
+çağrıda öldürür; `KILL_ON_JOB_CLOSE` sayesinde Chiron çökse bile Windows ağacı temizler.
 Okuma ayrı thread'de; ana thread `proc.wait(timeout)` bekler, sonra job'u kapatır →
 stdout'u tutan kalmaz → okuyucu EOF görür.
 
@@ -551,15 +551,15 @@ metni asla argüman olmaz. Arkasındaki `claude.exe` doğrudan çağrılır, met
 ## Hook cevabı Windows'ta cp1254 çıkar
 
 Python hook'u (`bekci.py`) `sys.stdout.write` ile JSON cevap verdiğinde Windows varsayılanı cp1254;
-Türkçe gerekçe ("Aıron bekçisi…") UTF-8 bekleyen tarafta bozuluyor/çözülemiyordu. İlk canlı deneme ASCII
+Türkçe gerekçe ("Chiron bekçisi…") UTF-8 bekleyen tarafta bozuluyor/çözülemiyordu. İlk canlı deneme ASCII
 gerekçeyle yapıldığı için görünmedi, Türkçe testte yakalandı (2026-10-26). **Kural:** Claude Code hook'u
 yazan her Python betiği `sys.stdin`/`sys.stdout`'u `reconfigure(encoding="utf-8")` ile açar.
 
-## Masaüstü Aıron derlenmiş kopyayı açar, geliştirme sunucusunu değil
+## Masaüstü Chiron derlenmiş kopyayı açar, geliştirme sunucusunu değil
 
-Kısayol `desktop.py`'yi açar; o `frontend/out` (statik `next build` çıktısı) sunar. `AIRON.bat` yalnız `out`
-yoksa derliyordu — 2026-10-26 03:11'den sonraki bütün arayüz işi (bekçi, 7/24, Komuta) Yunus'un Aıron'unda
+Kısayol `desktop.py`'yi açar; o `frontend/out` (statik `next build` çıktısı) sunar. `CHIRON.bat` yalnız `out`
+yoksa derliyordu — 2026-10-26 03:11'den sonraki bütün arayüz işi (bekçi, 7/24, Komuta) Yunus'un Chiron'unda
 görünmedi; denemeler `next dev`'de yapıldığı için fark edilmedi ("hâlâ aynı görünüyor", 2026-10-27).
 **Çözüm:** `desktop.py` açılışta kaynak (`app`, `components`, `services`, `stores`… ve config) `out/index.html`'den
 yeniyse `npm run build` çalıştırır (`_rebuild_frontend_if_stale`). **Kural:** arayüz işi bitince `npm run build`
-de çalıştır; "çalışıyor" demeden önce derlenmiş kopyada (ya da Aıron'un kendisinde) bak.
+de çalıştır; "çalışıyor" demeden önce derlenmiş kopyada (ya da Chiron'un kendisinde) bak.

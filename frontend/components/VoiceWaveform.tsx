@@ -3,14 +3,14 @@
 import { useMicStore, WAVEFORM_BARS } from '@/stores/micStore';
 
 // Mikrofon dalga formu — kullanıcı isteğiyle (2026-07-30) sohbet dock'una
-// eklendi. Aıron'un seni GERÇEKTEN duyduğunun tek görsel kanıtı: mikrofon
+// eklendi. Chiron'un seni GERÇEKTEN duyduğunun tek görsel kanıtı: mikrofon
 // simgesi açık görünürken cihaz sessizce ölmüş olabilir, çubuklar kıpırdamazsa
 // bu anında belli oluyor.
 //
 // Veri tarayıcıdan DEĞİL backend'den geliyor. Tarayıcıda `getUserMedia` ile
 // ikinci bir mikrofon akışı açmak, Python tarafının (pyaudio) kullandığı cihazla
 // yarışırdı — seviye zaten ses döngüsünün okuduğu ham PCM'den hesaplanıyor
-// (bkz. AironLive._mic_level), yani gösterilen şey tam olarak Aıron'un duyduğu.
+// (bkz. ChironLive._mic_level), yani gösterilen şey tam olarak Chiron'un duyduğu.
 
 const MIN_SCALE = 0.06; // sessizken bile çubuklar görünür kalsın (ölü değil, sakin)
 

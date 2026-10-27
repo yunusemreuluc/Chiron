@@ -1,18 +1,18 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # İzleme, Brifing ve Aktivite — screen_watch.py · screen_monitor.py · activity_log.py
 
 Bağlı: [[Home]] · [[Arac-Tanimlari]] · [[Screen-Vision]] · [[Ekran-Mudahale]] · [[Arayuz]]
 
-Aıron'un **proaktif** tarafı: kullanıcı sormadan kendiliğinden konuşan
+Chiron'un **proaktif** tarafı: kullanıcı sormadan kendiliğinden konuşan
 mekanizmalar. Hepsi `main.py` içinde `asyncio.TaskGroup` ile paralel arka plan
 görevi olarak dönüyor.
 
 ## Ortak ön koşul
 
-`_proactive_checks_allowed()` — duraklatılmışken, susturulmuşken, Aıron zaten
+`_proactive_checks_allowed()` — duraklatılmışken, susturulmuşken, Chiron zaten
 konuşurken veya canlı oturum hazır değilken **hiçbir bekçi çalışmaz**. Bazıları
 ayrıca kamera açıkken de susuyor (`block_on_webcam`).
 
@@ -20,13 +20,13 @@ ayrıca kamera açıkken de susuyor (`block_on_webcam`).
 
 `start_watch(instruction, condition, timeout_minutes)` hemen döner; gerçek
 kontrol `_watch_custom_conditions` arka plan görevinde ~20 sn'de bir yapılır.
-Koşul gerçekleşince (veya süre dolunca) izleme kendiliğinden kalkar ve Aıron
+Koşul gerçekleşince (veya süre dolunca) izleme kendiliğinden kalkar ve Chiron
 sesli haber verir.
 
 [[Ekran-Mudahale]]'nin aksine **onay gerekmez** — bu araç yalnızca izler ve
 bildirir, tıklamaz/yazmaz.
 
-Aktif izlemeler `AironLive._active_watches` listesinde, yani **ses döngüsünün
+Aktif izlemeler `ChironLive._active_watches` listesinde, yani **ses döngüsünün
 belleğinde** yaşıyor; diskte karşılığı yok. Arayüzdeki Otomasyon paneli bu
 yüzden dosyadan değil, `backend/core/commands.read_provider("automation")`
 üzerinden okuyor ([[Arayuz]]).
@@ -37,7 +37,7 @@ yüzden dosyadan değil, `backend/core/commands.read_provider("automation")`
 
 - `_watch_screen_for_issues` — periyodik olarak ekranı kontrol eder
   (`actions/screen_monitor.py`), sorun görürse haber verir ve politikaya göre
-  kendisi düzeltir ([[Otonom-Duzeltme]]). **Aıron'un en pahalı arka plan işi** —
+  kendisi düzeltir ([[Otonom-Duzeltme]]). **Chiron'un en pahalı arka plan işi** —
   aşağıdaki kota bütçesine bak.
 - `_watch_system_health` — pil/disk/CPU/RAM eşikleri
   (`actions/sys_info.check_health_thresholds`)
@@ -45,7 +45,7 @@ yüzden dosyadan değil, `backend/core/commands.read_provider("automation")`
 ## Kota bütçesi (2026-08-01)
 
 Ekran bekçisi 25 sn'de bir Gemini görü çağrısı atıyordu: **saatte 144, günde
-3456**. Gemini ücretsiz katmanı **günde 1500** veriyor — yani Aıron ~10 saat
+3456**. Gemini ücretsiz katmanı **günde 1500** veriyor — yani Chiron ~10 saat
 açık kalınca kota, kullanıcı hiçbir şey yapmadan biterdi
 ([[Bilinen-Tuzaklar]] § Kotayı yakan şey araçlar değil).
 

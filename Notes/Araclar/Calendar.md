@@ -1,5 +1,5 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # Calendar — actions/calendar.py

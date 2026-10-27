@@ -15,8 +15,8 @@ import { useFrame } from '@react-three/fiber';
 // YOK (bkz. § useFrame içinde asla bellek ayırma) — tampon modül düzeyinde bir
 // kez ayrılıyor. Sıralama/istatistik yalnızca dışarıdan çağrıldığında oluyor.
 //
-// Okuma: tarayıcı konsolunda ya da pywebview'den `window.__aironFps()`.
-// Ölçüme temiz başlamak için önce `window.__aironFpsReset()`.
+// Okuma: tarayıcı konsolunda ya da pywebview'den `window.__chironFps()`.
+// Ölçüme temiz başlamak için önce `window.__chironFpsReset()`.
 
 // 900 örnek = 60 FPS'te ~15 sn. Halka tampon, yani hep son 15 sn duruyor.
 const SAMPLE_COUNT = 900;
@@ -88,16 +88,16 @@ export function FrameProbe() {
   useEffect(() => {
     const w = window as unknown as Record<string, unknown>;
     if (startedAt === 0) startedAt = performance.now();
-    w.__aironFps = computeStats;
-    w.__aironFpsReset = () => {
+    w.__chironFps = computeStats;
+    w.__chironFpsReset = () => {
       writeIndex = 0;
       filled = 0;
       totalFrames = 0;
       startedAt = performance.now();
     };
     return () => {
-      delete w.__aironFps;
-      delete w.__aironFpsReset;
+      delete w.__chironFps;
+      delete w.__chironFpsReset;
     };
   }, []);
 

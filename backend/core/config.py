@@ -1,4 +1,4 @@
-"""AIRON backend — uygulama ayarları. main.py'deki (masaüstü) app_config.py'den
+"""CHIRON backend — uygulama ayarları. main.py'deki (masaüstü) app_config.py'den
 BAĞIMSIZ — bu sadece FastAPI servisinin kendi çalışma ayarları (host/port/CORS)."""
 
 from __future__ import annotations

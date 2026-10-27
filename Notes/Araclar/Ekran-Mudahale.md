@@ -1,5 +1,5 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # Ekran Müdahale — actions/screen_control.py

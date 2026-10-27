@@ -1,4 +1,4 @@
-"""Otonom düzeltme — Aıron gördüğü hatayı kendisi çözer.
+"""Otonom düzeltme — Chiron gördüğü hatayı kendisi çözer.
 
 `screen_monitor.check_for_issue` bir sorun bulduğunda burası devreye giriyor:
 ekranı yeniden yakalayıp "bu tam olarak ne ve ekranda hangi adımlarla
@@ -41,7 +41,7 @@ from actions.tool_result import fail, ok
 from app_config import get_app_config_value, save_app_config
 from core.tool_registry import register_tool
 
-logger = logging.getLogger("airon")
+logger = logging.getLogger("chiron")
 
 # screen_monitor ile aynı liste — "gemini-2.5-flash" bu hesapta 404 veriyor.
 FIX_MODELS = (
@@ -204,7 +204,7 @@ def plan_fix(api_key: str, description: str, window_title: str) -> dict:
                 continue
         return bos
     except Exception:
-        logger.exception("[AIRON] Düzeltme planı üretilemedi")
+        logger.exception("[CHIRON] Düzeltme planı üretilemedi")
         return bos
     finally:
         try:

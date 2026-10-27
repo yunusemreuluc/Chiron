@@ -8,7 +8,7 @@ import { fetchMemory, type MemorySnapshot } from '@/services/modulesApi';
 // metindi; oysa memory/memory.json gerçek veri tutuyordu ve arayüze hiç
 // akmıyordu.
 //
-// SALT OKUNUR (bkz. backend/api/memory.py): silme işlemi Aıron'a söylenerek
+// SALT OKUNUR (bkz. backend/api/memory.py): silme işlemi Chiron'a söylenerek
 // yapılıyor, çünkü `delete_memory` aracı iki adımlı onay istiyor. Panele bir
 // çöp kutusu koymak o onayı atlatan ikinci bir yol açardı.
 
@@ -30,7 +30,7 @@ export function MemoryPanelContent() {
 
   if (failed) {
     return (
-      <p className="text-foreground-secondary text-xs">Hafıza okunamadı — Aıron çalışıyor mu?</p>
+      <p className="text-foreground-secondary text-xs">Hafıza okunamadı — Chiron çalışıyor mu?</p>
     );
   }
   if (!snapshot) {
@@ -39,7 +39,7 @@ export function MemoryPanelContent() {
   if (snapshot.total === 0) {
     return (
       <p className="text-foreground-secondary text-xs leading-relaxed">
-        Hafıza boş. Aıron sana dair bir şey öğrendiğinde (ya da ona &ldquo;bunu hatırla&rdquo;
+        Hafıza boş. Chiron sana dair bir şey öğrendiğinde (ya da ona &ldquo;bunu hatırla&rdquo;
         dediğinde) burada birikmeye başlar.
       </p>
     );

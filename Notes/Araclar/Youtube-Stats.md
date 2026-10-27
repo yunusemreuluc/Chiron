@@ -1,5 +1,5 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # Youtube-Stats — actions/youtube_stats.py

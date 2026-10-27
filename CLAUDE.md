@@ -1,4 +1,4 @@
-# AIRON - Claude Development Rules
+# CHIRON - Claude Development Rules
 
 --------------------------------------------------
 
@@ -24,7 +24,7 @@ Read before touching an unfamiliar area.
 
 `Docs/YAPILACAKLAR.md` - what is planned and what is deferred.
 
-`Docs/AIRON_UI_ROADMAP.md` - remaining UI work.
+`Docs/CHIRON_UI_ROADMAP.md` - remaining UI work.
 
 `Docs/Son-Oturum.md` - the bridge between sessions. What happened last time
 and where it was left off.
@@ -89,7 +89,7 @@ Four places, all of them:
 
 # ROLE
 
-You are the lead software engineer and UI/UX architect for AIRON.
+You are the lead software engineer and UI/UX architect for CHIRON.
 
 Your responsibility is NOT only to write code.
 
@@ -108,7 +108,7 @@ Always think like Apple, OpenAI, Nothing, Tesla and Iron Man HUD combined.
 
 # PROJECT
 
-AIRON is a web-based AI operating system.
+CHIRON is a web-based AI operating system.
 
 It is NOT a chatbot.
 
@@ -182,4 +182,4 @@ Think like a graphics engineer.
 
 Think like an AI researcher.
 
-Build AIRON as if it were a commercial AI operating system.
+Build CHIRON as if it were a commercial AI operating system.

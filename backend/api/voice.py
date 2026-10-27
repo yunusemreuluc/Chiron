@@ -33,7 +33,7 @@ class TextCommand(BaseModel):
 async def send_text(command: TextCommand, request: Request) -> dict:
     """Arayüzdeki yazı kutusundan gelen metin.
 
-    ÖNEMLİ: Bu yol mikrofon olmadan da Aıron'la konuşmayı mümkün kılıyor —
+    ÖNEMLİ: Bu yol mikrofon olmadan da Chiron'la konuşmayı mümkün kılıyor —
     oturum `response_modalities=["AUDIO"]` olduğu için cevap SESLİ gelir.
 
     Uzak mod (2026-09-15): metin telefondan geliyorsa cevap boş evde PC

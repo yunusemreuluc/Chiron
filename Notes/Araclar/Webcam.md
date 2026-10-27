@@ -1,5 +1,5 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # Webcam — main.py (canlı akış) + actions/webcam_vision.py (tek kare, kullanılmıyor)

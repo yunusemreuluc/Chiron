@@ -23,7 +23,7 @@ export interface ChatSummary {
   id: string;
   title: string;
   agent: ChatAgent;
-  source: 'airon' | 'terminal';
+  source: 'chiron' | 'terminal';
   cwd: string | null;
   created: number;
   updated: number;

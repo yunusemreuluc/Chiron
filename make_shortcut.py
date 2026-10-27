@@ -1,10 +1,10 @@
 """
-Aıron kısayol yardımcıları — Windows sürümü.
+Chiron kısayol yardımcıları — Windows sürümü.
 
 macOS sürümü .app/.command ve LaunchAgent plist üretiyordu; Windows'ta
 bunların karşılığı .lnk kısayollarıdır:
-  - Masaüstü kısayolu  → Desktop\\Aıron.lnk
-  - Açılışta başlat     → Başlangıç klasörü\\Aıron.lnk
+  - Masaüstü kısayolu  → Desktop\\Chiron.lnk
+  - Açılışta başlat     → Başlangıç klasörü\\Chiron.lnk
 
 PowerShell WScript.Shell kullanılır, ek bağımlılık gerekmez.
 Kısayollar pythonw.exe ile desktop.py'yi konsolsuz başlatır.
@@ -53,12 +53,12 @@ def _pythonw() -> str:
 # 2026-07-29'a kadar burada bir de "voice" (main.py, Tkinter penceresi) vardı;
 # o arayüz kaldırıldı, main.py artık giriş noktası değil.
 APPS = {
-    "desktop": ("desktop.py", "Aıron"),
+    "desktop": ("desktop.py", "Chiron"),
 }
 
 
 def _write_shortcut(link_path: Path, app: str = "desktop") -> Path:
-    """Verilen yola Aıron .lnk kısayolu yazar."""
+    """Verilen yola Chiron .lnk kısayolu yazar."""
     if app not in APPS:
         raise ValueError(f"Bilinmeyen uygulama: {app!r} (geçerli: {', '.join(APPS)})")
 
@@ -68,7 +68,7 @@ def _write_shortcut(link_path: Path, app: str = "desktop") -> Path:
     script_path = BASE_DIR / script_name
 
     icon_line = ""
-    ico_candidate = BASE_DIR / "Icon" / "airon.ico"
+    ico_candidate = BASE_DIR / "Icon" / "chiron.ico"
     if ico_candidate.exists():
         icon_line = f"$s.IconLocation = '{ico_candidate}'; "
 
@@ -97,7 +97,7 @@ def _write_shortcut(link_path: Path, app: str = "desktop") -> Path:
 
 
 # ── Masaüstü kısayolu ────────────────────────────────────────────────────────
-_SHORTCUT_NAMES = {"desktop": "Aıron.lnk"}
+_SHORTCUT_NAMES = {"desktop": "Chiron.lnk"}
 
 
 def desktop_shortcut_path(app: str = "desktop") -> Path:
@@ -110,7 +110,7 @@ def create_desktop_shortcut(app: str = "desktop") -> Path:
 
 # ── Açılışta başlat (Başlangıç klasörü) ──────────────────────────────────────
 def startup_shortcut_path() -> Path:
-    return _startup_dir() / "Aıron.lnk"
+    return _startup_dir() / "Chiron.lnk"
 
 
 def create_startup_shortcut(app: str = "desktop") -> Path:

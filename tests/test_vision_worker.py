@@ -34,7 +34,7 @@ def test_unknown_request_round_trip_and_shutdown():
 
 
 def test_child_exits_when_parent_dies():
-    # Sahte "Aıron": 2 sn yaşayıp ölen bir süreç; çocuk onun pid'ini izliyor.
+    # Sahte "Chiron": 2 sn yaşayıp ölen bir süreç; çocuk onun pid'ini izliyor.
     parent = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(2)"])
     child = subprocess.Popen(
         [sys.executable, "-m", "core.vision_worker", "--child", str(parent.pid)],

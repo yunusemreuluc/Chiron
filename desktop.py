@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Aıron — masaüstü penceresi.
+Chiron — masaüstü penceresi.
 
 Kullanıcı isteğiyle (2026-07-29): 3D arayüz artık tarayıcıda değil, kendi
 uygulama penceresinde açılıyor. Arayüz YENİDEN YAZILMADI — aynı Next.js/WebGL
@@ -15,11 +15,11 @@ MİMARİ — tek Python süreci, iki katman:
                                               ├── /api/* ..... REST
                                               └── /ws ........ canlı durum akışı
 
-Ses ve araçlar (main.py → AironLive) AYNI süreçte, kendi thread'inde çalışır ve
+Ses ve araçlar (main.py → ChironLive) AYNI süreçte, kendi thread'inde çalışır ve
 arayüzle core/web_ui.py adaptörü üzerinden konuşur. Eski Tkinter penceresi
 (ui.py) 2026-07-29'da tamamen kaldırıldı — tek arayüz bu.
 
-Çalıştırma:  venv\\Scripts\\pythonw.exe desktop.py   (veya AIRON.bat)
+Çalıştırma:  venv\\Scripts\\pythonw.exe desktop.py   (veya CHIRON.bat)
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ from pathlib import Path
 
 from core.speaking_overlay import overlay as speaking_overlay
 
-# Chromium, kullanıcı sayfaya dokunmadan ses çalmayı engeller. Aıron'un ses
+# Chromium, kullanıcı sayfaya dokunmadan ses çalmayı engeller. Chiron'un ses
 # efektleri (açılış sesi gibi) kullanıcı etkileşiminden ÖNCE çalmak zorunda —
 # bu bir masaüstü uygulaması, gezinilen bir web sayfası değil. WebView2 ek
 # argümanları yalnızca bu ortam değişkeninden okunuyor ve motor başlamadan
@@ -71,18 +71,18 @@ REMOTE_PORT = 8001
 FRONTEND_EXPORT_DIR = BASE_DIR / "frontend" / "out"
 
 # İkonlar (bkz. make_icon.py — prosedürel üretim, boyut başına ayrı çizim).
-ICON_PATH = BASE_DIR / "Icon" / "airon.ico"
-TRAY_ICON_PATH = BASE_DIR / "Icon" / "airon-tray.png"
+ICON_PATH = BASE_DIR / "Icon" / "chiron.ico"
+TRAY_ICON_PATH = BASE_DIR / "Icon" / "chiron-tray.png"
 
 # Görev çubuğu kimliği. pythonw.exe ile başlayan bir süreç, Windows'a kendini
 # tanıtmazsa görev çubuğunda "Python" olarak gruplanır ve Python'un ikonunu
 # gösterir. Bu sabit uygulamayı kendi kimliğine taşıyor.
-APP_USER_MODEL_ID = "Airon.Desktop"
+APP_USER_MODEL_ID = "Chiron.Desktop"
 
 # Pencere: 3D sahne geniş ekranda tasarlandı (bkz. Notes/Tasarim-Kurallari.md § Duyarlılık —
 # 1366 en dar hedef). Minimum boyut bunun altına inmeyi engelliyor ki yerleşim
 # hiç bozulmasın.
-WINDOW_TITLE = "Aıron"
+WINDOW_TITLE = "Chiron"
 WINDOW_SIZE = (1600, 950)
 WINDOW_MIN_SIZE = (1280, 800)
 # app/globals.css'teki --background ile aynı: pencere açılırken WebGL sahnesi
@@ -243,7 +243,7 @@ class WindowGeometry:
             WINDOW_STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
         except Exception:
             # Pencere durumunu kaydedememek uygulamanın kapanmasını engellemez.
-            logging.getLogger("airon").debug("Pencere durumu yazılamadı", exc_info=True)
+            logging.getLogger("chiron").debug("Pencere durumu yazılamadı", exc_info=True)
 
     def bind(self) -> None:
         self._window.events.shown += self.apply_saved
@@ -252,11 +252,11 @@ class WindowGeometry:
 
 # ── Pencere kimliği ve ikonu ────────────────────────────────────────────────
 def _apply_taskbar_identity() -> None:
-    """Görev çubuğunda Aıron'u Python'dan ayırır.
+    """Görev çubuğunda Chiron'u Python'dan ayırır.
 
     Uygulama `pythonw.exe` ile başlıyor. Windows, süreç kendini açıkça
     tanıtmadıkça görev çubuğu düğmesini Python'un kimliğiyle gruplandırır ve
-    onun ikonunu gösterir — sabitlenmiş öğede Aıron yerine yılan ikonu çıkmasının
+    onun ikonunu gösterir — sabitlenmiş öğede Chiron yerine yılan ikonu çıkmasının
     sebebi bu. Açık bir AppUserModelID düğmeyi kendi kimliğimize taşıyor.
 
     Pencere OLUŞTURULMADAN ÖNCE çağrılmalı: kimlik, pencere ilk kez görev
@@ -269,7 +269,7 @@ def _apply_taskbar_identity() -> None:
     except Exception:
         # Kimlik ayarlanamazsa uygulama çalışır, sadece görev çubuğunda Python
         # ile gruplanır — açılışı engelleyecek bir sorun değil.
-        logging.getLogger("airon").debug("AppUserModelID ayarlanamadı", exc_info=True)
+        logging.getLogger("chiron").debug("AppUserModelID ayarlanamadı", exc_info=True)
 
 
 def _apply_window_icon(*_args) -> None:
@@ -327,7 +327,7 @@ def _apply_window_icon(*_args) -> None:
             if handle:
                 user32.SendMessageW(hwnd, wm_seticon, which, handle)
     except Exception:
-        logging.getLogger("airon").debug("Pencere ikonu ayarlanamadı", exc_info=True)
+        logging.getLogger("chiron").debug("Pencere ikonu ayarlanamadı", exc_info=True)
 
 
 def _fatal(message: str) -> int:
@@ -342,7 +342,7 @@ def _fatal(message: str) -> int:
         try:
             import ctypes
 
-            ctypes.windll.user32.MessageBoxW(None, message, "Aıron", 0x10)  # MB_ICONERROR
+            ctypes.windll.user32.MessageBoxW(None, message, "Chiron", 0x10)  # MB_ICONERROR
         except Exception:
             pass
     return 1
@@ -371,7 +371,7 @@ def _start_backend() -> "threading.Thread | None":
     "port kullanımda" hatasıyla uygulamayı hiç açılmaz hale getirirdi.
     """
     if _port_is_open(HOST, PORT):
-        print(f"[Aıron] {PORT} portu zaten dinlemede — mevcut backend kullanılıyor.")
+        print(f"[Chiron] {PORT} portu zaten dinlemede — mevcut backend kullanılıyor.")
         return None
 
     import uvicorn
@@ -386,12 +386,12 @@ def _start_backend() -> "threading.Thread | None":
         sockets.append(_bind_socket(HOST, REMOTE_PORT))
     except OSError as exc:
         # Telefon erişimi olmasın diye uygulamanın hiç açılmaması kabul edilemez.
-        print(f"[Aıron] Uzak erişim portu {REMOTE_PORT} açılamadı ({exc}) — telefon erişimi kapalı.")
+        print(f"[Chiron] Uzak erişim portu {REMOTE_PORT} açılamadı ({exc}) — telefon erişimi kapalı.")
 
     config = uvicorn.Config(app, log_level="warning")
     server = uvicorn.Server(config)
     thread = threading.Thread(
-        target=server.run, kwargs={"sockets": sockets}, name="airon-backend", daemon=True
+        target=server.run, kwargs={"sockets": sockets}, name="chiron-backend", daemon=True
     )
     thread.start()
     return thread
@@ -429,7 +429,7 @@ class TrayController:
                 import pystray
                 from PIL import Image
             except Exception:
-                logging.getLogger("airon").warning("[Aıron] pystray/Pillow yok — tepsi kapalı")
+                logging.getLogger("chiron").warning("[Chiron] pystray/Pillow yok — tepsi kapalı")
                 return
 
             # Tepsi ikonu Windows'ta 16-24px arasında çiziliyor. pystray .ico
@@ -437,23 +437,23 @@ class TrayController:
             # küçük varyanttan üretilmiş ayrı bir PNG veriliyor.
             image = Image.open(TRAY_ICON_PATH if TRAY_ICON_PATH.exists() else ICON_PATH)
             self._icon = pystray.Icon(
-                "airon",
+                "chiron",
                 image,
-                "Aıron",
+                "Chiron",
                 menu=pystray.Menu(
-                    pystray.MenuItem("Aıron'u aç", self._restore, default=True),
+                    pystray.MenuItem("Chiron'u aç", self._restore, default=True),
                     pystray.MenuItem("Çıkış", self._quit),
                 ),
             )
             icon = self._icon
 
         self._window.hide()
-        # Pencere gizlendiği an Aıron'un konuştuğunu gösteren tek şey kalmıyor
+        # Pencere gizlendiği an Chiron'un konuştuğunu gösteren tek şey kalmıyor
         # (3D sahnedeki çekirdek görünmüyor). Sağ üstteki ses dalgası yalnızca
         # burada devreye giriyor — pencere açıkken gereksiz, çünkü çekirdek
         # zaten konuşmayı gösteriyor. Bkz. core/speaking_overlay.py.
         speaking_overlay.set_enabled(True)
-        threading.Thread(target=icon.run, name="airon-tray", daemon=True).start()
+        threading.Thread(target=icon.run, name="chiron-tray", daemon=True).start()
 
     def _clear_icon(self) -> None:
         with self._lock:
@@ -473,10 +473,10 @@ class TrayController:
 
 
 def _start_voice_assistant() -> None:
-    """Sesli asistanı (main.py → AironLive) bu sürecin içinde başlatır.
+    """Sesli asistanı (main.py → ChironLive) bu sürecin içinde başlatır.
 
     Kullanıcı isteğiyle (2026-07-29) sesli asistan ile 3D arayüz TEK UYGULAMA
-    oldu. AironLive'ın kendisi DEĞİŞMEDİ — sadece Tkinter arayüzü yerine
+    oldu. ChironLive'ın kendisi DEĞİŞMEDİ — sadece Tkinter arayüzü yerine
     core/web_ui.WebUI adaptörü veriliyor (aynı yüzey, ekrana çizmek yerine
     WebSocket'e yayın). Sesin çalıştığı bilinen kod yoluna dokunulmadı.
 
@@ -492,23 +492,23 @@ def _start_voice_assistant() -> None:
         try:
             # main.py import edilirken pyaudio/araçlar yükleniyor; pencere
             # açılışını geciktirmemek için burada, thread'in içinde import edilir.
-            from main import AironLive
+            from main import ChironLive
 
             ui = WebUI()
             ui.wait_for_api_key()
-            assistant = AironLive(ui)
-            # Arayüzün "Aıron hazır mı" sorusunu cevaplayabilmesi için geri
+            assistant = ChironLive(ui)
+            # Arayüzün "Chiron hazır mı" sorusunu cevaplayabilmesi için geri
             # referans: canlı oturum kurulmadan gönderilen komut kayboluyor.
             ui.bind_assistant(assistant)
             asyncio.run(assistant.run())
         except Exception:
-            logging.getLogger("airon").exception("[Aıron] Sesli asistan başlatılamadı")
+            logging.getLogger("chiron").exception("[Chiron] Sesli asistan başlatılamadı")
 
-    threading.Thread(target=runner, name="airon-voice", daemon=True).start()
+    threading.Thread(target=runner, name="chiron-voice", daemon=True).start()
 
 
 # Arayüz kaynağı: bunlardan biri derlenmiş kopyadan (out/index.html) yeniyse açılışta yeniden derlenir.
-# NEDEN (2026-10-27): kısayol desktop.py'yi doğrudan açıyor, AIRON.bat yalnız "out yoksa" derliyordu —
+# NEDEN (2026-10-27): kısayol desktop.py'yi doğrudan açıyor, CHIRON.bat yalnız "out yoksa" derliyordu —
 # arayüz değişiklikleri haftalarca eski kopyayla açıldı ("hâlâ aynı görünüyor").
 FRONTEND_SOURCES = ("app", "components", "hooks", "layouts", "public", "services", "stores", "three")
 FRONTEND_CONFIGS = ("package.json", "next.config.ts", "postcss.config.mjs")
@@ -538,21 +538,21 @@ def _frontend_is_stale() -> bool:
 
 def _rebuild_frontend_if_stale() -> None:
     """Kaynak derlenmiş kopyadan yeniyse `npm run build` (bir iki dakika). Olmazsa eski kopyayla açılır."""
-    log = logging.getLogger("airon")
+    log = logging.getLogger("chiron")
     try:
         if not _frontend_is_stale():
             return
     except Exception:
-        log.exception("[Aıron] Arayüzün güncelliği denetlenemedi")
+        log.exception("[Chiron] Arayüzün güncelliği denetlenemedi")
         return
     import shutil
     import subprocess
 
     npm = shutil.which("npm.cmd") or shutil.which("npm")
     if not npm:
-        log.warning("[Aıron] Arayüz eski ama npm bulunamadı; eski kopyayla açılıyor")
+        log.warning("[Chiron] Arayüz eski ama npm bulunamadı; eski kopyayla açılıyor")
         return
-    log.info("[Aıron] Arayüz kaynağı değişmiş, yeniden derleniyor…")
+    log.info("[Chiron] Arayüz kaynağı değişmiş, yeniden derleniyor…")
     try:
         result = subprocess.run(
             [npm, "run", "build"],
@@ -565,10 +565,10 @@ def _rebuild_frontend_if_stale() -> None:
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
     except Exception:
-        log.exception("[Aıron] Arayüz derlenemedi; eski kopyayla açılıyor")
+        log.exception("[Chiron] Arayüz derlenemedi; eski kopyayla açılıyor")
         return
     if result.returncode != 0:
-        log.error("[Aıron] Arayüz derlemesi başarısız (%s): %s", result.returncode, result.stdout[-2000:])
+        log.error("[Chiron] Arayüz derlemesi başarısız (%s): %s", result.returncode, result.stdout[-2000:])
 
 
 def main() -> int:
@@ -577,7 +577,7 @@ def main() -> int:
         return _fatal(
             "Arayüz henüz derlenmemiş.\n\n"
             f"Beklenen klasör:\n{FRONTEND_EXPORT_DIR}\n\n"
-            "Çözüm: proje klasöründeki AIRON.bat dosyasını bir kez çalıştır — "
+            "Çözüm: proje klasöründeki CHIRON.bat dosyasını bir kez çalıştır — "
             "arayüzü kendisi derler."
         )
 

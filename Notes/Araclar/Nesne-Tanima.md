@@ -1,5 +1,5 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # Nesne Tanıma — actions/object_recognition.py
@@ -49,7 +49,7 @@ exception fırlatmaz** — ultralytics/PIL yoksa ya da hata olursa boş liste d�
 
 Sonuçlar `vision_detections` WebSocket olayıyla Vision paneline akıyor
 ([[Arayuz]]). İki kaynak var: kullanıcı panelden "Nesneler" düğmesine bastığında
-(`source: "panel"`) ve Aıron kendi aracını çağırdığında (`source: "assistant"`) —
-Aıron bir şey gördüğünde kullanıcı da görsün diye.
+(`source: "panel"`) ve Chiron kendi aracını çağırdığında (`source: "assistant"`) —
+Chiron bir şey gördüğünde kullanıcı da görsün diye.
 
 Tool: `recognize_objects`, `learn_object` ([[Arac-Tanimlari]]).

@@ -10,8 +10,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'AIRON',
-  description: 'AIRON — Intelligent AI Operating System',
+  title: 'CHIRON',
+  description: 'CHIRON — Intelligent AI Operating System',
 };
 
 export default function RootLayout({

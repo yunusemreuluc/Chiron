@@ -1,5 +1,5 @@
 ---
-tags: [airon, ajan-ofisi, claude-code, codex, arayuz]
+tags: [chiron, ajan-ofisi, claude-code, codex, arayuz]
 ---
 
 # Ajan Ofisi
@@ -21,7 +21,7 @@ işleri kanban olarak gösterir. Esin: Muratify AI'ın AgentSpace'i (2026-10-02)
 ## Veri nereden geliyor
 
 ```
-Claude Code ──hook (async)──> %LOCALAPPDATA%\airon\ofis\events.jsonl ─┐
+Claude Code ──hook (async)──> %LOCALAPPDATA%\chiron\ofis\events.jsonl ─┐
 Codex exec ──kendi kaydı───> ~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl ─┤
                                                                        ▼
                          backend/core/ofis.py  OfficeWatcher (1 sn'de bir stat)
@@ -125,7 +125,7 @@ o deponun ayrı bir worktree'sinde yapılır. Kod: `backend/core/pano_git.py` (g
 ```
 Başlat ──> worktree ~/Projects/.pano-worktrees/<repo>-K-001, dal pano/K-001 (ana dalın ucundan)
 Claude worktree'de çalışır (cwd = worktree; commit/push/merge YAPMA notu görevde)
-bitti ──> dogrulaniyor: Aıron commit_all → test komutunu KENDİSİ koşar → reset_after_test
+bitti ──> dogrulaniyor: Chiron commit_all → test komutunu KENDİSİ koşar → reset_after_test
           ├─ değişiklik yok → bitti, kopya + dal silinir
           ├─ test kaldı → hata (çıktının kuyruğu kartta; Yeniden dene aynı oturumu sürdürür)
           └─ test geçti / test yok → birlestir ──Birleştir──> ana klasörde merge --no-ff → bitti
@@ -135,11 +135,11 @@ bitti ──> dogrulaniyor: Aıron commit_all → test komutunu KENDİSİ koşar
 - **Birleştirme kuralları:** ana klasör kartın açıldığı dalda olmalı; izlenen dosyalarda commit'lenmemiş
   değişiklik varsa birleştirme REDDEDİLİR (Yunus'un yarım işi korunur). Çakışmada `merge --abort`,
   kart `hata`ya düşer ve hata metni Claude'a "worktree'de `git merge <ana dal>` yap" der.
-  ⚠ Airon'un kendi deposu şu an commit'siz değişiklik taşıdığı için Airon kartları birleşemez —
+  ⚠ Chiron'un kendi deposu şu an commit'siz değişiklik taşıdığı için Chiron kartları birleşemez —
   önce commit.
 - **Test komutu:** kabukta, Claude'un izin denetimi OLMADAN koşar. Bu yüzden uzaktan (telefon)
   yalnızca `suggest_test` önerisi ya da boş kabul edilir (403); özel komut yalnız PC'den.
-  Süreç ağacı Job Object'te (zaman aşımı 15 dk, Aıron kapanınca test de ölür).
+  Süreç ağacı Job Object'te (zaman aşımı 15 dk, Chiron kapanınca test de ölür).
 - **Test artıkları:** test `commit_all`'dan SONRA koştuğu için HEAD'den farklı her şey testin ürünü;
   `reset --hard` + `clean -fd` ile atılır. Önceden (canlı deneme) `__pycache__` yüzünden
   `worktree remove` reddediyor, dal silinemiyordu.
@@ -148,7 +148,7 @@ bitti ──> dogrulaniyor: Aıron commit_all → test komutunu KENDİSİ koşar
 - **Bilinen sınır:** birleştirme ve kopya silme pano kilidi altında (birkaç sn); yavaş diskte pano
   o sürede donar (Terra, düşük önem — bilinçli bırakıldı).
 
-Canlı deneme: geçici depoda hatalı `carp` fonksiyonu → Claude düzeltti, Aıron test koştu (1 passed),
+Canlı deneme: geçici depoda hatalı `carp` fonksiyonu → Claude düzeltti, Chiron test koştu (1 passed),
 birleştirme commit'i oluştu, dal ve kopya temizlendi. Testler: `tests/test_pano_worktree.py` (21;
 Codex Terra 16 + Claude 5 gerileme). Terra read-only: 6 bulgu, 5'i düzeltildi, 1'i (kilit) bırakıldı.
 
@@ -179,7 +179,7 @@ o görev Claude'a çevrilir, codex kartı başlamaz. Kartın ajanı bekliyor/dur
 yazıyor; worktree'ler için satır birikir (zararsız, ara sıra temizlenebilir).
 
 Canlı deneme: Jarvis küçük bir kartı iki Terra görevine böldü (README ikincisinin "sonra"sında); Terra ilkini
-yaptı, kendi sandbox'ında testi koşamadı (venv) ama Aıron koştu → geçti → birleşti. Testler:
+yaptı, kendi sandbox'ında testi koşamadı (venv) ama Chiron koştu → geçti → birleşti. Testler:
 `tests/test_pano_leader.py` (Terra 19, kotası dolarken yazdı + Claude 5 kota testi); paket 174/174.
 Çapraz inceleme YAPILAMADI: Terra kotası dolu, Astra yok, özel kod Gemini'ye gitmez — Claude kendi inceledi.
 
@@ -221,7 +221,7 @@ stream-json her işte `rate_limit_event` gönderiyor → `rate_limit_info.unifie
   pencere ve sıfırlanma saati. Çalışan iş KESİLMEZ. Gemini/Codex kartları Claude kotasından etkilenmez.
 - **Görünüm:** Pano'nun üstünde kota şeridi (+ Terra uyuyor notu); ofis üst şeridinde "Claude kota" çubukları
   (`OfficeView`, 30 sn'de bir `/api/pano`).
-- **Sınır:** sayı yalnız Aıron'un başlattığı Claude işlerinden geliyor; terminal oturumları bildirmez. Aıron
+- **Sınır:** sayı yalnız Chiron'un başlattığı Claude işlerinden geliyor; terminal oturumları bildirmez. Chiron
   uzun süre iş başlatmazsa gösterilen değer bayatlar (`seen` zamanı tutuluyor). İlk değer 2026-10-26'da
   bugünkü iş kayıtlarından yazıldı.
 
@@ -235,7 +235,7 @@ Kullanıcı kararı: global `~/.claude/settings.json`'a DOKUNULMAZ (ilk deneme g
 - **Katman 1, araç öncesi (yalnız Claude):** `claude_jobs` her `claude -p`'ye `--settings logs/bekci/settings.json`
   ekler; içinde PreToolUse hook'u → `python backend/core/bekci.py`. Ayar yalnız o oturuma, worktree'de değil
   (ajan kendi bekçisini kapatamasın). 2026-10-26 gerçek işle denendi: hook `-p`'de tetikleniyor,
-  `AIRON_CLAUDE_JOB` geliyor, `deny` adımı durduruyor.
+  `CHIRON_CLAUDE_JOB` geliyor, `deny` adımı durduruyor.
 - **Katman 2, birleştirme öncesi (her motor):** `_verify` worktree diff'ini `scan_diff` ile tarar — eklenen
   anahtar/parola, `.env`/anahtar dosyası, `.claude`/`.git/hooks`, CI dosyası. Codex/Gemini'yi bu katman görür.
 - **13 kural:** toplu-silme, git-push, git-yikici, dis-gonderim (curl POST, rclone, gh pr…), indir-calistir,
@@ -250,14 +250,14 @@ Kullanıcı kararı: global `~/.claude/settings.json`'a DOKUNULMAZ (ilk deneme g
   cevap vermezse Claude Code adımı geçirir — yani engelleme "fail-open".
 - **Sınırlar:** kurallar desen eşleşmesi; kabukta dolaylı yazma (`> dosya`, python -c) kök kuralına takılmaz.
   Telefon işlerinde de hook çalışır ama uyarı yalnız `Job.bekci`'de, telefon arayüzü göstermiyor.
-  Kart Airon'un kendi bekçisini düzenlemek isterse `kafes`'e takılır (bilerek).
+  Kart Chiron'un kendi bekçisini düzenlemek isterse `kafes`'e takılır (bilerek).
 
 Testler: `tests/test_bekci.py` (41). Paket 226/226. Çapraz inceleme yapılamadı (Codex kotası yok); Claude kendi inceledi.
 
 ## 7/24 döngü (2026-10-26, adım 8)
 
 Kod: `backend/core/dongu.py`; durum `config/dongu.json`, raporlar `logs/dongu/rapor-YYYY-MM-DD.md` (ikisi de gitignore).
-Thread Aıron'la açılır (`main.py` lifespan), **döngü varsayılan kapalı**; Pano'daki "7/24" şeridinden açılır.
+Thread Chiron'la açılır (`main.py` lifespan), **döngü varsayılan kapalı**; Pano'daki "7/24" şeridinden açılır.
 Telefondan da açılıp kapanır (açmak korumayı gevşetmez; bekçi ve kota freni aynen geçerli).
 
 - **Ne yapar:** açıkken "Bekliyor" sütunu kuyruktur — hiçbir kart çalışmıyorsa en eski hazır kartı (bağımlılıkları
@@ -273,7 +273,7 @@ Telefondan da açılıp kapanır (açmak korumayı gevşetmez; bekçi ve kota fr
   kilitlenirdi.
 - **Yapmaz:** kart bölmez, hata vereni yeniden denemez, onay/birleştirme vermez — o kartlar Yunus'u bekler.
 - **Sabah raporu:** her gün 08:00 (yerel), son rapordan beri: bitenler, Yunus'u bekleyenler, hatalar, bekçi
-  uyarıları, yaklaşık harcama, kota. Aıron 08:00'de kapalıysa ilk açılışta yazılır (denendi). Pano'da 18 saat
+  uyarıları, yaklaşık harcama, kota. Chiron 08:00'de kapalıysa ilk açılışta yazılır (denendi). Pano'da 18 saat
   görünür, "Tamam" ile kapanır.
 - **Uyarı:** döngü açık ve bekçi `uyar` modundaysa şerit "Gözetimsiz çalışıyor ama bekçi yalnız uyarıyor" der.
 - **Sınır:** PC uyursa döngü de uyur (Windows uyku ayarına dokunulmadı). Rapor maliyeti kartın toplam
@@ -283,7 +283,7 @@ Testler: `tests/test_dongu.py` (9). Paket 235/235. Canlı: 2 Claude + 4 Gemini k
 
 ## Komuta ekranı ve sohbet (2026-10-27)
 
-Yunus: "sana terminalde nasıl iş veriyorsam Aıron'da da öyle olsun" + mevcut ofis/pano "kullanışsız" (boş
+Yunus: "sana terminalde nasıl iş veriyorsam Chiron'da da öyle olsun" + mevcut ofis/pano "kullanışsız" (boş
 sütunlar, üç şerit, iş üç sekmeye dağılmış). Taslak: https://claude.ai/artifact/9gfiWpCSyYSWTGuTxU1SYU.
 
 - **Sekmeler:** Komuta · İşler (eski Pano, `CardBoard`) · Geçmiş (eski Etkinlik, `TaskBoard`). Tam ekran

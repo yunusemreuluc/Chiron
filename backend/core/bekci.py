@@ -1,13 +1,13 @@
 """Bekçi: ajan işlerinin tehlikeli adımlarını yakalar (Ajan İstasyonu adım 7, 2026-10-26).
 
-Esin: ruflo-protector (ruvnet/ruflo, MIT) — fikir alındı, kod yazıldı; kural listesi Aıron'a göre.
+Esin: ruflo-protector (ruvnet/ruflo, MIT) — fikir alındı, kod yazıldı; kural listesi Chiron'a göre.
 
 İki katman:
 1. **Araç öncesi** (yalnız Claude işleri): `claude_jobs` her `claude -p`'yi `--settings <SETTINGS>`
    ile açar; o dosyadaki PreToolUse hook'u bu betiği çalıştırır (`python bekci.py`). Global
    `~/.claude/settings.json`'a DOKUNULMAZ — kullanıcının kendi oturumları etkilenmez, ayar
    dosyası da ajanın çalıştığı worktree'de değil. (2026-10-26 denendi: `-p` + `--settings`
-   hook'u tetikleniyor, `deny` adımı durduruyor, `AIRON_CLAUDE_JOB` hook'a geliyor.)
+   hook'u tetikleniyor, `deny` adımı durduruyor, `CHIRON_CLAUDE_JOB` hook'a geliyor.)
 2. **Birleştirme öncesi** (bütün motorlar): pano kartı doğrulanırken worktree diff'i
    `scan_diff` ile taranır — Codex/Gemini'nin hook'u yok, onları bu katman görür.
 
@@ -40,8 +40,8 @@ MAX_INPUT_LOG = 600  # günlüğe yazılan araç girdisi (karakter)
 MAX_HITS = 50  # kart başına saklanan uyarı
 
 # Ajanın yazma kökü (pano worktree'si). claude_jobs iş ortamına koyar; yoksa kural 4 bakmaz.
-ROOT_ENV = "AIRON_BEKCI_ROOT"
-JOB_ENV = "AIRON_CLAUDE_JOB"
+ROOT_ENV = "CHIRON_BEKCI_ROOT"
+JOB_ENV = "CHIRON_CLAUDE_JOB"
 
 SHELL_TOOLS = ("Bash", "PowerShell")
 WRITE_TOOLS = ("Write", "Edit", "MultiEdit", "NotebookEdit")
@@ -134,7 +134,7 @@ SHELL_RULES: list[tuple[str, str, str, re.Pattern[str]]] = [
     (
         "surec-oldurme",
         "orta",
-        "Ada göre süreç öldürme (Aıron'u da vurabilir)",
+        "Ada göre süreç öldürme (Chiron'u da vurabilir)",
         re.compile(r"\btaskkill\b[^|;\n]*/im\b|\bStop-Process\b[^|;\n]*-Name\b|\b(pkill|killall)\b", _I),
     ),
     (
@@ -356,7 +356,7 @@ def run_hook(raw: str, env: dict[str, str]) -> dict[str, Any] | None:
         return None
     names = ", ".join(name for _, _, name in blocked)
     reason = (
-        f"Aıron bekçisi bu adımı durdurdu ({names}). Bu adımı yapma; gerekiyorsa son mesajını "
+        f"Chiron bekçisi bu adımı durdurdu ({names}). Bu adımı yapma; gerekiyorsa son mesajını "
         "'ONAY_GEREKLI: <ne yapacağın>' satırıyla bitir, Yunus karar versin."
     )
     return {"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",

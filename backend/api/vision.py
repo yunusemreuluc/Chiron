@@ -6,7 +6,7 @@ iskelet olduğu için 2026-07-29 temizliğinde silinmişti; bu sürüm gerçekte
 
 MİMARİ — bu uçlar SONUÇ DÖNDÜRMÜYOR, komut gönderiyor:
 
-    Vision paneli ──HTTP──> burası ──commands──> AironLive (ses döngüsü thread'i)
+    Vision paneli ──HTTP──> burası ──commands──> ChironLive (ses döngüsü thread'i)
     Vision paneli <───────────── WebSocket <──────────── WebUI
 
 Sebebi kameranın bu katmanın elinde olmaması: cihazı `WebcamStreamer` (main.py)

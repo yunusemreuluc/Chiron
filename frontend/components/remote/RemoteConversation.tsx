@@ -10,7 +10,7 @@ import { RemoteCore } from './RemoteCore';
 
 // Telefondaki sohbet akışı. Masaüstündeki ConversationLog 320px'lik bir kartın
 // içinde 12px metin; telefonda asıl ekran bu, okunurluk öncelikli: 15px metin,
-// kullanıcı sağda, Aıron solda cam kartta.
+// kullanıcı sağda, Chiron solda cam kartta.
 
 // Araç adı → "şu an ne yapıyor". Yalnızca uzaktan anlamlı olanlar; listede
 // olmayan araç genel "Çalışıyor" etiketine düşüyor (uydurma bir açıklama yok).
@@ -36,7 +36,7 @@ const TASK_LABELS: Record<string, string> = {
 };
 
 const PIN_THRESHOLD_PX = 96;
-// Aıron'un balonu: sol üst köşe kısa — mesajın "nereden geldiğini" gösteren kuyruk.
+// Chiron'un balonu: sol üst köşe kısa — mesajın "nereden geldiğini" gösteren kuyruk.
 const BUBBLE_RADIUS = '6px 20px 20px 20px';
 
 function formatTime(at: number): string {
@@ -85,10 +85,10 @@ export function RemoteConversation({ onPrompt }: { onPrompt: (text: string) => v
     return () => viewport.removeEventListener('resize', handleResize);
   }, []);
 
-  // Geçmişte yalnızca sistem satırları varken ("Aıron hazır.") de karşılama
+  // Geçmişte yalnızca sistem satırları varken ("Chiron hazır.") de karşılama
   // ekranı: gerçek kullanımda geçmiş hiç boş gelmiyor, `lines.length === 0`
   // koşulu hazır istemleri telefonda hiç göstermiyordu (görsel testte yakalandı).
-  const hasConversation = lines.some((line) => line.kind === 'user' || line.kind === 'airon');
+  const hasConversation = lines.some((line) => line.kind === 'user' || line.kind === 'chiron');
   if (!hasConversation && !busy) {
     return <EmptyState connected={connected} onPrompt={onPrompt} />;
   }
@@ -174,7 +174,8 @@ function MessageRow({ line }: { line: LogLine }) {
           style={{ color: 'rgba(127, 178, 255, 0.8)' }}
         >
           <span className="bg-primary h-1 w-1 rounded-full shadow-[0_0_6px_rgba(127,178,255,0.8)]" />
-          Aıron
+          {/* Kadın seste satır "Daphne:" ile geliyor (bkz. app_config.assistant_name). */}
+          {line.raw.split(':')[0].trim() || 'Chiron'}
         </span>
         <p className="text-foreground text-[15px] leading-relaxed break-words whitespace-pre-wrap">
           {line.text}
@@ -226,7 +227,7 @@ function EmptyState({ connected, onPrompt }: { connected: boolean; onPrompt: (te
         PC’n bir mesaj uzağında
       </h2>
       <p className="text-foreground-secondary mt-2 max-w-[290px] text-center text-[13.5px] leading-relaxed">
-        Aıron ekrana bakar, durumu kontrol eder ve cevabı buraya yazar. PC hoparlörü sessiz kalır.
+        Chiron ekrana bakar, durumu kontrol eder ve cevabı buraya yazar. PC hoparlörü sessiz kalır.
       </p>
 
       <div className="mt-7 grid w-full max-w-[420px] grid-cols-2 gap-2.5">

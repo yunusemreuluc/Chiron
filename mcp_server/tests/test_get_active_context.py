@@ -26,7 +26,7 @@ async def test_returns_foreground_app(client, monkeypatch):
     assert data["app"] == "Visual Studio Code"
     assert data["window_title"] == "server.py"
     assert data["away"] is False
-    # Özet Airon'un kendi describe_context'inden geliyor.
+    # Özet Chiron'un kendi describe_context'inden geliyor.
     assert "Visual Studio Code" in data["summary"]
 
 

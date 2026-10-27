@@ -6,7 +6,7 @@ import { LuClock, LuEye } from 'react-icons/lu';
 import { fetchAutomation, type AutomationSnapshot } from '@/services/modulesApi';
 
 // Otomasyon modülü — kullanıcı isteğiyle (2026-07-30) backend'e bağlandı.
-// Veri kaynağı `AironLive._active_watches` (bkz. backend/api/automation.py).
+// Veri kaynağı `ChironLive._active_watches` (bkz. backend/api/automation.py).
 //
 // Hafızanın aksine bu veri DOSYADA DEĞİL, ses döngüsünün belleğinde — o yüzden
 // periyodik olarak yenilenmesi gerekiyor: bir izleme koşulu gerçekleşince
@@ -48,7 +48,7 @@ export function AutomationPanelContent() {
     return (
       <p className="text-foreground-secondary text-xs leading-relaxed">
         Sesli asistan bu pencerede çalışmıyor, bakacak bir izleme yok. Masaüstündeki{' '}
-        <strong className="text-foreground font-medium">Aıron</strong> kısayoluyla açarsan aktif
+        <strong className="text-foreground font-medium">Chiron</strong> kısayoluyla açarsan aktif
         izlemeler burada görünür.
       </p>
     );
@@ -59,7 +59,7 @@ export function AutomationPanelContent() {
   if (snapshot.watches.length === 0 && briefingEntries.length === 0) {
     return (
       <p className="text-foreground-secondary text-xs leading-relaxed">
-        Aktif izleme yok. Aıron&apos;a &ldquo;şunu izle, olunca haber ver&rdquo; dediğinde burada
+        Aktif izleme yok. Chiron&apos;a &ldquo;şunu izle, olunca haber ver&rdquo; dediğinde burada
         görünür.
       </p>
     );

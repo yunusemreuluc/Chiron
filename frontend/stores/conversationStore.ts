@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 
-// Sesli asistanın (main.py → AironLive) sohbet akışı. Satırlar backend'den
+// Sesli asistanın (main.py → ChironLive) sohbet akışı. Satırlar backend'den
 // "log" olayı olarak geliyor (bkz. core/web_ui.py write_log).
-export type LogKind = 'user' | 'airon' | 'system' | 'error';
+export type LogKind = 'user' | 'chiron' | 'system' | 'error';
 
 export interface LogLine {
   id: number;
@@ -13,13 +13,14 @@ export interface LogLine {
   raw: string;
 }
 
-// AironUI'nin (ui.py) yıllardır kullandığı önek sözleşmesi — kaynak metni
+// ChironUI'nin (ui.py) yıllardır kullandığı önek sözleşmesi — kaynak metni
 // değiştirmeden burada tipe çevriliyor.
 const PREFIXES: { prefix: string; kind: LogKind }[] = [
   { prefix: 'siz:', kind: 'user' },
   { prefix: 'you:', kind: 'user' },
-  { prefix: 'aıron:', kind: 'airon' },
-  { prefix: 'airon:', kind: 'airon' },
+  { prefix: 'chiron:', kind: 'chiron' },
+  // Kadın seste asistanın adı Daphne (bkz. app_config.assistant_name).
+  { prefix: 'daphne:', kind: 'chiron' },
   { prefix: 'sys:', kind: 'system' },
   { prefix: 'err:', kind: 'error' },
 ];

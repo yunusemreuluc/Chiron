@@ -1,4 +1,4 @@
-// AIRON Energy Core — organik yüzey distorsiyonu için 3D simplex noise
+// CHIRON Energy Core — organik yüzey distorsiyonu için 3D simplex noise
 // (Ashima Arts / Stefan Gustavson'ın kamu malı webgl-noise uygulaması) +
 // fresnel kenar parlaması. Tek oktav — düşük GPU maliyeti (CLAUDE.md § PERFORMANCE).
 const SIMPLEX_NOISE_GLSL = /* glsl */ `

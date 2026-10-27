@@ -4,16 +4,16 @@ import type { Metadata, Viewport } from 'next';
 // çerçevesi olmadan, kendi uygulaması gibi açılıyor — manifest ve Apple
 // meta'ları bunun için. Bkz. Notes/Uzaktan-Erisim.md.
 export const metadata: Metadata = {
-  title: 'Aıron',
-  description: 'Aıron — PC’ne dışarıdan ulaş',
+  title: 'Chiron',
+  description: 'Chiron — PC’ne dışarıdan ulaş',
   manifest: '/m/manifest.webmanifest',
   appleWebApp: {
     capable: true,
-    title: 'Aıron',
+    title: 'Chiron',
     statusBarStyle: 'black-translucent',
   },
   icons: {
-    icon: [{ url: '/m/icons/airon-192.png', sizes: '192x192', type: 'image/png' }],
+    icon: [{ url: '/m/icons/chiron-192.png', sizes: '192x192', type: 'image/png' }],
     apple: [{ url: '/m/icons/apple-touch-icon.png', sizes: '180x180' }],
   },
 };

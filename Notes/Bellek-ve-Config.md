@@ -1,5 +1,5 @@
 ---
-tags: [airon, bellek, config]
+tags: [chiron, bellek, config]
 ---
 
 # Bellek ve Config — memory_manager.py + app_config.py

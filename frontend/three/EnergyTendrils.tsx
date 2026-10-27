@@ -12,7 +12,7 @@ import {
   ENERGY_TENDRILS_VERTEX_SHADER,
 } from './shaders/energyTendrils';
 
-// AIRON — çekirdekten dışa doğru yayılan ince enerji parçacıkları (kullanıcı
+// CHIRON — çekirdekten dışa doğru yayılan ince enerji parçacıkları (kullanıcı
 // isteği, 2026-07-27): "içten dışa doğru yayılan ince parçacıklar / energy
 // tendrils". Deterministik sin-hash ile yön/faz üretiliyor (Math.random()
 // yerine — render sırasında saf olmayan çağrı olmasın diye, bkz. Background.tsx'teki
@@ -96,7 +96,7 @@ export function EnergyTendrils() {
     material.uniforms.uTime.value = state.clock.elapsedTime;
 
     // Korona çekirdeğe yapışık: rengi ONUN paletinden geliyor (three/palette.ts),
-    // yoksa Aıron konuşurken yeşil bir çekirdeğin etrafında mavi bir toz bulutu
+    // yoksa Chiron konuşurken yeşil bir çekirdeğin etrafında mavi bir toz bulutu
     // dönerdi.
     const isAsleep = usePowerStore.getState().powerState === 'asleep';
     const palette = isAsleep ? SLEEP_PALETTE : STATE_PALETTE[useAIStateStore.getState().aiState];

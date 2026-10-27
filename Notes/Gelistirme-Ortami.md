@@ -1,11 +1,11 @@
 ---
-tags: [airon, gelistirme, claude-code]
+tags: [chiron, gelistirme, claude-code]
 ---
 
 # Geliştirme Ortamı — Claude Code alt-ajanları
 
-Bu not Aıron'un **kendi kodunu** değil, Aıron'u geliştirirken kullanılan araçları anlatır.
-Aıron çalışma zamanında bu ajanların hiçbirini kullanmaz — bunlar Claude Code oturumunda
+Bu not Chiron'un **kendi kodunu** değil, Chiron'u geliştirirken kullanılan araçları anlatır.
+Chiron çalışma zamanında bu ajanların hiçbirini kullanmaz — bunlar Claude Code oturumunda
 `Agent` aracıyla çağrılan yardımcı personalardır.
 
 ## The Agency (agency-agents)
@@ -25,13 +25,13 @@ iş akışı ve teslim listesi.
 | Kurulan bölümler | engineering (58), design (10), security (12), testing (9), project-management (7), product (5) = **101** |
 | Kurulmayan | marketing, specialized, strategy, game-development, gis, sales, academic, finance, healthcare, spatial-computing, support, paid-media |
 
-Global seçildi: ajanlar Aıron'a özgü değil, depoyu kirletmemeleri gerekiyor.
+Global seçildi: ajanlar Chiron'a özgü değil, depoyu kirletmemeleri gerekiyor.
 
 ### Neden hepsi değil
 
 Claude Code her oturumda kurulu tüm ajanların `description` alanını sistem promptuna
 yükler. 258 ajan kalıcı bir token maliyeti demek ve seçim isabetini de düşürür —
-model 258 seçenek arasından doğru olanı bulmakta zorlanır. Aıron bir Python + Next.js
+model 258 seçenek arasından doğru olanı bulmakta zorlanır. Chiron bir Python + Next.js
 masaüstü uygulaması; pazarlama, GIS veya oyun geliştirme ajanlarının burada işi yok.
 
 ### Tuzak: `name` alanı kebab-case olmalı
@@ -59,7 +59,7 @@ Dosyalar UTF-8 **BOM'suz** yazıldı; BOM `---` satırının önüne düşüp fr
 ayrıştırmasını bozar. PowerShell 5.1'de `Out-File -Encoding utf8` BOM ekler,
 bu yüzden `[System.IO.File]::WriteAllText` + `UTF8Encoding($false)` kullanıldı.
 
-### Aıron'la doğrudan ilgili olanlar
+### Chiron'la doğrudan ilgili olanlar
 
 - `engineering-ai-engineer`, `engineering-multi-agent-systems-architect`,
   `engineering-prompt-engineer` — `core/prompt.txt` ve `tool_defs.py` turları
@@ -119,8 +119,8 @@ Stdlib dışında bağımlılık yok; ortak yardımcılar `_ortak.py`'de.
 Komutlar `python .claude/hooks/session_start.py` — **mutlak yol değil**.
 İki sebep:
 
-1. Kasanın mutlak yolu eskiden `Ders Notları\Aıron`'du — içinde `ı` ve boşluk vardı, cmd'nin
-   kod sayfasından geçerken bozulma riski. 2026-10-02'den beri `C:\Users\yunus\Projects\Airon`
+1. Kasanın mutlak yolu eskiden `Ders Notları\Chiron`'du — içinde `ı` ve boşluk vardı, cmd'nin
+   kod sayfasından geçerken bozulma riski. 2026-10-02'den beri `C:\Users\yunus\Projects\Chiron`
    (saf ASCII, OneDrive dışı) ama göreli yol yine de her yerde güvenli.
 2. `$CLAUDE_PROJECT_DIR` Windows kabuğunda genişlemez (`%VAR%` bekler); göreli
    yol her kabukta aynı çalışır.

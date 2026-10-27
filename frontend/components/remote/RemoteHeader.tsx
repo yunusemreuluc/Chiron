@@ -66,7 +66,7 @@ export function RemoteHeader() {
 
       <div className="flex min-w-0 flex-1 flex-col gap-1.5">
         <span className="text-foreground text-[16px] leading-none font-semibold tracking-[-0.01em]">
-          Aıron
+          Chiron
         </span>
         <span className="text-foreground-secondary flex items-center gap-1.5 text-[12px] leading-none">
           <span
@@ -77,7 +77,7 @@ export function RemoteHeader() {
       </div>
 
       {/* PC hoparlörü. Uzak modda kapalı — telefondan yazınca kendiliğinden
-          kapanıyor (backend/api/voice.py). Açmak, evdeki birine Aıron'u
+          kapanıyor (backend/api/voice.py). Açmak, evdeki birine Chiron'u
           duyurmak istendiğinde işe yarıyor. */}
       <button
         type="button"

@@ -1,12 +1,12 @@
 """Tepsideyken konuşma göstergesi — ekranın sağ üstünde küçük bir ses dalgası.
 
-Kullanıcı isteği (2026-08-01): Aıron tepsiye alındığında pencere görünmüyor,
+Kullanıcı isteği (2026-08-01): Chiron tepsiye alındığında pencere görünmüyor,
 dolayısıyla konuştuğunu anlamanın hiçbir görsel yolu kalmıyor. Konuşurken sağ
 üstte bir dalga çıksın, susunca kapansın.
 
 ## Dalga GERÇEK sesten besleniyor
 
-Süslemek için döngüye alınmış bir animasyon değil: çubuklar Aıron'un o an
+Süslemek için döngüye alınmış bir animasyon değil: çubuklar Chiron'un o an
 çaldığı ses parçasının genliğinden geliyor (`main.py._play_audio` içindeki
 PCM parçası → `_mic_level` ile RMS). Sustuğunda düzleşiyor, yüksek sesle
 konuşurken yükseliyor.
@@ -28,7 +28,7 @@ etmek kötüdür"di.
 
 Elenen alternatif: ikinci bir pywebview penceresi. Görsel olarak HUD'un geri
 kalanıyla tutarlı olurdu ama küçücük bir gösterge için ayrı bir WebView2
-örneği (~50-150 MB) açmak gerekiyordu; Aıron'un bellek profili zaten ~1.25 GB
+örneği (~50-150 MB) açmak gerekiyordu; Chiron'un bellek profili zaten ~1.25 GB
 ([[Kurulum-ve-Baslatma]]).
 
 ## İş parçacığı kuralı
@@ -46,7 +46,7 @@ import logging
 import threading
 from collections import deque
 
-logger = logging.getLogger("airon")
+logger = logging.getLogger("chiron")
 
 # Görünüm
 BAR_COUNT = 14
@@ -112,7 +112,7 @@ class SpeakingOverlay:
             return
         self._stop.clear()
         self._thread = threading.Thread(
-            target=self._run, name="airon-speaking-overlay", daemon=True
+            target=self._run, name="chiron-speaking-overlay", daemon=True
         )
         self._thread.start()
 
@@ -120,7 +120,7 @@ class SpeakingOverlay:
         try:
             import tkinter as tk
         except Exception:
-            logger.warning("[AIRON] Tkinter yok, konuşma göstergesi devre dışı")
+            logger.warning("[CHIRON] Tkinter yok, konuşma göstergesi devre dışı")
             return
 
         try:
@@ -133,7 +133,7 @@ class SpeakingOverlay:
             except Exception:
                 # Şeffaflık desteklenmiyorsa panel opak kalır — gösterge yine
                 # çalışır, sadece dikdörtgen kenarı görünür. Sessizce vazgeçme.
-                logger.info("[AIRON] Şeffaf kaplama desteklenmiyor, opak devam")
+                logger.info("[CHIRON] Şeffaf kaplama desteklenmiyor, opak devam")
 
             ekran_w = root.winfo_screenwidth()
             x = ekran_w - PANEL_W - MARGIN_RIGHT
@@ -156,7 +156,7 @@ class SpeakingOverlay:
 
                 Köşe noktaları iki kez tekrarlanıp `smooth=True` verilince Tk
                 aradaki eğriyi kendisi çiziyor. Keskin köşeli bir kutu
-                masaüstünde 'sistem uyarısı' gibi duruyordu; Aıron'un geri
+                masaüstünde 'sistem uyarısı' gibi duruyordu; Chiron'un geri
                 kalanı yuvarlak (bkz. Notes/Tasarim-Kurallari.md § Arayüz stili).
                 """
                 noktalar = [
@@ -216,7 +216,7 @@ class SpeakingOverlay:
             root.after(0, tick)
             root.mainloop()
         except Exception:
-            logger.exception("[AIRON] Konuşma göstergesi çöktü")
+            logger.exception("[CHIRON] Konuşma göstergesi çöktü")
 
 
 # Tek örnek: hem ses döngüsü (main.py) hem tepsi (desktop.py) buna dokunuyor.

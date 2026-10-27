@@ -60,7 +60,7 @@ export function AssistantDock() {
     setIsArmed(false);
     // İki taraf birlikte temizleniyor: arayüzdeki satırlar VE Gemini Live'ın
     // sohbet bağlamı (backend/api/voice.py → /reset). Yalnızca ekranı silmek
-    // aldatıcı olurdu — Aıron konuşulanları hatırlamaya devam ederdi.
+    // aldatıcı olurdu — Chiron konuşulanları hatırlamaya devam ederdi.
     clearLines();
     void resetSession();
     playSfx('hud');
@@ -88,7 +88,7 @@ export function AssistantDock() {
                   <span className="flex flex-col gap-1">
                     <span className="label-micro">Sohbet</span>
                     <span className="text-foreground text-[13px] leading-none font-medium">
-                      Aıron
+                      Chiron
                     </span>
                   </span>
                 </div>
@@ -113,8 +113,8 @@ export function AssistantDock() {
       {/* Dock'un kendisi: her zaman görünen, sabit yükseklikte cam çubuk. */}
       <GlassPanel className="pointer-events-auto flex items-center gap-1.5 px-2.5 py-2">
         {/* Uzak mod (2026-09-15): telefondan yazılınca PC hoparlörü ve mikrofonu
-            kapanıyor. Eve dönen kullanıcı Aıron'un neden sustuğunu burada görmeli
-            — gizli bir durum "Aıron bozuldu" gibi okunurdu. Tek dokunuşla çıkış;
+            kapanıyor. Eve dönen kullanıcı Chiron'un neden sustuğunu burada görmeli
+            — gizli bir durum "Chiron bozuldu" gibi okunurdu. Tek dokunuşla çıkış;
             PC'den yazmak da uzak modu kendiliğinden kapatıyor. */}
         {remote && (
           <>
@@ -171,7 +171,7 @@ export function AssistantDock() {
               : lastLine
                 ? lastLine.text
                 : connected
-                  ? 'Aıron hazır'
+                  ? 'Chiron hazır'
                   : 'Bağlanıyor'}
           </span>
         </button>

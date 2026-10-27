@@ -62,7 +62,7 @@ def _download_video(url: str) -> tuple[bool, str, str, str]:
     if not HAS_YTDLP:
         return False, "Video indirmek için 'yt-dlp' kurulu değil. 'pip install yt-dlp' ile kur.", "", ""
 
-    tmp_dir = tempfile.mkdtemp(prefix="airon-video-")
+    tmp_dir = tempfile.mkdtemp(prefix="chiron-video-")
     ydl_opts = {
         # ffmpeg bu sistemde kurulu olmayabilir — ayrı ses/görüntü akışlarını
         # birleştirmek (merge) ffmpeg gerektirir, bu yüzden bilinçli olarak zaten
@@ -136,7 +136,7 @@ def _video_prompt(question: str, label: str) -> str:
         else ""
     )
     return (
-        "Sen Aıron için video izleyip rapor eden bir analistsin. Aşağıdaki videoyu "
+        "Sen Chiron için video izleyip rapor eden bir analistsin. Aşağıdaki videoyu "
         f"baştan sona (görüntü + ses) izle.\nVideo: {label or 'verilen video'}\n\n"
         f"{focus}"
         "Rapor formatı:\n"

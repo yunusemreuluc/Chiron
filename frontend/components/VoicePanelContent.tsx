@@ -6,11 +6,11 @@ import { useConversationStore } from '@/stores/conversationStore';
 import { fetchVoiceStatus, sendTextCommand } from '@/services/voiceApi';
 import { ConversationLog } from './ConversationLog';
 
-// Sesli asistanın (main.py → AironLive) sohbet arayüzü. Sağ alttaki dock'un
+// Sesli asistanın (main.py → ChironLive) sohbet arayüzü. Sağ alttaki dock'un
 // içinde yaşıyor (bkz. AssistantDock.tsx); komutlar backend/api/voice.py
-// üzerinden AironLive'a gidiyor.
+// üzerinden ChironLive'a gidiyor.
 //
-// YAZI KUTUSU ÖNEMLİ: mikrofon arızalıyken bile Aıron'la konuşmayı mümkün kılıyor —
+// YAZI KUTUSU ÖNEMLİ: mikrofon arızalıyken bile Chiron'la konuşmayı mümkün kılıyor —
 // Live oturumu `response_modalities=["AUDIO"]` olduğu için cevap SESLİ geliyor.
 export function VoicePanelContent() {
   const connected = useConversationStore((state) => state.connected);
@@ -40,10 +40,10 @@ export function VoicePanelContent() {
   const canSend = assistantRunning !== false && ready;
   const placeholder =
     assistantRunning === false
-      ? 'Aıron çalışmıyor'
+      ? 'Chiron çalışmıyor'
       : ready
-        ? 'Aıron’a yaz...'
-        : 'Aıron bağlanıyor...';
+        ? 'Chiron’a yaz...'
+        : 'Chiron bağlanıyor...';
 
   const submit = async () => {
     const text = draft.trim();
@@ -92,7 +92,7 @@ export function VoicePanelContent() {
 
       {assistantRunning === false && (
         <p className="text-foreground-secondary text-[11px] leading-relaxed">
-          Sesli asistan bu pencerede çalışmıyor. Masaüstündeki <strong>Aıron 3D</strong> kısayoluyla
+          Sesli asistan bu pencerede çalışmıyor. Masaüstündeki <strong>Chiron 3D</strong> kısayoluyla
           açarsan ses, araçlar ve sohbet burada olur.
         </p>
       )}

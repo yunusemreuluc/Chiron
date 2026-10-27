@@ -20,7 +20,7 @@ export const AI_STATE_LABELS: Record<AIState, string> = {
   thinking: 'Düşünüyor',
   speaking: 'Konuşuyor',
   vision: 'Görüyor',
-  // "Otomasyon" değil "Uyguluyor": etiket Aıron'un NE YAPTIĞINI söylüyor,
+  // "Otomasyon" değil "Uyguluyor": etiket Chiron'un NE YAPTIĞINI söylüyor,
   // özelliğin adını değil — diğer dördü de öyle.
   automation: 'Uyguluyor',
   memory: 'Hatırlıyor',
@@ -40,7 +40,7 @@ export const useAIStateStore = create<AIStateStore>((set) => ({
 export function getOrbitSpeedMultiplier(state: AIState): number {
   if (state === 'thinking') return 0.4;
   if (state === 'speaking') return 1.25;
-  // Otomasyon sistemin en hareketli hâli: Aıron dışarıya iş yaptırıyor, sahne
+  // Otomasyon sistemin en hareketli hâli: Chiron dışarıya iş yaptırıyor, sahne
   // de onunla birlikte hızlanıyor. Hafıza tam tersi — içe dönük, neredeyse
   // düşünmek kadar yavaş ama durmuyor.
   if (state === 'automation') return 1.5;

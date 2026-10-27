@@ -1,5 +1,5 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # Gemini Masaüstü Otomasyonu — actions/gemini_automation.py

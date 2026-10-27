@@ -57,7 +57,7 @@ const MODULE_CONTENT: Record<ModuleId, ModuleContent> = {
     title: 'Tarayıcı',
     icon: LuGlobe,
     description:
-      'Aıron tarayıcıda adres açıp arama yapabiliyor ama bir oturum durumu tutmuyor — burada gösterilecek bir şey yok. Sayfa içi etkileşim eklenince burası da dolacak.',
+      'Chiron tarayıcıda adres açıp arama yapabiliyor ama bir oturum durumu tutmuyor — burada gösterilecek bir şey yok. Sayfa içi etkileşim eklenince burası da dolacak.',
   },
   settings: {
     title: 'Ayarlar',

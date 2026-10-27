@@ -1,5 +1,5 @@
 ---
-tags: [airon, tasarim]
+tags: [chiron, tasarim]
 ---
 
 # Tasarım Kuralları
@@ -38,7 +38,7 @@ mousemove başına render olmasın diye).
 
 ## Enerji çekirdeği
 
-AIRON'un merkezi canlıdır. Sürekli nefes alır, yavaşça döner, parçacık yayar,
+CHIRON'un merkezi canlıdır. Sürekli nefes alır, yavaşça döner, parçacık yayar,
 ışımasını değiştirir, kullanıcı etkinliğine tepki verir. **Asla durağan olmaz.**
 
 Tepki vermesi gereken beş şey: Ses, Düşünme, Görü, **Otomasyon**, **Hafıza**.

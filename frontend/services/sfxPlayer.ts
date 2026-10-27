@@ -12,7 +12,7 @@ const FILES = {
   // çalınmıyordu. Bir DURUM sesi değil, kullanıcının kendi eyleminin
   // onaylanması: bu yüzden başarı/hata seslerinden ayrı tutuluyor.
   hud: 'HUD.mp3',
-  // Düşünme döngüsü — tek atış değil, DÖNGÜ (bkz. setThinkingLoop). Aıron
+  // Düşünme döngüsü — tek atış değil, DÖNGÜ (bkz. setThinkingLoop). Chiron
   // düşündüğü sürece çalıyor, durum değişince susuyor.
   think: 'Think.mp3',
 } as const;
@@ -56,11 +56,11 @@ export function playSfx(name: SfxName): void {
 
 // Düşünme sesi diğerlerinden BELİRGİN ŞEKİLDE KISIK: bir olayı bildiren tek
 // atışlık efektlerin aksine bu, saniyelerce süren bir arka plan dokusu. Aynı
-// seviyede çalsaydı Aıron'un her düşünme anı rahatsız edici olurdu.
+// seviyede çalsaydı Chiron'un her düşünme anı rahatsız edici olurdu.
 const THINKING_VOLUME_SCALE = 0.35;
 
 /**
- * Düşünme döngüsünü açar/kapatır. Aıron "thinking" durumuna girdiğinde
+ * Düşünme döngüsünü açar/kapatır. Chiron "thinking" durumuna girdiğinde
  * başlıyor, çıktığında susuyor (bkz. hooks/useThinkingSound.ts).
  */
 export function setThinkingLoop(active: boolean): void {

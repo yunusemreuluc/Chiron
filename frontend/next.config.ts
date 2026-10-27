@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next';
 
-// Kullanıcı isteğiyle (2026-07-29) — Aıron artık tarayıcıda değil, kendi masaüstü
+// Kullanıcı isteğiyle (2026-07-29) — Chiron artık tarayıcıda değil, kendi masaüstü
 // penceresinde açılıyor (bkz. kökteki desktop.py). Bunun için arayüz STATİK olarak
 // dışa aktarılıyor: `next build` → frontend/out/ altında saf HTML/CSS/JS.
 //

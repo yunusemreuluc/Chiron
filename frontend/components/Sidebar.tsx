@@ -73,7 +73,7 @@ function RailButton({
         aria-label={label}
         aria-current={isActive ? 'true' : undefined}
         onClick={onClick}
-        // Yerel durum etiketi gösteriyor, store ise AIRON imzasına "çekil"
+        // Yerel durum etiketi gösteriyor, store ise CHIRON imzasına "çekil"
         // diyor (bkz. stores/railHoverStore.ts) — ikisi aynı olayın iki ayrı
         // sonucu, o yüzden birlikte set ediliyor.
         onMouseEnter={() => {

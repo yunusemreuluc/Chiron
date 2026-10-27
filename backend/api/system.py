@@ -139,11 +139,11 @@ async def telemetry() -> dict:
 
 @router.get("/context")
 async def context() -> dict:
-    """Ambient bağlam — Aıron'un "kullanıcı şu an ne yapıyor" farkındalığı.
+    """Ambient bağlam — Chiron'un "kullanıcı şu an ne yapıyor" farkındalığı.
 
     Aynı kaynağı `get_context` aracı da kullanıyor (actions/ambient_context.py):
     araç modele, bu uç nokta arayüze. İkisi AYNI fonksiyondan besleniyor, yani
-    arayüzde gördüğün şey Aıron'un gerçekten bildiği şey — ayrı yazılsalardı
+    arayüzde gördüğün şey Chiron'un gerçekten bildiği şey — ayrı yazılsalardı
     biri bayatlar ve arayüz olmayan bir farkındalığı varmış gibi gösterirdi
     (bkz. Notes/Bilinen-Tuzaklar.md § Arayüzde dürüstlük).
 

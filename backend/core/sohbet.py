@@ -1,6 +1,6 @@
-"""Sohbet — Aıron'dan ajanla süren konuşma (Komuta ekranı, 2026-10-27).
+"""Sohbet — Chiron'dan ajanla süren konuşma (Komuta ekranı, 2026-10-27).
 
-Kullanıcı isteği: "sana terminalde nasıl iş veriyorsam Aıron'da da öyle olsun". Pano kartı tek
+Kullanıcı isteği: "sana terminalde nasıl iş veriyorsam Chiron'da da öyle olsun". Pano kartı tek
 seferlik iş; sohbette her mesaj AYNI Claude oturumunu `--resume` ile sürdürür, yani ajan önceki
 mesajları bilir. İşi yine `claude_jobs` koşar: aynı kuyruk, bekçi, kota freni, süre sınırı.
 
@@ -28,7 +28,7 @@ from typing import Any, Callable
 
 from backend.core import claude_jobs
 
-logger = logging.getLogger("airon.sohbet")
+logger = logging.getLogger("chiron.sohbet")
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 STORE_PATH = BASE_DIR / "config" / "sohbet.json"
@@ -141,7 +141,7 @@ class Sohbet:
             "id": chat["id"],
             "title": chat["title"],
             "agent": chat["agent"],
-            "source": chat.get("source", "airon"),
+            "source": chat.get("source", "chiron"),
             "cwd": chat.get("cwd"),
             "created": chat["created"],
             "updated": chat["updated"],
@@ -167,7 +167,7 @@ class Sohbet:
                 continue
             job = self.jobs.get(msg["job_id"])
             if not job:
-                msg.update(status="hata", text=msg.get("text") or "İş kaydı kayboldu (Aıron yeniden başlamış olabilir).")
+                msg.update(status="hata", text=msg.get("text") or "İş kaydı kayboldu (Chiron yeniden başlamış olabilir).")
                 changed = True
                 continue
             status = _JOB_TO_STATUS.get(job.get("status"), "hata")
@@ -204,7 +204,7 @@ class Sohbet:
             "id": secrets.token_hex(4),
             "title": (title or "").strip()[:MAX_TITLE] or "Yeni sohbet",
             "agent": agent,
-            "source": "airon",
+            "source": "chiron",
             "cwd": cwd,
             "session_id": None,
             "created": now,
@@ -296,7 +296,7 @@ class Sohbet:
 
     # ── Terminal oturumları ─────────────────────────────────────────────
     def terminal_sessions(self) -> list[dict[str, Any]]:
-        """PC'deki son etkileşimli Claude Code oturumları (en yeni önce). Aıron'un kendi açtığı
+        """PC'deki son etkileşimli Claude Code oturumları (en yeni önce). Chiron'un kendi açtığı
         `claude -p` oturumları (entrypoint sdk-cli) ve alt ajan kayıtları listelenmez."""
         horizon = self.clock() - TERMINAL_DAYS * 86400
         files: list[tuple[float, Path]] = []

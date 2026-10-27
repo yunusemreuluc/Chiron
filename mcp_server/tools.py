@@ -1,14 +1,14 @@
 """
-Airon'un salt-okunur yeteneklerini MCP'ye taşıyan ince sarmalayıcılar.
+Chiron'un salt-okunur yeteneklerini MCP'ye taşıyan ince sarmalayıcılar.
 
-Buradaki fonksiyonlar Airon'un MEVCUT kodunu import edip çağırıyor; Airon'da
+Buradaki fonksiyonlar Chiron'un MEVCUT kodunu import edip çağırıyor; Chiron'da
 hiçbir dosya değişmiyor. Her fonksiyon ya Pydantic bir sonuç modeli döner ya da
 `ToolError` fırlatır — MCPServer bunu `is_error=True` + okunabilir mesaja
 çeviriyor, server çökmüyor.
 
-GÜVENLİK SINIRI: Airon'da iki adımlı onay (`confirm=false` → `confirm=true`)
+GÜVENLİK SINIRI: Chiron'da iki adımlı onay (`confirm=false` → `confirm=true`)
 isteyen hiçbir araç buraya alınmadı. Buradaki dört aracın hiçbiri dosya yazmaz,
-silmez, tıklamaz, ağ isteği atmaz. Ekran görüntüsü için Airon'un geçici bir PNG
+silmez, tıklamaz, ağ isteği atmaz. Ekran görüntüsü için Chiron'un geçici bir PNG
 yazması istisna — o dosya iş bitince siliniyor.
 """
 
@@ -25,7 +25,7 @@ from typing import Literal
 from mcp.server.mcpserver.exceptions import ToolError
 from pydantic import BaseModel, Field
 
-# Airon modülleri `from actions...`, `from core...` diye mutlak import ediyor —
+# Chiron modülleri `from actions...`, `from core...` diye mutlak import ediyor —
 # repo kökü sys.path'te olmalı. Server hangi klasörden başlatılırsa başlatılsın.
 REPO_ROOT = Path(__file__).resolve().parent.parent
 if str(REPO_ROOT) not in sys.path:
@@ -39,11 +39,11 @@ MAX_IMAGE_BYTES = 20 * 1024 * 1024
 MAX_IMAGE_PIXELS = 40_000_000
 
 # Hafızada olup MCP'ye ASLA açılmayan kategoriler. whatsapp_contacts telefon
-# numarası tutuyor — Airon'un kendisi mesaj göndermek için kullanıyor ama bir
+# numarası tutuyor — Chiron'un kendisi mesaj göndermek için kullanıyor ama bir
 # dış modele dökülmesinin bir faydası yok, sadece riski var.
 PRIVATE_MEMORY_CATEGORIES = {"whatsapp_contacts"}
 
-# Kategori dışlamak yetmiyor: kullanıcı "annemin numarası ..." dediğinde Airon
+# Kategori dışlamak yetmiyor: kullanıcı "annemin numarası ..." dediğinde Chiron
 # bunu notes/ altına da kaydedebiliyor. Her değerde telefon benzeri diziler
 # (10–15 rakam, boşluk/tire/nokta/parantez ayraçlı, başta + olabilir) maskelenir.
 _PHONE_CANDIDATE = re.compile(r"\+?\d[\d\s().-]{8,}\d")
@@ -195,15 +195,15 @@ _reader_lock = threading.Lock()
 
 
 def _ensure_ocr_reader() -> None:
-    """OCR okuyucusunu Airon'un önbelleğine İNDİRMESİZ kurar.
+    """OCR okuyucusunu Chiron'un önbelleğine İNDİRMESİZ kurar.
 
-    Airon'un kendi `_get_reader()`'ı EasyOCR'ı varsayılan `download_enabled=True`
+    Chiron'un kendi `_get_reader()`'ı EasyOCR'ı varsayılan `download_enabled=True`
     ile başlatıyor: model eksikse ağdan indiriyor ve hatayı yutuyor (sonuç "yazı
     yok" görünüyor). MCP tarafı ağsız ve dürüst olmalı — okuyucuyu aynı
-    ayarlarla ama indirme kapalı kurup Airon'un önbellek değişkenine koyuyoruz;
-    Airon'un kodu değişmiyor, `read_text_in_jpeg` bu hazır okuyucuyu kullanıyor.
+    ayarlarla ama indirme kapalı kurup Chiron'un önbellek değişkenine koyuyoruz;
+    Chiron'un kodu değişmiyor, `read_text_in_jpeg` bu hazır okuyucuyu kullanıyor.
     """
-    # 2026-10-02: Airon'un okuyucusu artık `ocr._reader` (core/idle_model.py) —
+    # 2026-10-02: Chiron'un okuyucusu artık `ocr._reader` (core/idle_model.py) —
     # kullanınca yüklenip 2 dk boşta kalınca bırakılıyor. `ensure` yalnız boşsa
     # bizim (indirmesiz) yükleyicimizle kurar ve bunu kullanım sayar.
     with _reader_lock:
@@ -215,7 +215,7 @@ def _ensure_ocr_reader() -> None:
         except Exception as exc:
             raise ToolError(
                 f"OCR modeli yüklenemedi ({exc}). Modeller ~/.EasyOCR/model altında olmalı; "
-                "Airon'da bir kez metin okutmak onları indirir."
+                "Chiron'da bir kez metin okutmak onları indirir."
             ) from exc
 
 
@@ -227,7 +227,7 @@ def _capture_screen() -> tuple[bytes, str]:
     captured, path_or_error, window_title = screen_vision._capture_active_window()
     if not captured:
         raise ToolError(path_or_error)
-    # Airon bu PNG'yi tempfile'a yazıp bırakıyor (Gemini'ye yüklemek için).
+    # Chiron bu PNG'yi tempfile'a yazıp bırakıyor (Gemini'ye yüklemek için).
     # Burada ekran görüntüsü diskte kalmasın: oku ve sil.
     tmp = Path(path_or_error)
     try:
@@ -238,7 +238,7 @@ def _capture_screen() -> tuple[bytes, str]:
 
 def read_text(source: Literal["screen", "image"], image_path: str | None) -> ReadTextResult:
     if not ocr.HAS_EASYOCR:
-        raise ToolError("easyocr kurulu değil — Airon'un requirements.txt notuna bakın.")
+        raise ToolError("easyocr kurulu değil — Chiron'un requirements.txt notuna bakın.")
     _ensure_ocr_reader()
 
     if source == "image":
@@ -271,7 +271,7 @@ def active_context() -> ActiveContext:
     return ActiveContext(summary=summary, **{k: ctx[k] for k in ActiveContext.model_fields if k != "summary"})
 
 
-# ── 3. Airon hafızasında arama ──────────────────────────────────────────────
+# ── 3. Chiron hafızasında arama ──────────────────────────────────────────────
 
 def search_memory(query: str, limit: int) -> MemorySearchResult:
     needle = memory_manager._normalize_text(query)
@@ -283,7 +283,7 @@ def search_memory(query: str, limit: int) -> MemorySearchResult:
     for category, bucket in mem.items():
         if category in PRIVATE_MEMORY_CATEGORIES:
             continue
-        # Airon'un delete_memory'si de aynı iki şekli ele alıyor: kategori
+        # Chiron'un delete_memory'si de aynı iki şekli ele alıyor: kategori
         # altında anahtar/değer sözlüğü ya da doğrudan bir değer.
         items = bucket.items() if isinstance(bucket, dict) else [(category, bucket)]
         for key, value in items:

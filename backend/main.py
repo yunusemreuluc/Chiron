@@ -1,4 +1,4 @@
-"""AIRON — web backend (FastAPI).
+"""CHIRON — web backend (FastAPI).
 
 main.py (kök dizindeki Tkinter/Gemini Live masaüstü uygulaması) ile TAMAMEN
 BAĞIMSIZ, ayrı bir süreç olarak çalışır — ona hiç dokunmaz, hiçbir modülünü
@@ -29,7 +29,7 @@ from backend.core.remote_auth import RemoteAccessMiddleware
 from backend.websocket.manager import manager
 from backend.websocket.router import router as websocket_router
 
-logger = logging.getLogger("airon.backend")
+logger = logging.getLogger("chiron.backend")
 
 # Masaüstü sürümünde (bkz. kökteki desktop.py) arayüz de buradan sunuluyor:
 # `npm run build` çıktısı frontend/out/ altındaki statik dosyalar. Böylece
@@ -60,11 +60,11 @@ async def lifespan(_: FastAPI):
     yield
     dongu.stop()
     watcher.stop()
-    # Telefondan verilen Claude işi Aıron'la birlikte kapanır (süreç ağacıyla).
+    # Telefondan verilen Claude işi Chiron'la birlikte kapanır (süreç ağacıyla).
     claude_jobs.jobs.shutdown()
 
 
-app = FastAPI(title="AIRON Backend", version="0.1.0", lifespan=lifespan)
+app = FastAPI(title="CHIRON Backend", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -86,7 +86,7 @@ app.include_router(websocket_router)
 
 @app.get("/api/health")
 async def health() -> dict:
-    return {"success": True, "message": "AIRON backend çalışıyor", "data": {}}
+    return {"success": True, "message": "CHIRON backend çalışıyor", "data": {}}
 
 
 if SFX_DIR.is_dir():

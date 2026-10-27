@@ -1,17 +1,17 @@
 ---
-tags: [airon, plan, claude-code, uzaktan-erisim]
+tags: [chiron, plan, claude-code, uzaktan-erisim]
 ---
 
-# Plan — Aıron'a Claude Code entegrasyonu
+# Plan — Chiron'a Claude Code entegrasyonu
 
-Bağlı: [[Home]] · [[Uzaktan-Erisim]] · [[Airon-Mobil]] · [[MCP-Server]]
+Bağlı: [[Home]] · [[Uzaktan-Erisim]] · [[Chiron-Mobil]] · [[MCP-Server]]
 
-2026-09-30, kullanıcı isteği: *"Ben işteyken telefonla görev verince Aıron senin
+2026-09-30, kullanıcı isteği: *"Ben işteyken telefonla görev verince Chiron senin
 sisteminle yapabilir mi?"* — telefondan sesle verilen işi PC'de Claude Code (şu an
 kullanılan sistemin aynısı: CLAUDE.md, Jarvis hafızası, skill'ler, Codex lane'leri)
-analiz edip yapacak, sonucu Aıron sesli söyleyecek.
+analiz edip yapacak, sonucu Chiron sesli söyleyecek.
 
-**Sıra (kullanıcı kararı):** önce Faz 0 — Aıron'un performansı ölçülür, testler
+**Sıra (kullanıcı kararı):** önce Faz 0 — Chiron'un performansı ölçülür, testler
 yapılır, gereksiz dosyalar silinir. Entegrasyon ondan sonra.
 
 **2026-10-02 güncellemesi (kullanıcı):** Faz 0'dan da önce **Ajan Ofisi** (Faz A) yapılır.
@@ -55,7 +55,7 @@ Bilinen-Tuzaklar § Arayüzde dürüstlük geçerli: ofiste gösterilen her şey
 - **Claude Code hook'ları** (`~/.claude/settings.json`, var olan dört hook'un yanına):
   `SessionStart`, `UserPromptSubmit`, `PreToolUse`, `PostToolUse`, `SubagentStop`, `Stop`,
   `SessionEnd`. Tek bir hızlı betik (`~/.claude/hooks/ofis-olay.ps1`) olayı
-  `%LOCALAPPDATA%\airon\ofis\events.jsonl`'e ekler. Kural: **<30 ms, asla bloklamaz,
+  `%LOCALAPPDATA%\chiron\ofis\events.jsonl`'e ekler. Kural: **<30 ms, asla bloklamaz,
   hata verirse sessiz geçer** — Claude oturumunu yavaşlatamaz.
 - **Kim ne yapıyor çıkarımı:** `Agent` aracı → yeni alt ajan masası (açıklama + prompt);
   `Bash` komutu `codex exec … -m gpt-5.6-sol` → Sol, `gpt-6-astra` → Astra, `bunny.py` →
@@ -65,11 +65,11 @@ Bilinen-Tuzaklar § Arayüzde dürüstlük geçerli: ofiste gösterilen her şey
 - **Backend:** `backend/core/ofis.py` olay dosyasını izler, durumu kurar (kim, hangi iş,
   hangi aşama), WebSocket'e `office_*` olayları basar. (Tuzak: `EventType` + yayıncı +
   arayüz `switch` üçü birden — biri atlanırsa olay sessizce düşer.)
-- Aıron kapalıyken de olaylar diske yazılır; açılınca geçmiş yüklenir.
+- Chiron kapalıyken de olaylar diske yazılır; açılınca geçmiş yüklenir.
 
 ### A.3 Ofis sahnesi
 
-- **Görsel dil:** AgentSpace piksel sanat; Aıron'un tasarım kuralları (cam, derinlik,
+- **Görsel dil:** AgentSpace piksel sanat; Chiron'un tasarım kuralları (cam, derinlik,
   hacimsel ışık, "düz tasarım yok") piksel sanatla çelişir. Öneri: **izometrik, hologram
   tarzı 3D ofis** — mevcut Three.js sahnesinde, kamera çekirdekten ofise uçar.
   Kenar çubuğundaki boş `Ajanlar` modülü ofise açılır.
@@ -98,10 +98,10 @@ Bilinen-Tuzaklar § Arayüzde dürüstlük geçerli: ofiste gösterilen her şey
 - **Kaynak paneli:** Claude/Codex/Gemini/Bunny kota ve token kullanımı, model dağılımı.
 - **Zaman çizelgesi tekrar oynatma:** dünün işini hızlandırılmış izleme (olay logu üstünden).
 - **Hafıza köşesi:** Jarvis/memory dosyalarına yazılanlar ofiste "arşiv dolabı"na düşer.
-- **Günlük rapor:** gün sonu "bugün ofiste ne oldu" özeti, Aıron sesli okuyabilir.
-- **Sesle soru:** "Aıron, ofiste kim ne yapıyor?" → yeni araç `get_office_status` (salt-okunur;
+- **Günlük rapor:** gün sonu "bugün ofiste ne oldu" özeti, Chiron sesli okuyabilir.
+- **Sesle soru:** "Chiron, ofiste kim ne yapıyor?" → yeni araç `get_office_status` (salt-okunur;
   MCP server'a da eklenebilir).
-- **Telefonda ofis:** Faz 3'te Aıron Mobil'e aynı ofis + pano (salt-okunur başlar).
+- **Telefonda ofis:** Faz 3'te Chiron Mobil'e aynı ofis + pano (salt-okunur başlar).
 
 ### A.6 Sınırlar
 
@@ -131,7 +131,7 @@ Bilinen-Tuzaklar § Arayüzde dürüstlük geçerli: ofiste gösterilen her şey
 
 ## Faz 0 — Performans, test, temizlik (ilk iş)
 
-Amaç: Claude işleri arka planda çalışırken Aıron makineyi yormasın.
+Amaç: Claude işleri arka planda çalışırken Chiron makineyi yormasın.
 
 ### 0.1 Ölçüm (önce taban çizgisi, sonra değişiklik)
 - Boşta (dinleme açık, konuşma yok) 10 dk: CPU %, RAM, GPU/VRAM, süreç sayısı.
@@ -162,28 +162,28 @@ Amaç: Claude işleri arka planda çalışırken Aıron makineyi yormasın.
   (`yolov8s-worldv2.pt` kök dizinde + `weights/` — hangisi kullanılıyor), eski makrolar,
   ölü kod/araç dosyaları (tool_defs'te tanımı olmayan `actions/*.py`).
 - 2026-09-30 ilk tarama: repo `venv` hariç **1,1 GB**, 13 `__pycache__` klasörü,
-  `logs/` 2 dosya (airon.log, desktop.log), `yolov8s-worldv2.pt` gitignore'da.
+  `logs/` 2 dosya (chiron.log, desktop.log), `yolov8s-worldv2.pt` gitignore'da.
   Klasör bazında boyut dökümü yarına kaldı (OneDrive'da `du` çok yavaş).
 - `.gitignore` kontrolü: log, ağırlık, `__pycache__`, `config/api_keys.json` repoya girmesin.
 - Not: proje OneDrive içinde — büyük ağırlık/log dosyaları senkronu da yoruyor; OneDrive
   dışına taşımak ayrı bir karar olarak sorulur.
-- Ayrı konu: `C:\Users\yunus\Aıron` bir **Unity projesi**, bu repo değil. Karışmasın;
+- Ayrı konu: `C:\Users\yunus\Chiron` bir **Unity projesi**, bu repo değil. Karışmasın;
   silinmesi istenirse ayrıca sorulur.
 
 ### Faz 0 sonuçları (2026-10-02)
 
 **Ölçüm.** Yöntem: `psutil` süreç ağacı + Windows `GPU Engine(*engtype_3D)` sayacı (pid'e göre).
-Sesli asistan ölçümü kullanıcının kendi açtığı tam Aıron'u (pasif, dokunmadan) okuyarak.
+Sesli asistan ölçümü kullanıcının kendi açtığı tam Chiron'u (pasif, dokunmadan) okuyarak.
 
 | Durum | CPU (makine %) | GPU 3D | RAM |
 |---|---|---|---|
-| Tam Aıron, **tepside**, boşta (ses döngüsü açık) | %0,5 | %0 | 1,7 GB (1,1 GB'ı WebView2 GPU süreci — gizliyken de bırakmıyor) |
+| Tam Chiron, **tepside**, boşta (ses döngüsü açık) | %0,5 | %0 | 1,7 GB (1,1 GB'ı WebView2 GPU süreci — gizliyken de bırakmıyor) |
 | Arayüz, pencere açık, boşta — **önce** (111 FPS, 144 Hz ekran) | %5,7 | **%69,5** | — |
 | Arayüz, pencere açık, boşta — **sonra** (uyarlanır FPS, ~30) | %2,7 | **%22,5** | — |
 
-"Önce/sonra" görünür Edge'de (gerçek GPU), çalışan Aıron'un sunduğu arayüzle, 45 sn
+"Önce/sonra" görünür Edge'de (gerçek GPU), çalışan Chiron'un sunduğu arayüzle, 45 sn
 boşta, fare hareketsiz. WebView2 aynı Chromium motoru; gerçek pencerede de doğrulanmalı
-(`window.__aironGovernor()`).
+(`window.__chironGovernor()`).
 
 - **Yapılan:** `three/FrameGovernor.tsx` — aktif/girdi 60, boşta 30, odak dışı 20, uyku 15 FPS
   (ayrıntı [[Arayuz]] § Kare hızı). Ofis açıkken ana sahne zaten duruyor ([[Ajan-Ofisi]]).
@@ -200,7 +200,7 @@ boşta, fare hareketsiz. WebView2 aynı Chromium motoru; gerçek pencerede de do
 
 **Testler.** `tests/test_remote_auth.py` (Codex Sol yazdı, Claude doğruladı: config bellekte
 taklit, gerçek dosyaya dokunmuyor) — 32 test. Toplam pytest **112/112** (ofis 31 +
-uzak kapı 32 + istek listesi + MCP 42). Açılış duman testi yerine çalışan Aıron'a GET:
+uzak kapı 32 + istek listesi + MCP 42). Açılış duman testi yerine çalışan Chiron'a GET:
 `/api/health` 1,5 ms, `/api/system/telemetry` 18 ms, `/api/office/state` 2 ms.
 
 **Temizlik envanteri** (silinmedi — kullanıcı onayı bekliyor):
@@ -209,7 +209,7 @@ uzak kapı 32 + istek listesi + MCP 42). Açılış duman testi yerine çalışa
 |---|---|---|
 | 13 × `__pycache__/` | 1,1 MB | yeniden üretilir, güvenle silinir |
 | `frontend/.next/` (build önbelleği) | 17 MB | yeniden üretilir, güvenle silinir |
-| `logs/airon.log`, `logs/desktop.log` | 0,8 MB | küçük; silinebilir ya da döndürülebilir |
+| `logs/chiron.log`, `logs/desktop.log` | 0,8 MB | küçük; silinebilir ya da döndürülebilir |
 | `weights/ViT-B-32.pt` | 338 MB | **KULLANILIYOR** (YOLO-World'ün CLIP metin kodlayıcısı) — kalır |
 | `yolov8s-worldv2.pt` (kök) | 25 MB | **KULLANILIYOR** (`object_recognition.py`) — kalır |
 | ölü `actions/*.py` | — | yok: 85 py dosyası tarandı, her modül bir yerden çağrılıyor |
@@ -223,12 +223,12 @@ izlenmiyor. Asıl yük silinecek dosyalar değil, **OneDrive senkronu**: `fronte
 - Makro: "kullanmıyorum, tamamen sil" — motor, API, panel, kenar çubuğu, `macros/`, not sayfası kaldırıldı.
 - Görü modelleri: "basınca çalışsın, yoksa çalışmasın" → `core/vision_worker.py`: YOLO-World + EasyOCR
   ayrı alt süreçte, 2 dk boşta kapanır. Süreç içi bırakma (`core/idle_model.py`) ölçüldü ve belleği
-  geri VERMEDİ (torch ayırıcısı); alt süreç ölünce 1,8–2,6 GB tamamen dönüyor. Aıron 14 MB'ta kalıyor.
+  geri VERMEDİ (torch ayırıcısı); alt süreç ölünce 1,8–2,6 GB tamamen dönüyor. Chiron 14 MB'ta kalıyor.
   Bedel: uzun aradan sonra ilk çağrı ~6 sn (eskiden ~2,5), sıcakken 0,6 sn.
 - MSAA: "yok, yapma" — dokunulmadı.
-- OneDrive: taşındı → `C:\Users\yunus\Projects\Airon` (69.904 dosya, 2,5 GB, 0 hata; venv yeniden
+- OneDrive: taşındı → `C:\Users\yunus\Projects\Chiron` (69.904 dosya, 2,5 GB, 0 hata; venv yeniden
   kurulmadan çalıştı, 121/121 test). Güncellenen: masaüstü kısayolu, Claude MCP kaydı (`claude mcp
-  get airon` → Connected), Obsidian kasa kaydı (yedek `obsidian.json.bak-airon-tasima`). Eski klasör
+  get chiron` → Connected), Obsidian kasa kaydı (yedek `obsidian.json.bak-chiron-tasima`). Eski klasör
   silindi (OneDrive çöp kutusunda 30 gün). **Yedek notu:** git'e girmeyen `config/api_keys.json` ve
   `memory/` artık OneDrive'da değil — ayrı yedek kurulmadı.
 
@@ -237,7 +237,7 @@ izlenmiyor. Asıl yük silinecek dosyalar değil, **OneDrive senkronu**: `fronte
 ## Faz 1 — PC ucu: telefondan Claude'a iş
 
 ```
-[Telefon · Aıron Mobil] ──Tailscale + PIN──> POST /api/remote/claude
+[Telefon · Chiron Mobil] ──Tailscale + PIN──> POST /api/remote/claude
                                               │ iş kuyruğu (job id, tek seferde 1 iş)
                                               ▼
                         claude -p "<görev>" --output-format stream-json   (cwd: C:\Users\yunus)
@@ -262,7 +262,7 @@ izlenmiyor. Asıl yük silinecek dosyalar değil, **OneDrive senkronu**: `fronte
 `POST /api/remote/claude {task, resume_of?}` · `GET /api/remote/claude` (son 10) ·
 `GET /api/remote/claude/{id}` · `POST /api/remote/claude/{id}/cancel`. Kapı: `/api/remote/*` public değil.
 
-- **Durumlar:** `queued → running → done | needs_approval | failed | timeout | cancelled`; Aıron
+- **Durumlar:** `queued → running → done | needs_approval | failed | timeout | cancelled`; Chiron
   kapanırken yarıda kalan iş açılışta `interrupted`. Telefona giden alanlar: `last_step` (canlı tek
   satır), `steps`, `summary` (sesli okunacak son mesaj), `approval`, `session_id`, `cost_usd`.
 - **İzin modu `auto`** (araç kısıtı yok kararına en yakın güvenli hâl: bu oturumun kendisi gibi,
@@ -271,7 +271,7 @@ izlenmiyor. Asıl yük silinecek dosyalar değil, **OneDrive senkronu**: `fronte
 - **Enjeksiyon:** `claude` npm başlatıcısı `.CMD` — argüman cmd.exe'den geçer. `claude.exe`
   doğrudan çalıştırılıyor, görev stdin'den gidiyor; exe bulunamazsa iş başlamaz.
 - **Süreç ağacı = Windows Job Object** (Astra): askıda başlat → job'a ata → uyandır;
-  `KILL_ON_JOB_CLOSE`. Süre sınırı (45 dk), iptal ve Aıron'un kapanması/çökmesi bütün ağacı
+  `KILL_ON_JOB_CLOSE`. Süre sınırı (45 dk), iptal ve Chiron'un kapanması/çökmesi bütün ağacı
   öldürür — Claude'un arka planda başlattığı ve stdout'u tutan torunlar dahil (eskiden kuyruk kilitlenirdi).
 - Tek iş + 3'lük kuyruk; kayıt `logs/claude-jobs/<id>.json(l)`, son 30 iş, log iş başına 20 MB.
 
@@ -282,23 +282,23 @@ düzeltildi; bir yarışı Sol da ayrıca yakaladı. Astra 2. tur 3 bulgu: Job O
 psutil yedeği aynı kilidi geri getiriyordu (kritik) → artık iş başlatılmaz, `failed`; log kotası tek
 büyük satırla aşılıyordu; budama `*.json.backup`'ı da siliyordu. Üçü düzeltildi, testli.
 
-**Kalan:** telefondan gerçek deneme (Aıron Mobil'de araç yok → Faz 3); `/m` web arayüzüne iş kutusu yok.
+**Kalan:** telefondan gerçek deneme (Chiron Mobil'de araç yok → Faz 3); `/m` web arayüzüne iş kutusu yok.
 
 ## Faz 2 + 3 — yapılan (2026-10-03)
 
-Telefon tarafı Aıron Mobil'de: [[Airon-Mobil]] § 2026-10-03. PC'ye eklenenler:
+Telefon tarafı Chiron Mobil'de: [[Chiron-Mobil]] § 2026-10-03. PC'ye eklenenler:
 `GET /api/remote/claude/updates` (söylenmemiş sonuçlar + `active`, tek kilit) ve
 `POST /api/remote/claude/ack`. Onay Faz 2 planındaki `PreToolUse` hook'u yerine
 `ONAY_GEREKLI` + `--resume` ile çözüldü (Faz 1 — yapılan). Push yerine WorkManager yoklaması +
 yerel bildirim. Astra telefon tarafını iki tur inceledi: 7 + 4 bulgu, hepsi düzeltildi.
 
 **Kalan — gerçek senaryo:** telefon hücresel veriyle iş verir → PC'de biter → bildirim → sesli sonuç.
-Aıron PC'de yeni kodla yeniden başlatılmadan uçlar yok.
+Chiron PC'de yeni kodla yeniden başlatılmadan uçlar yok.
 
 ## Faz 2 — Onay ve bildirim (ilk plan)
-- Claude Code `PreToolUse` hook'u geri alınamayan araç çağrısını yakalar → Aıron'a sorar →
+- Claude Code `PreToolUse` hook'u geri alınamayan araç çağrısını yakalar → Chiron'a sorar →
   telefonda "Şunu yapacak, onay?" → evet/hayır işe geri döner.
-- İş bitince telefona bildirim; araba modundaysa Aıron sesli okur.
+- İş bitince telefona bildirim; araba modundaysa Chiron sesli okur.
 
 ## Faz 3 — Mobil araçlar ve takip
 - Kotlin: `delegate_to_claude(görev)`, `claude_job_status()` araçları (Gemini Live

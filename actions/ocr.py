@@ -33,7 +33,7 @@ try:
 except ImportError:
     HAS_PIL = False
 
-logger = logging.getLogger("airon")
+logger = logging.getLogger("chiron")
 
 # Türkçe + İngilizce birlikte: EasyOCR Latin alfabeli dilleri aynı modelde
 # birleştirebiliyor. Türkçe'ye özgü karakterler (ş, ğ, ı, ö, ü, ç) 'tr' olmadan

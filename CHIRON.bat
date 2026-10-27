@@ -2,7 +2,7 @@
 chcp 65001 >nul
 cd /d "%~dp0"
 
-REM Aıron — masaüstü penceresi (3D arayüz, WebView2). Bkz. desktop.py
+REM Chiron — masaüstü penceresi (3D arayüz, WebView2). Bkz. desktop.py
 REM Arayüz derlenmemişse bir kereye mahsus derler; sonraki açılışlar doğrudan başlar.
 
 if not exist "frontend\out\index.html" (

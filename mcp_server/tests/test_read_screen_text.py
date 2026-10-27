@@ -17,8 +17,8 @@ async def test_reads_text_from_image_file(client):
     result = await client.call_tool("read_screen_text", {"source": "image", "image_path": str(TEXT_IMAGE)})
     assert not result.is_error
     data = result.structured_content
-    assert data["text"] == "AIRON MCP TEST Kahve 42 TL"
-    assert [line["text"] for line in data["lines"]] == ["AIRON MCP TEST", "Kahve 42 TL"]
+    assert data["text"] == "CHIRON MCP TEST Kahve 42 TL"
+    assert [line["text"] for line in data["lines"]] == ["CHIRON MCP TEST", "Kahve 42 TL"]
     for line in data["lines"]:
         assert all(0.0 <= v <= 1.0 for v in line["box"])
 
@@ -31,7 +31,7 @@ async def test_blank_image_returns_empty_text_not_error(client):
 
 
 async def test_screen_source_reads_capture_and_deletes_temp_file(client, monkeypatch, tmp_path):
-    shot = tmp_path / "airon-screen-test.png"
+    shot = tmp_path / "chiron-screen-test.png"
     shutil.copy(TEXT_IMAGE, shot)
     monkeypatch.setattr(screen_vision, "_capture_active_window", lambda: (True, str(shot), "Test Window"))
 
@@ -40,7 +40,7 @@ async def test_screen_source_reads_capture_and_deletes_temp_file(client, monkeyp
     assert not result.is_error
     assert result.structured_content["source"] == "screen"
     assert result.structured_content["window_title"] == "Test Window"
-    assert "AIRON MCP TEST" in result.structured_content["text"]
+    assert "CHIRON MCP TEST" in result.structured_content["text"]
     assert not shot.exists(), "Ekran görüntüsü diskte bırakılmamalı"
 
 

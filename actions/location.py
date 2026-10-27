@@ -3,7 +3,7 @@ Gerçek konum tespiti — Windows Konum Servisi, olmazsa IP tabanlı.
 
 Kullanıcı isteğiyle (2026-07-31): hava durumu sabit bir şehre değil, kullanıcının
 GERÇEKTEN bulunduğu yere baksın. Önceden `actions/weather.py` sırasıyla
-parametre → `AIRON_WEATHER_LOCATION` → sabit "Konya" deniyordu; sabit değer
+parametre → `CHIRON_WEATHER_LOCATION` → sabit "Konya" deniyordu; sabit değer
 tesadüfen doğruydu ama taşınınca ya da seyahatte yanlış olurdu.
 
 İKİ KAYNAK, SIRAYLA:
@@ -32,7 +32,7 @@ from typing import Any
 
 import requests
 
-logger = logging.getLogger("airon")
+logger = logging.getLogger("chiron")
 
 HAS_WINSDK = importlib.util.find_spec("winsdk") is not None
 
@@ -86,7 +86,7 @@ def _detect_windows() -> dict[str, Any] | None:
         except Exception:
             logger.debug("[Konum] Windows konum servisi kullanılamadı", exc_info=True)
 
-    thread = threading.Thread(target=calis, name="airon-location", daemon=True)
+    thread = threading.Thread(target=calis, name="chiron-location", daemon=True)
     thread.start()
     # Thread'in kendi zaman aşımı var; buradaki pay ona ek olarak WinRT'nin
     # kapanış süresini kapsıyor.
@@ -140,7 +140,7 @@ def _reverse_name(lat: float, lon: float) -> str:
             f"https://wttr.in/{lat:.4f},{lon:.4f}",
             params={"format": "j1"},
             timeout=IP_TIMEOUT_SECONDS,
-            headers={"User-Agent": "Airon Windows"},
+            headers={"User-Agent": "Chiron Windows"},
         )
         response.raise_for_status()
         area = (response.json().get("nearest_area") or [{}])[0]

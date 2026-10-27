@@ -1,4 +1,4 @@
-# Aıron Windows — Gerekli paketler
+# Chiron Windows — Gerekli paketler
 # Kurulum:  pip install -r requirements.txt
 
 google-genai          # Gemini Live API (ses + araç çağrıları)
@@ -18,7 +18,7 @@ ultralytics           # YOLO-World — yerel, açık-kelime dağarcıklı nesne 
 easyocr               # Yerel OCR, Türkçe+İngilizce (read_text) — Gemini kotasına dokunmaz.
                       #   DİKKAT: `pip install easyocr` opencv-python-headless çekiyor ve mevcut
                       #   opencv-python'un cv2'sini ezmeye çalışıyor. Kurulumda dosya kilitliyse
-                      #   (Aıron açıkken) hata verir. Sorunsuz yol:
+                      #   (Chiron açıkken) hata verir. Sorunsuz yol:
                       #     pip install ninja lazy-loader imageio scikit-image
                       #     pip install easyocr --no-deps
                       #   Projenin kullandığı cv2 API'leri (VideoCapture/resize/flip/imencode)

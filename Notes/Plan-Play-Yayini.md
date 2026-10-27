@@ -1,12 +1,12 @@
 ---
-tags: [airon, mobil, android, plan, play-store]
+tags: [chiron, mobil, android, plan, play-store]
 ---
 
-# Plan — Aıron Mobil'i Play Store'a çıkarmak
+# Plan — Chiron Mobil'i Play Store'a çıkarmak
 
-Bağlı: [[Airon-Mobil]] · [[Home]]
+Bağlı: [[Chiron-Mobil]] · [[Home]]
 
-2026-10-14, kullanıcı: *"aironu mobil kısmına yayınlamak istiyorum, ona düzen lazım,
+2026-10-14, kullanıcı: *"chironu mobil kısmına yayınlamak istiyorum, ona düzen lazım,
 yapılacaklar lazım."* Amaç: Play Store'da yayında bir uygulama, CV'ye eklenecek.
 
 ## Kararlar (kullanıcı, 2026-10-14)
@@ -22,8 +22,8 @@ yapılacaklar lazım."* Amaç: Play Store'da yayında bir uygulama, CV'ye eklene
 - **Hedef deneyim (kullanıcı, 2026-10-14):** *"bnm telefonda nasıl kullanılıyorsa onun gibi
   kullanmaları için."* Android'in Siri'si. Özellik kesmek değil, aynı deneyimi politikaya uygun yoldan vermek.
   - Varsayılan asistan rolü (`ROLE_ASSISTANT` / VoiceInteractionService): güç ya da ana ekran
-    tuşuna basılı tutunca Aıron açılır. Play'in SMS izni istisnası da "varsayılan asistan" için var.
-  - Uyandırma sözü herkes için: `airon-wake` ile sentetik çok-sesli genel model, üstüne ilk girişte
+    tuşuna basılı tutunca Chiron açılır. Play'in SMS izni istisnası da "varsayılan asistan" için var.
+  - Uyandırma sözü herkes için: `chiron-wake` ile sentetik çok-sesli genel model, üstüne ilk girişte
     10 kayıtla telefonda eğitilen kişisel doğrulayıcı (openWakeWord custom verifier). Kontrol edilecek.
     Lisans CC BY-NC-SA: ücretsiz ve reklamsız kaldıkça sorun yok.
   - Uygulama açma: `QUERY_ALL_PACKAGES` yerine `<queries>` MAIN/LAUNCHER, aynı sonuç.

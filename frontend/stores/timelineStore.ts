@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 
-// AIRON alt zaman çizelgesi — Notes/Tasarim-Kurallari.md § Panel yerleşimi
+// CHIRON alt zaman çizelgesi — Notes/Tasarim-Kurallari.md § Panel yerleşimi
 // (Timeline / Reasoning / Tasks / Progress / Logs). Kullanıcı isteğiyle
 // (2026-07-30) sıfırdan yazıldı.
 //
 // TEK AKIŞ, ÜÇ KAYNAK: araç çağrıları (`task_started`/`task_finished`),
 // geliştirici günlüğü (`debug`) ve muhakeme durumu (`energy_state` → thinking).
 // Ayrı sekmeler yapmak yerine tek kronolojik akış: kullanıcının cevabını aradığı
-// soru "Aıron şu an ne yapıyor / az önce ne yaptı" — bu tek bir zaman ekseninde
+// soru "Chiron şu an ne yapıyor / az önce ne yaptı" — bu tek bir zaman ekseninde
 // okunur, üç ayrı listede değil.
 
 export type TimelineKind = 'task' | 'log' | 'reasoning';

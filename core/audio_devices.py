@@ -1,11 +1,11 @@
 """
 Ses cihazı seçimi ve mikrofon sağlık kontrolü.
 
-NEDEN VAR (2026-07-29): Aıron sessiz kalıyordu ve hiçbir yerde nedeni
+NEDEN VAR (2026-07-29): Chiron sessiz kalıyordu ve hiçbir yerde nedeni
 görünmüyordu. Teşhis: mikrofon uç noktası Windows'ta AKTİF ve sesi açık (%97)
 görünmesine rağmen hiçbir host API'de gerçek ses üretmiyordu. PyAudio bu durumda
 hata vermez — akışı açar ve içi boş tamponlar döndürür. Gemini Live hiç konuşma
-duymadığı için hiç yanıt vermez; kullanıcıya bu "Aıron'un sesi gelmiyor" olarak
+duymadığı için hiç yanıt vermez; kullanıcıya bu "Chiron'un sesi gelmiyor" olarak
 görünür. Sessiz arıza, en pahalı arıza türüdür — bu modül onu sesli hale getiriyor.
 
 İKİ TÜR ARIZA VAR ve ikisi de "sıfır ses" gibi görünmez:
@@ -26,7 +26,7 @@ import statistics
 import struct
 from dataclasses import dataclass
 
-logger = logging.getLogger("airon")
+logger = logging.getLogger("chiron")
 
 # ── SESSİZLİK ARIZA DEĞİLDİR ────────────────────────────────────────────────
 #
@@ -118,7 +118,7 @@ def downsample_int16(data: bytes, src_rate: int, dst_rate: int) -> bytes:
     NEDEN GEREKLİ: Gemini Live girişi 16 kHz istiyor ama WASAPI paylaşımlı modda
     16 kHz'i REDDEDİYOR (`Invalid sample rate`) — cihazın kendi hızını dayatıyor
     (genellikle 48 kHz). Bu makinede çalışan tek yol WASAPI olduğu için dönüşüm
-    olmadan Aıron hiç duyamıyor.
+    olmadan Chiron hiç duyamıyor.
 
     Tam sayı oranda (48000→16000 = 3) blok ORTALAMASI alınıyor, örnek atlama
     değil: atlamak takma ada (aliasing) yol açar, ortalama kaba ama bedava bir
@@ -190,7 +190,7 @@ def open_input_stream(pya, device_index: int | None, target_rate: int, chunk: in
             continue
         if rate != target_rate:
             logger.info(
-                "[AIRON] 🎚 Mikrofon %d Hz'i kabul etmedi, %d Hz'de açıldı (aşağı örnekleniyor).",
+                "[CHIRON] 🎚 Mikrofon %d Hz'i kabul etmedi, %d Hz'de açıldı (aşağı örnekleniyor).",
                 target_rate,
                 rate,
             )
@@ -224,11 +224,11 @@ def resolve_device_index(pya, kind: str, name_hint: str) -> int | None:
 
     for index, info in _iter_devices(pya, kind):
         if hint in str(info.get("name", "")).lower():
-            logger.info("[AIRON] 🎚 %s cihazı seçildi: [%s] %s", kind, index, info.get("name"))
+            logger.info("[CHIRON] 🎚 %s cihazı seçildi: [%s] %s", kind, index, info.get("name"))
             return index
 
     logger.warning(
-        "[AIRON] ⚠ config'teki %s cihazı bulunamadı (%r) — varsayılan cihaz kullanılıyor.",
+        "[CHIRON] ⚠ config'teki %s cihazı bulunamadı (%r) — varsayılan cihaz kullanılıyor.",
         kind,
         name_hint,
     )
@@ -312,7 +312,7 @@ def resolve_input_device(pya, name_hint: str) -> int | None:
     preferred = [d for d in devices if d[2] in PREFERRED_INPUT_HOST_APIS]
 
     def _log(choice, why: str) -> int:
-        logger.info("[AIRON] 🎚 Mikrofon seçildi (%s): [%s] %s — %s", why, choice[0], choice[1], choice[2])
+        logger.info("[CHIRON] 🎚 Mikrofon seçildi (%s): [%s] %s — %s", why, choice[0], choice[1], choice[2])
         return choice[0]
 
     hint = (name_hint or "").strip().lower()
@@ -322,7 +322,7 @@ def resolve_input_device(pya, name_hint: str) -> int | None:
                 if hint in device[1].lower():
                     return _log(device, why)
         logger.warning(
-            "[AIRON] ⚠ config'teki mikrofon bulunamadı (%r) — otomatik seçime düşülüyor.",
+            "[CHIRON] ⚠ config'teki mikrofon bulunamadı (%r) — otomatik seçime düşülüyor.",
             name_hint,
         )
 
@@ -371,9 +371,9 @@ def describe_input_observation(probe: InputProbe) -> str:
         return ""
     return (
         "Mikrofon açılışta hiç sinyal üretmedi. O sırada sessizdiysen bu NORMAL — "
-        "sessiz odada çalışan bir mikrofon da sıfır okur. Ama konuştuğun hâlde Aıron "
+        "sessiz odada çalışan bir mikrofon da sıfır okur. Ama konuştuğun hâlde Chiron "
         "yanıt vermiyorsa sırayla kontrol et: kulaklığın üzerindeki fiziksel susturma "
         "düğmesi, Windows > Ayarlar > Ses > Giriş'te doğru cihaz ve seviyesi. Farklı "
         'bir mikrofon için config/api_keys.json içine "mic_device": "<cihaz adının bir '
-        'parçası>" ekle. Her hâlükârda yazı kutusuna yazarsan Aıron sana SESLİ cevap verir.'
+        'parçası>" ekle. Her hâlükârda yazı kutusuna yazarsan Chiron sana SESLİ cevap verir.'
     )

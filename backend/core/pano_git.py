@@ -6,8 +6,8 @@ ana dala birleştirmeyi Yunus onaylar. Otomatik birleştirme YOK.
 Akış (bir kart için):
     create_worktree  → <WORKTREE_ROOT>/<repo>-<kart>, dal `pano/<kart>`, ana dalın o anki ucundan
     (Claude worktree'de çalışır; commit atmaz)
-    commit_all       → Claude'un bıraktığı her değişiklik tek commit (Aıron atar, Claude değil)
-    run_test         → kartın test komutu worktree'de, Aıron koşar — Claude'un "test geçti" demesine güvenilmez
+    commit_all       → Claude'un bıraktığı her değişiklik tek commit (Chiron atar, Claude değil)
+    run_test         → kartın test komutu worktree'de, Chiron koşar — Claude'un "test geçti" demesine güvenilmez
     merge            → Yunus onaylayınca ana klasörde `git merge --no-ff`; çakışmada geri alınır
     remove_worktree  → birleştikten / kart silinince
 
@@ -31,7 +31,7 @@ from pathlib import Path
 PROJECTS_DIR = Path.home() / "Projects"
 WORKTREE_ROOT = PROJECTS_DIR / ".pano-worktrees"
 # %TEMP%\pytest-of-yunus'un izinleri bozuk (2026-10-26) — önerilen test komutu kendi geçici klasörünü kullanır.
-PYTEST_TMP = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "airon" / "pano-pytest"
+PYTEST_TMP = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "chiron" / "pano-pytest"
 
 GIT_TIMEOUT = 120
 TEST_TIMEOUT = 15 * 60
@@ -139,7 +139,7 @@ def has_commits(worktree: Path, base_sha: str) -> bool:
 
 def run_test(worktree: Path, cmd: str, timeout: float = TEST_TIMEOUT) -> TestResult:
     """Kabuk altındaki bütün ağaç Claude işleri gibi Job Object'e bağlı (Terra incelemesi):
-    psutil'le "çocukları bul öldür" yetim torunu kaçırıyor, Aıron kapanınca da test yaşıyordu.
+    psutil'le "çocukları bul öldür" yetim torunu kaçırıyor, Chiron kapanınca da test yaşıyordu.
     Askıda başlar, job'a atanınca uyanır — atamadan önce çocuk doğurup kaçamasın."""
     from backend.core.claude_jobs import CREATE_SUSPENDED, ProcessTree
 

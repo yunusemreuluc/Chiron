@@ -127,10 +127,10 @@ export function OfficeView() {
           {/* Üst şerit */}
           <header className="office-top">
             <div className="glass-panel office-top__brand">
-              <span className="label-micro">Aıron · Ajan Ofisi</span>
+              <span className="label-micro">Chiron · Ajan Ofisi</span>
               <span className="office-live">
                 <span className={`office-live__dot ${lastEvent && now - lastEvent < 60 ? 'is-live' : ''}`} />
-                {offline ? 'Aıron backend kapalı' : lastEvent ? `son olay ${ago(lastEvent, now)}` : 'henüz olay yok'}
+                {offline ? 'Chiron backend kapalı' : lastEvent ? `son olay ${ago(lastEvent, now)}` : 'henüz olay yok'}
               </span>
             </div>
 

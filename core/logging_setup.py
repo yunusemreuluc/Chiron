@@ -2,10 +2,10 @@
 Kalıcı dosya loglaması.
 
 Eskiden tüm sistem/hata mesajları print() ile yazılıyordu — bu, uygulama
-AIRON.bat üzerinden pythonw.exe (konsolsuz) ile başlatıldığında hiçbir yere
+CHIRON.bat üzerinden pythonw.exe (konsolsuz) ile başlatıldığında hiçbir yere
 gitmeden kayboluyordu. Üretimde "neden başarısız oldu" sorusuna cevap
 verebilmek için tüm print() çağrıları logging modülüne taşınıyor; bu modül
-o logger'ı logs/airon.log dosyasına (döner, sınırlı boyutlu) yazacak şekilde
+o logger'ı logs/chiron.log dosyasına (döner, sınırlı boyutlu) yazacak şekilde
 kurar.
 """
 
@@ -18,7 +18,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 LOG_DIR = BASE_DIR / "logs"
-LOG_FILE = LOG_DIR / "airon.log"
+LOG_FILE = LOG_DIR / "chiron.log"
 
 _configured = False
 

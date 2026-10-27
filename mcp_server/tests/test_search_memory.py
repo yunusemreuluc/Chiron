@@ -15,7 +15,7 @@ FAKE_MEMORY = {
         "drink": {"value": "Türk kahvesi, şekersiz"},
         "music": {"value": "lo-fi while coding"},
     },
-    "projects": {"airon": {"value": "Windows voice assistant with local OCR"}},
+    "projects": {"chiron": {"value": "Windows voice assistant with local OCR"}},
     "whatsapp_contacts": {"annem": {"display_name": "Annem", "value": "+90 555 000 00 00", "aliases": ["kahve"]}},
 }
 

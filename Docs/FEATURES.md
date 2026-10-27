@@ -1,4 +1,4 @@
-# AIRON — Özellik Takibi
+# CHIRON — Özellik Takibi
 
 Tamamlanan özellikler 2026-07-29'da bu listeden **silindi** (kullanıcı isteği).
 Burada yalnızca yapılmamış ya da yarım kalanlar var.

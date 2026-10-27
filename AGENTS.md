@@ -1,4 +1,4 @@
-# AIRON — Codex Kuralları
+# CHIRON — Codex Kuralları
 
 Global `~/.codex/AGENTS.md` bu projede de geçerlidir: **Codex küçük ve tanımlı işleri yapar, büyük işler Claude'a aittir.**
 Aşağıdakiler bu projeye özeldir ve globalin üstüne biner.

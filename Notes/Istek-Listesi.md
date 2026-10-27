@@ -1,6 +1,6 @@
 # İstek Listesi
 
-Telefondaki Aıron'un yapamadığı ve kullanıcının "listeye ekle" dediği istekler.
+Telefondaki Chiron'un yapamadığı ve kullanıcının "listeye ekle" dediği istekler.
 Durum değerleri: `yeni` → `bakıldı` → `yapıldı` / `yapılmayacak`. Durumu elle değiştirebilirsin;
 `yapıldı` olanı telefon bir sonraki konuşmada kullanıcıya haber verir.
 
@@ -52,8 +52,8 @@ Durum değerleri: `yeni` → `bakıldı` → `yapıldı` / `yapılmayacak`. Duru
 
 ### İ-009 · PC durumunu görüntüleme
 **Durum:** yapıldı · **Sayı:** 1 · **Bildirildi:** evet
-- 2026-10-03 04:55 · "pcde şuan ne yapılıyor" · denenen: query_desktop_airon question='PC'de şuan ne yapılıyor' - success=false · Xiaomi 22101316G, 0.1.0
-  - Ayrıntı: Kullanıcı mevcut PC durumunu (açık uygulamalar, sistem durumu gibi) öğrenmek istedi ancak query_desktop_airon aracı success=false döndü. Aracın başarılı olup kullanıcının isteğini yerine getirmesi beklenir.
+- 2026-10-03 04:55 · "pcde şuan ne yapılıyor" · denenen: query_desktop_chiron question='PC'de şuan ne yapılıyor' - success=false · Xiaomi 22101316G, 0.1.0
+  - Ayrıntı: Kullanıcı mevcut PC durumunu (açık uygulamalar, sistem durumu gibi) öğrenmek istedi ancak query_desktop_chiron aracı success=false döndü. Aracın başarılı olup kullanıcının isteğini yerine getirmesi beklenir.
 <!-- ids: aa8d8c13-c58f-476c-b1ad-733e6094662c -->
 
 ### İ-010 · Terminalde yeni sekme açma ve Claude'a bağlanma

@@ -1,4 +1,4 @@
-// AIRON Energy Core — TEL KAFES sürümü (2026-08-06).
+// CHIRON Energy Core — TEL KAFES sürümü (2026-08-06).
 //
 // Köşe (vertex) shader'ı dolu küredekiyle AYNI kalıyor (ENERGY_CORE_VERTEX_SHADER):
 // simplex gürültüsü kafesin kendisini dalgalandırıyor, yani çizgiler donmuş bir

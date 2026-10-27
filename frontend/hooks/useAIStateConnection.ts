@@ -148,7 +148,7 @@ export function useAIStateConnection() {
               }
               break;
             case 'sfx':
-              // Araç başarıyla bittiğinde AironLive'ın çaldırdığı ses
+              // Araç başarıyla bittiğinde ChironLive'ın çaldırdığı ses
               // (bkz. core/web_ui.py play_success_sfx).
               if (data.name === 'success' && sfxAllowed()) playSfx('success');
               break;

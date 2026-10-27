@@ -1,6 +1,6 @@
 import type { AIState } from '@/stores/aiStateStore';
 
-// AIRON — çekirdeğin durum paleti (yalnızca renk verisi).
+// CHIRON — çekirdeğin durum paleti (yalnızca renk verisi).
 //
 // Bu dosya 2026-09-15'te palette.ts'ten ayrıldı ve bilerek `three` import
 // ETMİYOR: telefon arayüzü (components/remote) aynı renkleri kullanıyor ama
@@ -14,12 +14,12 @@ import type { AIState } from '@/stores/aiStateStore';
 // değiştiğinde biri geride kalır ve yeşil bir çekirdeğin etrafında mavi bir
 // korona dönerdi.
 //
-// Kullanıcı isteğiyle (2026-07-30): Aıron KONUŞURKEN çekirdek maviden çıkıp
+// Kullanıcı isteğiyle (2026-07-30): Chiron KONUŞURKEN çekirdek maviden çıkıp
 // turkuaz-yeşil bir plazmaya dönüyor (bkz. PLASMA_TEAL — beş ton karşılaştırılıp
 // seçildi). Palet bilerek doygun neon değil: bloom (PostProcessing.tsx) üstüne
 // bindiğinde beyaza kırpılmaması gerekiyor.
 // Diğer durumlar globals.css'teki "Platin + Buz Mavisi" sisteminde kalıyor;
-// renk dekorasyon değil, "Aıron şu an konuşuyor" bilgisini taşıyor.
+// renk dekorasyon değil, "Chiron şu an konuşuyor" bilgisini taşıyor.
 
 export interface CorePalette {
   /** Gövdenin derin tonu — gölgede kalan yarı (shader'da uColorA). */
@@ -62,12 +62,12 @@ const PLASMA_TEAL: CorePalette = {
 };
 
 /**
- * Otomasyon — Aıron makineye DOKUNUYOR (ekran müdahalesi, uygulama açma,
+ * Otomasyon — Chiron makineye DOKUNUYOR (ekran müdahalesi, uygulama açma,
  * kabuk komutu). 2026-07-31, bkz. Notes/Arayuz.md § Beş tepki.
  *
  * Kehribar seçildi çünkü sahnede kullanılmayan tek aile o: ICE mavi, konuşma
  * turkuaz, uyku çelik. Ama asıl gerekçe anlamsal — kehribar her arayüzde
- * "dikkat, makine hareket ediyor" demek. Aıron'un fareyi ele aldığı an
+ * "dikkat, makine hareket ediyor" demek. Chiron'un fareyi ele aldığı an
  * kullanıcının bunu ANINDA fark etmesi gerekiyor; bu, dekorasyon değil uyarı.
  *
  * Kırmızıya kaçılmadı: kırmızı "hata" der, oysa burada her şey yolunda.
@@ -82,7 +82,7 @@ const SOLAR_AMBER: CorePalette = {
 };
 
 /**
- * Hafıza — Aıron kendi belleğine uzanıyor (kayıt, silme, "şunu tanı").
+ * Hafıza — Chiron kendi belleğine uzanıyor (kayıt, silme, "şunu tanı").
  *
  * Mor, tayfın soğuk ucunda ve mavinin ÖTESİNDE: ICE ile aynı yönde ama daha
  * derinde. Amaçlanan okuma bu — hafıza dışarıdaki bir iş değil, çekirdeğin
@@ -117,7 +117,7 @@ export const STATE_PALETTE: Record<AIState, CorePalette> = {
 /**
  * Uyku — renk YOK, yalnızca soğuk çelik.
  *
- * Uyuyan Aıron'un sönmüş değil "dinlenen" görünmesi bu paletin işi: gövde
+ * Uyuyan Chiron'un sönmüş değil "dinlenen" görünmesi bu paletin işi: gövde
  * neredeyse zemine karışıyor ama kenar hattı hâlâ okunuyor, yani cisim orada
  * duruyor. Tamamen siyaha indirilseydi uygulama çökmüş gibi görünürdü.
  */

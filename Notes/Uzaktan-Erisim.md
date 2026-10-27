@@ -1,12 +1,12 @@
 ---
-tags: [airon, uzaktan-erisim, guvenlik]
+tags: [chiron, uzaktan-erisim, guvenlik]
 ---
 
-# Uzaktan Erişim — telefondan Aıron
+# Uzaktan Erişim — telefondan Chiron
 
 Bağlı: [[Home]] · [[Mimari]] · [[Arayuz]] · [[Bilinen-Tuzaklar]]
 
-2026-09-15, kullanıcı isteği: *"PC açık, dışarı çıktım, telefondan Aıron'a
+2026-09-15, kullanıcı isteği: *"PC açık, dışarı çıktım, telefondan Chiron'a
 diyeceğim ki PC'deki şu uygulama bitti mi, o da PC'me bakıp cevap verecek."*
 
 Beyin zaten hazırdı (metin komutu, ekran/sistem araçları, cevabın WebSocket'e
@@ -15,7 +15,7 @@ yazı olarak düşmesi). Eksik olan taşıma, kapı ve kabuktu.
 ## Mimari
 
 ```
-[Telefon · Aıron PWA] ──HTTPS (tailnet)──> tailscale serve ──> 127.0.0.1:8001 ┐
+[Telefon · Chiron PWA] ──HTTPS (tailnet)──> tailscale serve ──> 127.0.0.1:8001 ┐
 [WebView2 penceresi]  ──HTTP────────────────────────────────> 127.0.0.1:8000 ┴─ AYNI uvicorn sunucusu
 ```
 
@@ -118,12 +118,12 @@ bulamıyordu). Ana ekrana eklenince tarayıcı çerçevesiz açılıyor (manifes
   Tekilleştirme `at` + ham metin ile — aynı satır iki yoldan gelirse bir kez.
 - **Demo döngüsü yok.** Masaüstü backend yokken sahte durumlar oynatıyor; telefonda
   bu yalan olurdu, "PC'ye ulaşılamıyor" dürüstçe yazıyor.
-- Duraklatılmış Aıron metni sessizce yutuyor (`_on_text_command`) — telefonda yazı
-  kutusu yerine "Aıron'u devam ettir" düğmesi çıkıyor.
+- Duraklatılmış Chiron metni sessizce yutuyor (`_on_text_command`) — telefonda yazı
+  kutusu yerine "Chiron'u devam ettir" düğmesi çıkıyor.
 
 ## Kurulum (bir kerelik)
 
-1. **PC:** Aıron'da Ayarlar → Uzaktan erişim → PIN belirle.
+1. **PC:** Chiron'da Ayarlar → Uzaktan erişim → PIN belirle.
 2. **PC:** Tailscale'i kur ve giriş yap (`winget install Tailscale.Tailscale`).
 3. **Telefon:** Tailscale uygulamasını kur, AYNI hesapla giriş yap.
 4. **Tailscale yönetim paneli** (login.tailscale.com → DNS): MagicDNS ve
@@ -134,7 +134,7 @@ bulamıyordu). Ana ekrana eklenince tarayıcı çerçevesiz açılıyor (manifes
 6. **Telefon:** adresi aç → PIN → paylaş menüsünden "Ana ekrana ekle".
 
 **Dışarıdayken çalışması için:** PC uyku moduna girmemeli (Güç ayarları →
-Uyku: Hiçbir zaman, fişe takılıyken) ve Aıron açık olmalı (Ayarlar → Açılışta
+Uyku: Hiçbir zaman, fişe takılıyken) ve Chiron açık olmalı (Ayarlar → Açılışta
 başlat).
 
 ## Doğrulama (2026-09-15)

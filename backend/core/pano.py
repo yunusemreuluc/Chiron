@@ -20,7 +20,7 @@ Devam ettirme: aynı Claude oturumu `--resume` ile sürer (`session_job`). O iş
 kuyruğun geçmişinden düşmüşse (KEEP_JOBS) kart görevi baştan verilir.
 
 Proje kartı (adım 3, 2026-10-26): kartta `repo` varsa iş o deponun ayrı bir worktree'sinde
-yapılır (bkz. `pano_git.py`). Claude bitirince kart `dogrulaniyor`a geçer: Aıron değişikliği
+yapılır (bkz. `pano_git.py`). Claude bitirince kart `dogrulaniyor`a geçer: Chiron değişikliği
 commit'ler, test komutunu KENDİSİ koşar. Test geçerse `birlestir` (Yunus onaylar), kalırsa
 `hata` (Yeniden dene aynı oturumu test çıktısıyla sürdürür). Otomatik birleştirme yok.
 
@@ -49,7 +49,7 @@ from typing import Any
 from backend.core import bekci, claude_jobs, pano_git
 from backend.core.pano_git import GitError
 
-logger = logging.getLogger("airon.pano")
+logger = logging.getLogger("chiron.pano")
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 STORE_PATH = BASE_DIR / "config" / "pano.json"
@@ -77,7 +77,7 @@ REJECTED = "Onaylanmadı: {approval}. Bu adımı YAPMA; o ana kadar yapılanı �
 WORKTREE_NOTE = """\
 Çalışma klasörün bu kartın git worktree'si: {worktree} (dal {branch}; ana klasör {repo}).
 - Yalnızca bu klasörde çalış, ana klasöre dokunma.
-- git commit, push ya da merge YAPMA: değişikliği Aıron commit'leyip test edecek, birleştirmeyi Yunus onaylayacak.
+- git commit, push ya da merge YAPMA: değişikliği Chiron commit'leyip test edecek, birleştirmeyi Yunus onaylayacak.
 - Test komutu: {test}. Bitirmeden önce kendin de çalıştır."""
 LEADER_NOTE = """\
 Sen Jarvis'sin: Yunus'un ajan ekibinin lideri. Bu oturum SALT OKUNUR; hiçbir dosyayı değiştirme,
@@ -225,7 +225,7 @@ class Pano:
         """Kullanıcı eylemi sonrası kayıt: diske yazılamadıysa bunu SÖYLE (Terra incelemesi).
         Okuma yolundaki (_reconcile) kayıtlar `_save` ile sessiz kalır — durum bellekte doğru."""
         if not self._save():
-            raise PanoError("Değişiklik yapıldı ama diske yazılamadı; Aıron yeniden açılınca kaybolabilir.")
+            raise PanoError("Değişiklik yapıldı ama diske yazılamadı; Chiron yeniden açılınca kaybolabilir.")
 
     def _prune(self) -> None:
         excess = len(self._cards) - MAX_CARDS
@@ -526,11 +526,11 @@ class Pano:
             head = f"Pano {card['id']}: kopya silinirken kalan iş ({card['title']})"
         if merge:
             head = f"Birleştir {card['branch']} ({card['id']}: {card['title']})"
-        return f"{head}\n\nAıron görev panosundan, Claude Code ile.\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
+        return f"{head}\n\nChiron görev panosundan, Claude Code ile.\n\nCo-Authored-By: Claude <noreply@anthropic.com>"
 
     def _kick_verifications(self) -> None:
         """`dogrulaniyor` kartların commit + test işini başlatır (kilit DIŞINDA çağrılır).
-        Aıron doğrulama ortasında kapanırsa kart bu durumda kalır; açılışta yeniden koşar."""
+        Chiron doğrulama ortasında kapanırsa kart bu durumda kalır; açılışta yeniden koşar."""
         with self._lock:
             pending = [c["id"] for c in self._cards if c["status"] == "dogrulaniyor" and c["id"] not in self._verifying]
             self._verifying.update(pending)
@@ -628,7 +628,7 @@ class Pano:
                 worktree=card["worktree"],
                 branch=card["branch"],
                 repo=card["repo"],
-                test=card["test_cmd"] or "yok (Aıron test koşmayacak; kendin uygun olanı çalıştır)",
+                test=card["test_cmd"] or "yok (Chiron test koşmayacak; kendin uygun olanı çalıştır)",
             )
         return text
 
@@ -742,7 +742,7 @@ class Pano:
             card["summary"] = job.get("summary") or ""
             self._apply_plan(card, card["summary"])
         elif status == "done":
-            # Proje kartı: Claude'un "bitti"si yetmez, Aıron commit'leyip test edecek.
+            # Proje kartı: Claude'un "bitti"si yetmez, Chiron commit'leyip test edecek.
             card.update(status="dogrulaniyor" if card.get("worktree") else "bitti", summary=job.get("summary") or "")
         elif status == "needs_approval":
             card.update(status="onay", summary=job.get("summary") or "", approval=job.get("approval") or "")

@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react';
 import { fetchData } from '@/services/apiClient';
 
-// Ambient bağlam — Aıron'un "kullanıcı şu an ne yapıyor" farkındalığı.
+// Ambient bağlam — Chiron'un "kullanıcı şu an ne yapıyor" farkındalığı.
 //
 // Aynı veriyi `get_context` aracı modele veriyor (actions/ambient_context.py).
-// Burada arayüze getirilmesinin sebebi DÜRÜSTLÜK: Aıron'un neyi bildiği
+// Burada arayüze getirilmesinin sebebi DÜRÜSTLÜK: Chiron'un neyi bildiği
 // görünür olmalı. Gizli bir araçta kalsaydı kullanıcı, asistanın bağlamı
 // bildiğini ancak deneyerek keşfederdi.
 //
@@ -38,7 +38,7 @@ export function useAmbientContext(): AmbientContext | null {
       if (cancelled) return;
 
       // Backend hiçbir şey okuyamadıysa (ya da hiç cevap vermediyse) arayüzde de
-      // HİÇBİR ŞEY gösterme — bir önceki bağlamı ekranda bırakmak, Aıron'un artık
+      // HİÇBİR ŞEY gösterme — bir önceki bağlamı ekranda bırakmak, Chiron'un artık
       // sahip olmadığı bir farkındalığı varmış gibi gösterirdi.
       const app = typeof data?.app === 'string' ? data.app : '';
       const windowTitle = typeof data?.window_title === 'string' ? data.window_title : '';

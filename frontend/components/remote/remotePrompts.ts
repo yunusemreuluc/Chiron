@@ -1,5 +1,5 @@
 // Boş ekran: "ne sorabilirim" sorusunun cevabı hazır istemler olarak duruyor.
-// Hepsi Aıron'un GERÇEKTEN uzaktan yapabildiği işler (Notes/Araclar/).
+// Hepsi Chiron'un GERÇEKTEN uzaktan yapabildiği işler (Notes/Araclar/).
 export const REMOTE_PROMPTS: { title: string; hint: string; text: string }[] = [
   {
     title: 'Ekranda ne var?',

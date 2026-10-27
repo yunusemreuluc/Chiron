@@ -140,7 +140,7 @@ export function CardBoard() {
   if (cards === null) {
     return (
       <div className="office-empty">
-        <p>{offline ? 'Aıron backend’ine ulaşılamıyor.' : 'Pano yükleniyor…'}</p>
+        <p>{offline ? 'Chiron backend’ine ulaşılamıyor.' : 'Pano yükleniyor…'}</p>
       </div>
     );
   }
@@ -555,7 +555,7 @@ function Composer({ run, codexUntil }: { run: Run; codexUntil: number | null }) 
       {repo && (
         <>
           <label className="pano-field" htmlFor="pano-test">
-            <span className="label-micro">Test komutu · Aıron koşar</span>
+            <span className="label-micro">Test komutu · Chiron koşar</span>
             <input
               id="pano-test"
               value={testCmd}

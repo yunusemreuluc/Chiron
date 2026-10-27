@@ -25,7 +25,7 @@ def ev(event: str, ts: float, **extra) -> dict:
     return {"event": event, "ts": ts, "session_id": SID, "cwd": r"C:\proje", **extra}
 
 
-def started_turn(state: OfficeState, prompt: str = "Airon'a ofis ekle") -> None:
+def started_turn(state: OfficeState, prompt: str = "Chiron'a ofis ekle") -> None:
     state.apply(ev("SessionStart", T0, source="startup"))
     state.apply(ev("UserPromptSubmit", T0 + 1, prompt=prompt))
 
@@ -68,7 +68,7 @@ def test_chief_turn_creates_task_and_closes_on_stop():
     assert chief.status == ofis.WORKING
     assert chief.current == "Düzenliyor: a.py"
     task = s.tasks[chief.task_id]
-    assert task.title == "Airon'a ofis ekle"
+    assert task.title == "Chiron'a ofis ekle"
     assert task.files_changed == [r"C:\proje\a.py"]
 
     s.apply(ev("Stop", T0 + 5, last_message="Tamam, ekledim."))
@@ -310,7 +310,7 @@ def test_office_api(monkeypatch):
     assert body["success"] and [d["id"] for d in body["data"]["desks"]][0] == "claude"
 
     detail = client.get(f"/api/office/workers/claude:{SID}").json()
-    assert detail["success"] and detail["data"]["task"]["title"] == "Airon'a ofis ekle"
+    assert detail["success"] and detail["data"]["task"]["title"] == "Chiron'a ofis ekle"
     assert detail["data"]["activity"]
 
     assert client.get("/api/office/workers/yok").json()["success"] is False
@@ -506,7 +506,7 @@ def test_task_notification_with_nonzero_exit_marks_failure():
 
 def test_git_bash_paths_match_windows_paths():
     assert ofis._same_dir("/c/Users/yunus/Proje", r"C:\Users\yunus\Proje")
-    assert ofis._same_dir('"/c/Users/yunus/Ders Notları/Aıron"', r"C:\Users\yunus\Ders Notları\Aıron")
+    assert ofis._same_dir('"/c/Users/yunus/Ders Notları/Chiron"', r"C:\Users\yunus\Ders Notları\Chiron")
     assert not ofis._same_dir("/c/Users/a", r"C:\Users\b")
 
 

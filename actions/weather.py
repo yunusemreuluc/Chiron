@@ -5,7 +5,7 @@ Alp Ünlü tarafından yapılmıştır — @alppunlu
 KONUM ÖNCELİĞİ (2026-07-31'de gerçek konum tespiti eklendi):
 1. Çağrıda verilen `location` — kullanıcı açıkça bir şehir söylediyse ("Ankara'da
    hava nasıl") o kazanır
-2. `AIRON_WEATHER_LOCATION` env değişkeni — elle konulmuş kalıcı geçersiz kılma
+2. `CHIRON_WEATHER_LOCATION` env değişkeni — elle konulmuş kalıcı geçersiz kılma
 3. **Gerçek konum** (actions/location.py — Windows Konum Servisi, olmazsa IP)
 4. `DEFAULT_LOCATION` — yalnızca yukarıdakilerin hepsi başarısızsa
 
@@ -40,7 +40,7 @@ def _resolve_target(location: str | None) -> tuple[str, str]:
     if explicit:
         return explicit, explicit
 
-    override = (os.environ.get("AIRON_WEATHER_LOCATION") or "").strip()
+    override = (os.environ.get("CHIRON_WEATHER_LOCATION") or "").strip()
     if override:
         return override, override
 
@@ -60,7 +60,7 @@ def get_weather_summary(location: str | None = None) -> dict:
             f"https://wttr.in/{target}",
             params={"format": "j1"},
             timeout=10,
-            headers={"User-Agent": "Airon Windows"},
+            headers={"User-Agent": "Chiron Windows"},
         )
         response.raise_for_status()
         payload = response.json()

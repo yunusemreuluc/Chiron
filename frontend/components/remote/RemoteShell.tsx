@@ -73,7 +73,7 @@ export function RemoteShell() {
 
 /**
  * Zemin — masaüstündeki yıldız alanı ve ufuk parıltısının sakin karşılığı.
- * Üstteki ışık Aıron'un durum rengini alıyor: telefon cepten çıkarıldığında
+ * Üstteki ışık Chiron'un durum rengini alıyor: telefon cepten çıkarıldığında
  * "konuşuyor mu, iş mi yapıyor" daha metni okumadan görünsün.
  */
 function Backdrop() {

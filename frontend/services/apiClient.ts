@@ -47,7 +47,7 @@ export async function request<T = Record<string, unknown>>(
     return (await response.json()) as ApiResult<T>;
   } catch {
     // Backend kapalı — arayüz çökmemeli, kullanıcıya dürüst bir mesaj dönmeli.
-    return { success: false, message: 'Aıron çalışmıyor.' };
+    return { success: false, message: 'Chiron çalışmıyor.' };
   }
 }
 

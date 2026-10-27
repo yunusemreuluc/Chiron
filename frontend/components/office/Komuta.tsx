@@ -34,7 +34,7 @@ import { useOfficeStore, type WorkerStatus } from '@/stores/officeStore';
 import type { CrewId } from './station/StationScene';
 import { ago, basename } from './format';
 
-// Komuta ekranı (2026-10-27). Kullanıcı isteği: "sana terminalde nasıl iş veriyorsam Aıron'da
+// Komuta ekranı (2026-10-27). Kullanıcı isteği: "sana terminalde nasıl iş veriyorsam Chiron'da
 // da öyle olsun" + "istasyon gözümün önünde olsun". Tek ekran: solda ekip ve sohbetler, ortada
 // canlı sohbet (her mesaj aynı Claude oturumunu sürdürür), sağda mini istasyon, senden
 // bekleyenler, sıra, bekçi ve 7/24. Sohbet mantığı backend/core/sohbet.py'de.

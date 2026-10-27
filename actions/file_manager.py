@@ -1,9 +1,9 @@
 """Dosya yönetimi — yeniden adlandırma, sıralı adlandırma, taşıma, silme.
 
-Kullanıcı isteği (2026-08-01): Aıron dosyaları yönetebilsin — özellikle
+Kullanıcı isteği (2026-08-01): Chiron dosyaları yönetebilsin — özellikle
 "şu klasördeki görselleri 1'den başlayarak sırala" gibi toplu işler.
 
-Öncesinde Aıron'da dosya DEĞİŞTİREN hiçbir araç yoktu; `search_files` buluyor,
+Öncesinde Chiron'da dosya DEĞİŞTİREN hiçbir araç yoktu; `search_files` buluyor,
 `summarize_file` okuyordu. `shell_run` ile `ren` komutu uydurulabilirdi ama her
 çağrıda onay istediği için toplu işte kullanılamazdı.
 
@@ -50,7 +50,7 @@ except ImportError:  # pragma: no cover — requirements.txt'te var
 # dosyayı sessizce işlemesin — sınır aşılırsa açıklayıp duruyor.
 MAX_FILES = 500
 
-# Bu yolların ALTINDA hiçbir işlem yapılmıyor. Sebep basit: Aıron'un hedefi
+# Bu yolların ALTINDA hiçbir işlem yapılmıyor. Sebep basit: Chiron'un hedefi
 # bazen ekran analizinden geliyor ve yanlış bir yol üretebiliyor; sistem
 # klasörlerinde bir hata onarılabilir olmaktan çıkar.
 def _korumali_kokler() -> list[Path]:
@@ -129,7 +129,7 @@ def _iki_fazli_adlandir(plan: list[tuple[Path, Path]]) -> tuple[int, list[str]]:
     hatalar: list[str] = []
 
     for kaynak, _hedef in plan:
-        gecici_yol = kaynak.with_name(f".airon-{ek}-{kaynak.name}")
+        gecici_yol = kaynak.with_name(f".chiron-{ek}-{kaynak.name}")
         try:
             kaynak.rename(gecici_yol)
             gecici.append((gecici_yol, _hedef))

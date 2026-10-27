@@ -1,14 +1,14 @@
-"""Telefondan gelen doğrudan masaüstü komutları (Aıron mobil, 2026-09-15).
+"""Telefondan gelen doğrudan masaüstü komutları (Chiron mobil, 2026-09-15).
 
 Neden modelden geçmiyor: "PC'yi kilitle" gibi bir komutun Gemini'ye sorulup
-aracın seçilmesini beklemek hem yavaş hem gereksiz — telefondaki Aıron zaten
+aracın seçilmesini beklemek hem yavaş hem gereksiz — telefondaki Chiron zaten
 niyeti anladı ve `send_desktop_command` aracını çağırdı. Buradaki her eylem
 BEYAZ LİSTEDE; serbest komut çalıştırma yok (o iş `shell_run`'ın, onun da iki
 adımlı onayı var).
 
 Kapatma/yeniden başlatma bilerek YOK: telefondan tetiklenen bir kapatma,
 kaydedilmemiş işi kaybettirebilir ve PC'ye bir daha uzaktan ulaşılamaz. O iş
-PC'deki Aıron'un `control_power` aracında, onay akışıyla duruyor.
+PC'deki Chiron'un `control_power` aracında, onay akışıyla duruyor.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ import ctypes
 import logging
 import threading
 
-logger = logging.getLogger("airon.backend")
+logger = logging.getLogger("chiron.backend")
 
 VK_MEDIA_NEXT_TRACK = 0xB0
 VK_MEDIA_PREV_TRACK = 0xB1

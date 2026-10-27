@@ -14,7 +14,7 @@ import { useTimelineStore, type TimelineEntry } from '@/stores/timelineStore';
 import { AI_STATE_LABELS, useAIStateStore } from '@/stores/aiStateStore';
 import { GlassPanel } from './GlassPanel';
 
-// AIRON alt zaman çizelgesi — Notes/Tasarim-Kurallari.md § Panel yerleşimi
+// CHIRON alt zaman çizelgesi — Notes/Tasarim-Kurallari.md § Panel yerleşimi
 // (Timeline / Reasoning / Tasks / Progress / Logs) + "Never clutter."
 //
 // "Never clutter" burada belirleyici oldu: panel VARSAYILAN OLARAK KAPALI, alt
@@ -80,7 +80,7 @@ export function Timeline() {
               {runningCount > 0 ? `${runningCount} görev çalışıyor` : 'Zaman çizelgesi'}
             </span>
             <span className="text-foreground-secondary truncate text-[11px]">
-              {latest ? summarize(latest) : `Aıron ${AI_STATE_LABELS[aiState].toLowerCase()}`}
+              {latest ? summarize(latest) : `Chiron ${AI_STATE_LABELS[aiState].toLowerCase()}`}
             </span>
           </span>
 
@@ -107,7 +107,7 @@ export function Timeline() {
               <div ref={scrollRef} className="h-full overflow-y-auto px-3 py-2.5">
                 {entries.length === 0 ? (
                   <p className="text-foreground-disabled text-[11px] leading-relaxed">
-                    Aıron bir araç çalıştırdığında (hava durumu, ekran analizi, nesne tanıma...)
+                    Chiron bir araç çalıştırdığında (hava durumu, ekran analizi, nesne tanıma...)
                     burada görünecek.
                   </p>
                 ) : (
@@ -136,7 +136,7 @@ function summarize(entry: TimelineEntry): string {
 }
 
 // Muhakeme satırı diğerlerinden AYRI okunmalı: görev ve log birer olay kaydı,
-// muhakeme ise Aıron'un kendi sesi. İtalik ve girintili — bir kenar notu gibi.
+// muhakeme ise Chiron'un kendi sesi. İtalik ve girintili — bir kenar notu gibi.
 const REASONING_TEXT = 'text-foreground-secondary italic';
 
 function TimelineRow({ entry }: { entry: TimelineEntry }) {

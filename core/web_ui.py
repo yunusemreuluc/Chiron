@@ -1,21 +1,21 @@
 """
-WebUI — AironLive ile 3D arayüz arasındaki adaptör.
+WebUI — ChironLive ile 3D arayüz arasındaki adaptör.
 
 NEDEN (2026-07-29, kullanıcı isteği): "sesli asistanla devam edelim, 3D arayüzü
-ona monte edelim". Ses döngüsü (main.py → AironLive) arayüzüne 15 noktadan
+ona monte edelim". Ses döngüsü (main.py → ChironLive) arayüzüne 15 noktadan
 dokunuyordu — 9 metot çağrısı + 6 geri çağırma yuvası. Bu sınıf tam olarak o
 yüzeyi taklit ediyor, ama ekrana çizmek yerine olayları WebSocket'e yayınlıyor.
 
-Sonuç: AironLive'ın TEK SATIRI değişmeden 3D arayüzle çalışıyor. Ses döngüsünün
+Sonuç: ChironLive'ın TEK SATIRI değişmeden 3D arayüzle çalışıyor. Ses döngüsünün
 arayüzden bağımsızlığı, onu yeniden yazarak değil, bağımlılığın karşı tarafını
 değiştirerek sağlandı — sesin çalıştığı bilinen kod yoluna hiç dokunulmadı.
 
-    AironLive  ──(ui.set_state / write_log / ...)──>  WebUI  ──WS──>  3D arayüz
-    AironLive  <──(on_text_command / on_pause_toggle)── WebUI  <──HTTP── 3D arayüz
+    ChironLive  ──(ui.set_state / write_log / ...)──>  WebUI  ──WS──>  3D arayüz
+    ChironLive  <──(on_text_command / on_pause_toggle)── WebUI  <──HTTP── 3D arayüz
 
 Tasarım kuralı: buradaki hiçbir çağrı ses döngüsünü BLOKLAMAMALI ve asla
 patlamamalı. Arayüz kapalı, backend ölü ya da tarayıcı bağlı değilken bile
-Aıron konuşmaya devam etmeli — olaylar sessizce düşer.
+Chiron konuşmaya devam etmeli — olaylar sessizce düşer.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ from backend.core import commands
 from backend.models.events import WSEvent
 from backend.websocket.manager import manager
 
-logger = logging.getLogger("airon")
+logger = logging.getLogger("chiron")
 
 # main.py'nin durum isimleri → frontend/stores/aiStateStore.ts değerleri.
 STATE_MAP = {
@@ -47,7 +47,7 @@ STATE_MAP = {
 # ── Araç → çekirdek durumu (2026-07-31, bkz. Notes/Arayuz.md § Beş tepki) ────────────
 # Notes/Tasarim-Kurallari.md § Enerji çekirdeği beş tepki istiyor: Ses, Düşünme,
 # Görü, Otomasyon, Hafıza. Gerçekte üçü çalışıyordu: HER araç çağrısı "THINKING"
-# yayınlıyordu, yani Aıron'un ekranı ele geçirmesiyle hava durumuna bakması
+# yayınlıyordu, yani Chiron'un ekranı ele geçirmesiyle hava durumuna bakması
 # sahnede birebir aynı görünüyordu. "VISION" ise STATE_MAP'te duruyor ama
 # main.py hiçbir zaman göndermiyordu — ölü bir daldı.
 #
@@ -57,7 +57,7 @@ STATE_MAP = {
 # zorunlu tutulsaydı araç eklemenin maliyeti beşinci bir dosya olurdu
 # (bkz. CLAUDE.md § Adding a new tool — dört yer, fazlası değil).
 
-# Aıron kendi belleğine yazıyor ya da ondan okuyor.
+# Chiron kendi belleğine yazıyor ya da ondan okuyor.
 _MEMORY_TOOLS = frozenset({
     "save_memory",
     "delete_memory",
@@ -66,7 +66,7 @@ _MEMORY_TOOLS = frozenset({
     "save_whatsapp_contact",
 })
 
-# Aıron makineye ya da dış dünyaya DOKUNUYOR (okumakla yetinmiyor). Ayrım okuma/
+# Chiron makineye ya da dış dünyaya DOKUNUYOR (okumakla yetinmiyor). Ayrım okuma/
 # yazma: `get_calendar_events` düşünme, `add_calendar_event` otomasyon.
 _AUTOMATION_TOOLS = frozenset({
     "gemini_desktop_task",
@@ -87,7 +87,7 @@ _AUTOMATION_TOOLS = frozenset({
     "stop_daily_briefing",
 })
 
-# Aıron BAKIYOR — kameradan ya da ekrandan.
+# Chiron BAKIYOR — kameradan ya da ekrandan.
 _VISION_TOOLS = frozenset({
     "analyze_screen",
     "recognize_objects",
@@ -140,38 +140,38 @@ def _summarize_args(args: dict[str, Any] | None) -> str:
 
 
 class WebUI:
-    """AironLive'ın arayüzden beklediği yüzey."""
+    """ChironLive'ın arayüzden beklediği yüzey."""
 
     def __init__(self) -> None:
-        # ── AironLive'ın okuduğu durum bayrakları ────────────────────────────
-        # Kullanıcının kendi mikrofon tercihi. AironLive'ın okuduğu `muted` ise
+        # ── ChironLive'ın okuduğu durum bayrakları ────────────────────────────
+        # Kullanıcının kendi mikrofon tercihi. ChironLive'ın okuduğu `muted` ise
         # bir özellik: tercih VEYA uzak mod (bkz. `muted`).
         self._user_muted = False
         self.paused = False
         # Uzak mod (2026-09-15, telefon erişimi): kullanıcı evde değil. Hoparlör
-        # ve mikrofon birlikte kapanıyor — boş evde Aıron yüksek sesle cevap
+        # ve mikrofon birlikte kapanıyor — boş evde Chiron yüksek sesle cevap
         # vermesin, ortam sesini de komut sanmasın. `speaker_muted`'ı
-        # AironLive._play_audio okuyor. Uzak moddan çıkınca mikrofon, uzak moda
+        # ChironLive._play_audio okuyor. Uzak moddan çıkınca mikrofon, uzak moda
         # girmeden ÖNCEKİ hâline dönüyor (kullanıcı zaten kapatmışsa kapalı kalır).
         self.remote_mode = False
         self.speaker_muted = False
         self._log_history: deque[dict[str, Any]] = deque(maxlen=LOG_HISTORY_LINES)
         self._log_lock = threading.Lock()
-        # Telefondaki Aıron'un `query_desktop_airon` aracı (2026-09-15). Soru
-        # canlı oturuma normal bir metin gibi gidiyor; cevap ise "Aıron:" log
+        # Telefondaki Chiron'un `query_desktop_chiron` aracı (2026-09-15). Soru
+        # canlı oturuma normal bir metin gibi gidiyor; cevap ise "Chiron:" log
         # satırı olarak dönüyor. Bekleyen varsa o satır ona teslim ediliyor.
         self._answer_waiter: dict[str, Any] | None = None
         self._answer_lock = threading.Lock()
 
-        # ── AironLive'ın doldurduğu geri çağırma yuvaları ────────────────────
-        # (AironLive.__init__ bunlara kendi metotlarını atıyor.)
+        # ── ChironLive'ın doldurduğu geri çağırma yuvaları ────────────────────
+        # (ChironLive.__init__ bunlara kendi metotlarını atıyor.)
         self.on_text_command: Callable[[str], None] | None = None
         self.on_pause_toggle: Callable[[bool], None] | None = None
         self.on_effects_state_change: Callable[[bool], None] | None = None
         self.on_webcam_toggle: Callable[[bool], None] | None = None
         self.on_reset_command: Callable[[], None] | None = None
         self.on_voice_change: Callable[[str], None] | None = None
-        # Vision panelinin "tara" düğmesi (2026-07-30). AironLive dolduruyor;
+        # Vision panelinin "tara" düğmesi (2026-07-30). ChironLive dolduruyor;
         # yerel YOLO-World tespitini çalıştırıp sonucu emit_detections ile geri
         # yayınlıyor.
         self.on_vision_detect: Callable[[], None] | None = None
@@ -184,7 +184,7 @@ class WebUI:
         # Kamera açık mı — arayüz açılışta bunu sorabilmeli (WS olayını kaçırmış
         # olabilir, ör. paneli sonradan açtı).
         self.webcam_active = False
-        # AironLive örneği — hazır olup olmadığını (canlı oturum var mı) sormak
+        # ChironLive örneği — hazır olup olmadığını (canlı oturum var mı) sormak
         # için. Arayüz, oturum kurulmadan komut gönderirse komut sessizce düşüyor;
         # bunu kullanıcıya "bağlanıyor" olarak göstermek için gerekli.
         self._assistant: Any = None
@@ -193,7 +193,7 @@ class WebUI:
 
     @property
     def muted(self) -> bool:
-        """Mikrofon fiilen kapalı mı — AironLive bunu okuyor.
+        """Mikrofon fiilen kapalı mı — ChironLive bunu okuyor.
 
         Tercih ve uzak mod AYRI tutuluyor (Astra incelemesi, 2026-09-15): önceden
         uzak mod girişte `muted`'ı ezip çıkışta eski değeri geri yazıyordu. Uzak
@@ -228,15 +228,15 @@ class WebUI:
         commands.register("remote_mode", self._handle_remote_mode)
         commands.register("ask", self._handle_ask)
         # Vision paneli (2026-07-30). `on_webcam_toggle` yuvası 2026-07-29'dan
-        # beri vardı ve AironLive onu dolduruyordu, ama komut olarak HİÇ
-        # kaydedilmemişti — yani kamerayı yalnızca Aıron kendi aracıyla
+        # beri vardı ve ChironLive onu dolduruyordu, ama komut olarak HİÇ
+        # kaydedilmemişti — yani kamerayı yalnızca Chiron kendi aracıyla
         # (toggle_webcam) açabiliyordu, kullanıcı arayüzden açamıyordu.
         commands.register("webcam", self._handle_webcam)
         commands.register("vision_detect", self._handle_vision_detect)
         commands.register("vision_ocr", self._handle_vision_ocr)
         commands.register_readiness(self.is_ready)
         # Otomasyon paneli (2026-07-30) — aktif izlemelerin tek kaynağı
-        # AironLive'ın belleği; API onu buradan okuyor.
+        # ChironLive'ın belleği; API onu buradan okuyor.
         commands.register_provider("automation", self._automation_snapshot)
         commands.register_provider("log_history", self._log_history_snapshot)
         commands.register_provider("assistant_status", self._status_snapshot)
@@ -246,9 +246,9 @@ class WebUI:
         text = str(payload.get("text", "")).strip()
         if not text or not self.on_text_command:
             return
-        # NOT: "Siz: ..." satırını BURADA yazmıyoruz — AironLive._on_text_command
+        # NOT: "Siz: ..." satırını BURADA yazmıyoruz — ChironLive._on_text_command
         # zaten yazıyor. İkisi birden yazınca satır sohbette iki kez görünüyordu.
-        # AironLive.on_text_command içeride asyncio'ya köprü kuruyor; yine de
+        # ChironLive.on_text_command içeride asyncio'ya köprü kuruyor; yine de
         # HTTP isteğini bekletmemek için ayrı thread'de çağrılıyor.
         threading.Thread(target=self.on_text_command, args=(text,), daemon=True).start()
 
@@ -290,7 +290,7 @@ class WebUI:
         self._emit_status()
 
     def _handle_ask(self, payload: dict) -> None:
-        """Soruyu gönderir ve SONRAKİ Aıron cevabını `on_answer`'a teslim eder.
+        """Soruyu gönderir ve SONRAKİ Chiron cevabını `on_answer`'a teslim eder.
 
         Tek bekleyen: backend/api/remote.py soruları kilitle sıraya koyuyor.
         Aynı anda iki soru olsaydı hangi cevabın hangisine ait olduğu log
@@ -301,13 +301,13 @@ class WebUI:
         if not text or not callable(on_answer) or not self.on_text_command:
             return
         if self.paused:
-            on_answer("Aıron PC'de duraklatılmış, soruyu işleyemiyor.", False)
+            on_answer("Chiron PC'de duraklatılmış, soruyu işleyemiyor.", False)
             return
         if not self.remote_mode:
             self._set_remote_mode(True)
         # Bekleyen, kendi sorusunun "Siz:" satırı log'a düşene kadar SİLAHSIZ.
         # Astra incelemesi (2026-09-15): önceki sürüm kayıt anından sonraki İLK
-        # "Aıron:" satırını alıyordu — zaman aşımına uğramış önceki sorunun geç
+        # "Chiron:" satırını alıyordu — zaman aşımına uğramış önceki sorunun geç
         # cevabı ya da bir proaktif bekçi mesajı yanlış soruya teslim ediliyordu.
         with self._answer_lock:
             self._answer_waiter = {"text": text, "armed": False, "callback": on_answer}
@@ -374,7 +374,7 @@ class WebUI:
             threading.Thread(target=self.on_reset_command, daemon=True).start()
 
     def _automation_snapshot(self) -> dict:
-        """AironLive'ın otomasyon durumunu okur (aktif izlemeler, brifing).
+        """ChironLive'ın otomasyon durumunu okur (aktif izlemeler, brifing).
 
         Asistan henüz bağlanmadıysa boş bir durum dönüyor — None dönmek
         "sesli asistan yok" anlamına gelirdi, oysa burada asistan VAR, sadece
@@ -395,7 +395,7 @@ class WebUI:
     def _emit_status(self) -> None:
         self._emit("assistant_status", self._status_snapshot())
 
-    # ── AironUI yüzeyi — AironLive'ın çağırdıkları ──────────────────────────
+    # ── ChironUI yüzeyi — ChironLive'ın çağırdıkları ──────────────────────────
     def set_state(self, state: str) -> None:
         previous, self._state = self._state, state
         # ERROR/MUTED/PAUSED gibi durumların 3D sahnede karşılığı yok; sahne
@@ -421,7 +421,7 @@ class WebUI:
     def write_log(self, text: str) -> None:
         """Sohbet satırı. Metnin KENDİSİ durumu da belirler: "Siz:" ile başlayan
         satır düşünmeyi, "ERR:" hata durumunu tetikler. Bu sözleşme eski Tkinter
-        arayüzünden devralındı — `AironLive` log satırlarını hâlâ bu öneklerle
+        arayüzünden devralındı — `ChironLive` log satırlarını hâlâ bu öneklerle
         yazıyor, o yüzden ayrıştırma burada yaşıyor (bkz. conversationStore.ts)."""
         entry = {"text": text, "at": time.time()}
         # Geçmişe yayından ÖNCE yazılıyor: telefon /history'yi tam yayın anında
@@ -437,7 +437,7 @@ class WebUI:
         """Bekleyen `/ask` sorusu varsa cevabını teslim eder.
 
         Sıra: önce sorunun kendi "Siz: <soru>" satırı görülmeli (silahlanma),
-        ANCAK ondan sonraki ilk "Aıron:" satırı cevap sayılır. ERR satırları
+        ANCAK ondan sonraki ilk "Chiron:" satırı cevap sayılır. ERR satırları
         bekleyeni çözmüyor: bir aracın hatası turun sonu değil, model yine konuşuyor.
         Kalan sınır: silahlanmayla cevap arasına bir proaktif bekçi mesajı
         girerse o teslim edilir — bekçiler uzak modda seyrek, bilinçli kabul.
@@ -452,7 +452,7 @@ class WebUI:
             head = head.strip().lower()
             if head in ("siz", "you") and body.strip() == waiter["text"]:
                 waiter["armed"] = True
-            elif waiter["armed"] and head in ("aıron", "airon"):
+            elif waiter["armed"] and head in ("chiron", "daphne"):
                 self._answer_waiter = None
                 callback = waiter["callback"]
                 answer = body.strip()
@@ -465,7 +465,7 @@ class WebUI:
             self.set_state("THINKING")
         elif lowered.startswith("err:") or "error" in lowered:
             self.write_debug(text, level="ERROR")
-            # Aıron konuşurken gelen hata satırı sahneyi durdurmamalı: 3D
+            # Chiron konuşurken gelen hata satırı sahneyi durdurmamalı: 3D
             # çekirdek "speaking" animasyonunun ortasında idle'a düşüyordu
             # (ERROR'ın sahnede karşılığı yok). Hata zaten sohbette görünüyor;
             # konuşma bitince durum kendiliğinden güncellenecek.
@@ -478,7 +478,7 @@ class WebUI:
     def emit_reasoning(self, text: str) -> None:
         """Modelin düşünme adımı — alt zaman çizelgesine (2026-07-31).
 
-        Sohbete YAZILMIYOR: sohbet Aıron'un söyledikleri için, muhakeme ise ne
+        Sohbete YAZILMIYOR: sohbet Chiron'un söyledikleri için, muhakeme ise ne
         söyleyeceğine nasıl karar verdiği. İkisini aynı akışa koymak sohbeti
         okunmaz hâle getirirdi.
         """
@@ -489,7 +489,7 @@ class WebUI:
     # ── Görev akışı (Timeline, 2026-07-30) ──────────────────────────────────
     # `task_started`/`task_finished` olayları backend/models/events.py'de
     # 2026-07-27'den beri TANIMLIYDI ama hiçbir yerden yayınlanmıyordu — yani
-    # Aıron araç çalıştırırken arayüz bunu hiç görmüyordu. Artık her araç
+    # Chiron araç çalıştırırken arayüz bunu hiç görmüyordu. Artık her araç
     # çağrısı (main.py → _execute_tool) buradan geçiyor.
     def task_started(self, name: str, args: dict[str, Any] | None = None) -> None:
         self._emit("task_started", {"name": name, "args": _summarize_args(args), "at": time.time()})
@@ -540,9 +540,9 @@ class WebUI:
     def emit_detections(self, detections: list[dict], source: str = "panel") -> None:
         """Yerel nesne tespiti sonuçlarını Vision paneline yayınlar.
 
-        `source` — "panel" (kullanıcı tara'ya bastı) ya da "assistant" (Aıron
+        `source` — "panel" (kullanıcı tara'ya bastı) ya da "assistant" (Chiron
         recognize_objects aracını kendi çağırdı). İkisi de aynı panele düşüyor:
-        Aıron bir şey gördüğünde kullanıcı da onu görmeli.
+        Chiron bir şey gördüğünde kullanıcı da onu görmeli.
         """
         self._emit(
             "vision_detections",
@@ -573,7 +573,7 @@ class WebUI:
 
     # ── Açılış ──────────────────────────────────────────────────────────────
     def wait_for_api_key(self) -> None:
-        """AironLive başlamadan önce API anahtarının varlığını bekler.
+        """ChironLive başlamadan önce API anahtarının varlığını bekler.
 
         Tkinter sürümü burada bir kurulum penceresi açıyordu. Web sürümünde
         anahtar config'ten okunuyor; yoksa kullanıcıya ne yapacağı söylenip
@@ -584,7 +584,7 @@ class WebUI:
             if not warned:
                 self.write_log(
                     "ERR: Gemini API anahtarı yok — config/api_keys.json içindeki "
-                    '"gemini_api_key" alanını doldur. Aıron anahtar girilir girilmez başlar.'
+                    '"gemini_api_key" alanını doldur. Chiron anahtar girilir girilmez başlar.'
                 )
                 warned = True
             time.sleep(1.0)

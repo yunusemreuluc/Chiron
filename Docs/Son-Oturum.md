@@ -7,6 +7,16 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-10-28 — İsim araştırması: Chiron (erkek) + Daphne (kadın)
+
+**Ne yapıldı:** ~90 isim web'de tarandı (aynı adla AI ürünü var mı); liste ve gerekçeler `Acik-Konular.md` →
+"Ürün adı". Yunus'un kararı: erkek ses **Chiron**, kadın ses **Daphne**, uygulama adı Aıron → Chiron; uyandırma
+kelimesi sese göre (Chiron sesinde "Chiron", Daphne sesinde "Daphne"). Kod değişmedi.
+
+**Nerede kalındı:** Tescil (Türk Patent/EUIPO) sorgusu yapılamadı, Yunus "şimdilik kendim kullanacağım, çıkarırken
+bakarız" dedi. Not: Bugatti Chiron ünlü marka. **Sırada:** ad değişikliği (arayüz/prompt/mobil + iki uyandırma
+kelimesi kaydı; klasör/MCP adı `airon` kalır) ya da önceki planlanan Komuta geri bildirimi — Yunus seçecek.
+
 ## Oturum: 2026-10-27 — Komuta ekranı + süren sohbet + terminali devral
 
 **Ne yapıldı:** Yunus "terminaldeki gibi iş vereyim" dedi ve ofis/pano'yu kullanışsız buldu. Taslak

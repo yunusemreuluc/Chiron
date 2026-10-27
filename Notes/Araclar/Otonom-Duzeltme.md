@@ -1,12 +1,12 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # Otonom Düzeltme — auto_fix.py
 
 Bağlı: [[Home]] · [[Izleme-ve-Brifing]] · [[Ekran-Mudahale]] · [[Screen-Vision]] · [[Bilinen-Tuzaklar]]
 
-Aıron ekranda gördüğü hatayı **kendisi düzeltir**. Araç: `set_auto_fix`.
+Chiron ekranda gördüğü hatayı **kendisi düzeltir**. Araç: `set_auto_fix`.
 
 Kullanıcı isteği (2026-08-01): *"hata buluyorsa çözümü de bulsun ve kendi
 yapsın."* Çözüm ÖNERME zaten vardı — eksik olan son adımdı: proaktif mesaj
@@ -82,7 +82,7 @@ Bedeli adım başına fazladan bir vision çağrısı — otomatik düzeltme nad
 - **En fazla 3 adım.** Daha uzunsa bu bir düzeltme değil kurulum sihirbazıdır;
   orada kullanıcı olmalı (`can_fix_on_screen:false` döner, tavsiyeye düşer).
 - **Her zaman duyurur.** Yapılan iş Timeline'a `auto_fix` görevi olarak
-  düşüyor ve Aıron sesli olarak "şunu yaptım" diyor — izin ister gibi değil,
+  düşüyor ve Chiron sesli olarak "şunu yaptım" diyor — izin ister gibi değil,
   olmuş bir şeyi haber verir gibi.
 
 ## Diakritik tuzağı

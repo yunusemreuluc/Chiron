@@ -2,7 +2,7 @@
 
 YÖN ÖNEMLİ: backend/websocket olayları ses döngüsünden ARAYÜZE akar; burası ters
 yön — kullanıcının arayüzde yaptığı şeyin (yazı göndermek, mikrofonu susturmak,
-sohbeti sıfırlamak) AironLive'a ulaşması.
+sohbeti sıfırlamak) ChironLive'a ulaşması.
 
 Neden basit bir sözlük yeterli: 2026-07-29'dan beri ses döngüsü ve backend AYNI
 SÜREÇTE çalışıyor (bkz. desktop.py). Süreçler arası bir kuyruk/soket gerekmiyor —
@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Callable
 
-logger = logging.getLogger("airon.backend")
+logger = logging.getLogger("chiron.backend")
 
 Handler = Callable[[dict[str, Any]], None]
 

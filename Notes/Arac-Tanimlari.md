@@ -1,5 +1,5 @@
 ---
-tags: [airon, araclar, prompt]
+tags: [chiron, araclar, prompt]
 ---
 
 # Araç Tanımları — tool_defs.py + core/prompt.txt

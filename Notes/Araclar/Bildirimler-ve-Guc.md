@@ -1,5 +1,5 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # Bildirimler ve Güç Kontrolü — actions/notifications.py · actions/power_control.py
@@ -25,7 +25,7 @@ hiçbir şey yapmaz), kullanıcı sözlü onay verirse aynı parametrelerle
 `confirm=true`.
 
 `action='cancel'` her zaman güvenli, onay gerekmez — bekleyen bir güç işlemini
-iptal eder (`AironLive._pending_power_task`).
+iptal eder (`ChironLive._pending_power_task`).
 
 2026-07-27'de eklendi, `Docs/YAPILACAKLAR.md` listesinin dışında ek bir özellik.
 

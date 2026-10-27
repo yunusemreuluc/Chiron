@@ -68,7 +68,7 @@ def _capture_active_window() -> Path | None:
             img = Image.frombytes("RGB", shot.size, shot.bgra, "raw", "BGRX")
         if max(img.size) > WATCH_MAX_DIMENSION:
             img.thumbnail((WATCH_MAX_DIMENSION, WATCH_MAX_DIMENSION), Image.Resampling.LANCZOS)
-        handle = tempfile.NamedTemporaryFile(prefix="airon-watch-", suffix=".png", delete=False)
+        handle = tempfile.NamedTemporaryFile(prefix="chiron-watch-", suffix=".png", delete=False)
         tmp_path = Path(handle.name)
         handle.close()
         img.save(str(tmp_path), format="PNG", optimize=True)

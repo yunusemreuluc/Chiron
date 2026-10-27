@@ -16,7 +16,7 @@ def make_text_image() -> None:
     img = Image.new("RGB", (900, 260), "white")
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(str(FONT), 56)
-    draw.text((40, 40), "AIRON MCP TEST", fill="black", font=font)
+    draw.text((40, 40), "CHIRON MCP TEST", fill="black", font=font)
     draw.text((40, 140), "Kahve 42 TL", fill="black", font=font)
     img.save(HERE / "text_sample.png")
 

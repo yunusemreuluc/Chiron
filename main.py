@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Aıron — gerçek zamanlı sesli asistan çekirdeği (Gemini Live + araçlar).
+Chiron — gerçek zamanlı sesli asistan çekirdeği (Gemini Live + araçlar).
 
 BU DOSYA BİR GİRİŞ NOKTASI DEĞİL. Uygulama `desktop.py` ile başlar; oradaki
-3D arayüz `AironLive`'ı `core/web_ui.WebUI` adaptörüyle çalıştırır.
+3D arayüz `ChironLive`'ı `core/web_ui.WebUI` adaptörüyle çalıştırır.
 
 2026-07-29'a kadar burada bir `main()` vardı ve Tkinter penceresini (ui.py) açardı;
-kullanıcı isteğiyle Tkinter arayüzü tamamen kaldırıldı. `AironLive` DEĞİŞMEDİ —
+kullanıcı isteğiyle Tkinter arayüzü tamamen kaldırıldı. `ChironLive` DEĞİŞMEDİ —
 arayüzüne yalnızca 15 noktadan dokunuyor ve WebUI o yüzeyin birebir karşılığı.
 """
 
@@ -38,7 +38,7 @@ from core.audio_devices import (
 from core.logging_setup import setup_logging
 from core.tool_registry import register_tool, dispatch_tool
 from actions.tool_result import fail, ok
-from app_config import get_app_config_value
+from app_config import assistant_name, get_app_config_value
 from memory.memory_manager import load_memory, update_memory, format_memory_for_prompt
 # NOT: Aşağıdaki actions/* import'ları main.py içinde İSİMLE hiç çağrılmıyor —
 # hepsi kendi modüllerinde @register_tool(...) ile işaretli (bkz. core/tool_registry.py).
@@ -86,7 +86,7 @@ if TYPE_CHECKING:  # yalnızca tip denetimi için — çalışma zamanında impo
     from core.web_ui import WebUI
 
 setup_logging()
-logger = logging.getLogger("airon")
+logger = logging.getLogger("chiron")
 
 # Otomatik düzeltme, kullanıcı klavyeye dokunmayı bırakalı bu kadar geçmeden
 # ekrana tıklamaz — yazmanın ortasında odak çalmak, düzelttiği sorundan daha
@@ -96,7 +96,7 @@ AUTO_FIX_MIN_IDLE_S = 2.0
 
 # ── Ekran bekçisinin kota bütçesi (2026-08-01) ──────────────────────────────
 # Bekçi 25 sn'de bir Gemini görü çağrısı atıyordu: saatte 144, günde 3456.
-# Gemini ÜCRETSİZ katmanı günde 1500 istek veriyor — Aıron ~10 saat açık
+# Gemini ÜCRETSİZ katmanı günde 1500 istek veriyor — Chiron ~10 saat açık
 # kalınca kota, kullanıcı tek kelime etmeden bitiyordu. Kasadaki üç ayrı
 # "test ederken kota dolmuştu" notunun gerçek sebebi buydu.
 #
@@ -259,14 +259,14 @@ SEND_SAMPLE_RATE = 16000
 RECV_SAMPLE_RATE = 24000
 CHUNK_SIZE       = 1024
 
-# Dalga formu seviyesi (bkz. AironLive._mic_level). Tam ölçek 16-bit tepe olan
+# Dalga formu seviyesi (bkz. ChironLive._mic_level). Tam ölçek 16-bit tepe olan
 # 32767 DEĞİL: normal konuşma o değerin çok altında kalıyor ve tepeye göre
 # normalize edilen bir çubuk hiç kıpırdamıyor gibi görünüyor.
 _MIC_LEVEL_STRIDE = 8
 _MIC_LEVEL_FULL_SCALE = 9000.0
 
 # Muhakeme akışı: bir düşünce parçası bu uzunluğa ulaşıp cümle sonu
-# noktalamasıyla bittiğinde yayınlanır (bkz. AironLive._flush_reasoning).
+# noktalamasıyla bittiğinde yayınlanır (bkz. ChironLive._flush_reasoning).
 # Çok küçük tutulursa Timeline yarım cümlelerle dolar.
 _REASONING_MIN_CHARS = 40
 # Oturum başına bir kez, mikrofonun gerçekten veri üretip üretmediğini ölçmek için
@@ -288,13 +288,13 @@ def load_system_prompt() -> str:
         return PROMPT_PATH.read_text(encoding="utf-8")
     except Exception:
         return (
-            "Sen Aıron'sın — Windows'ta çalışan kişisel AI asistanı. "
+            "Sen Chiron'sun — Windows'ta çalışan kişisel AI asistanı. "
             "Türkçe konuş. Kısa ve net yanıtlar ver. "
             "Araçları kullanarak görevleri tamamla, asla taklit etme."
         )
 
 
-class AironLive:
+class ChironLive:
     def __init__(self, ui: "WebUI"):
         self.ui             = ui
         self.session        = None
@@ -317,6 +317,7 @@ class AironLive:
         # Modelin düşünme adımlarını isteyip istemediğimiz. Bir kez reddedilirse
         # süreç boyunca kapalı kalır — bkz. _build_config ve bağlantı hatası dalı.
         self._thinking_supported = True
+        self._assistant_name = assistant_name()
         # Teşhis bayrağı: `model_turn` parçasının gerçek `thought` değeri
         # bağlantı başına yalnızca BİR KEZ loglanıyor (bkz. _receive_audio).
         self._logged_part_shape = False
@@ -460,7 +461,7 @@ class AironLive:
 
     # ── Registry'ye kayıtlı özel araçlar ─────────────────────────────────────
     # save_memory ve toggle_webcam saf actions/* fonksiyonları değil — ikisi de
-    # AironLive'ın kendi durumuna (ui, webcam_streamer) ihtiyaç duyuyor. Yine de
+    # ChironLive'ın kendi durumuna (ui, webcam_streamer) ihtiyaç duyuyor. Yine de
     # aynı @register_tool mekanizmasıyla kaydediliyorlar; dispatch_tool() imzada
     # `self` gördüğünde instance'ı otomatik enjekte ediyor (bkz. core/tool_registry.py).
     @register_tool("save_memory")
@@ -522,7 +523,7 @@ class AironLive:
         detections = await loop.run_in_executor(
             None, lambda: detect_objects_in_jpeg(frame, extra_vocab))
 
-        # Aıron ne gördüyse kullanıcı da görsün: sonuçlar Vision paneline de
+        # Chiron ne gördüyse kullanıcı da görsün: sonuçlar Vision paneline de
         # düşüyor (2026-07-30). Tespit boş olsa bile yayınlanıyor — panel "tarandı,
         # bir şey bulunamadı" ile "hiç taranmadı"yı ayırt edebilmeli.
         self.ui.emit_detections(detections, source="assistant")
@@ -552,7 +553,7 @@ class AironLive:
         # OCR CPU'da ~1 sn sürüyor; ses döngüsünü bloklamamak için executor'da.
         lines = await loop.run_in_executor(None, lambda: read_text_in_jpeg(frame))
 
-        # Aıron ne okuduysa kullanıcı da görsün — panele de düşüyor.
+        # Chiron ne okuduysa kullanıcı da görsün — panele de düşüyor.
         self.ui.emit_text(lines, source="assistant")
 
         if not lines:
@@ -600,7 +601,7 @@ class AironLive:
             "deadline": time.monotonic() + timeout_minutes * 60,
         }
         self._active_watches.append(watch)
-        logger.info(f"[AIRON] 👀 İzleme başlatıldı: {watch['instruction']} → {watch['condition']}")
+        logger.info(f"[CHIRON] 👀 İzleme başlatıldı: {watch['instruction']} → {watch['condition']}")
         return ok(
             f"Tamam, '{instruction.strip()}' izliyorum — '{condition.strip()}' olunca "
             f"haber vereceğim (en fazla {timeout_minutes} dakika).",
@@ -634,7 +635,7 @@ class AironLive:
         if not re.match(r"^([01]\d|2[0-3]):[0-5]\d$", time_str):
             return fail("Saati 'SS:DD' (24 saat) formatında ver — örnek: '08:00'.")
         update_memory({"scheduled_briefing": {"config": {"value": time_str, "last_briefed_date": ""}}})
-        logger.info(f"[AIRON] 🌅 Günlük brifing ayarlandı: {time_str}")
+        logger.info(f"[CHIRON] 🌅 Günlük brifing ayarlandı: {time_str}")
         return ok(f"Tamam, her gün saat {time_str}'te sana günlük brifing vereceğim.")
 
     @register_tool("stop_daily_briefing")
@@ -709,12 +710,12 @@ class AironLive:
         except asyncio.CancelledError:
             return
 
-        logger.info(f"[AIRON] 🔌 Zamanlanmış güç eylemi çalıştırılıyor: {action}")
+        logger.info(f"[CHIRON] 🔌 Zamanlanmış güç eylemi çalıştırılıyor: {action}")
         loop = asyncio.get_event_loop()
         try:
             await loop.run_in_executor(None, lambda: execute_power_action(action))
         except Exception:
-            logger.exception(f"[AIRON] Güç eylemi başarısız: {action}")
+            logger.exception(f"[CHIRON] Güç eylemi başarısız: {action}")
             await self._send_proactive_system_message(
                 f"[SİSTEM] Zamanlanmış '{action}' işlemi başarısız oldu. Kullanıcıya haber ver."
             )
@@ -727,7 +728,7 @@ class AironLive:
             return
         self.ui.write_log(f"Siz: {text}")
         if not self._loop or not self.session:
-            self.ui.write_log("ERR: Aıron bağlantısı henüz hazır değil.")
+            self.ui.write_log("ERR: Chiron bağlantısı henüz hazır değil.")
             return
         asyncio.run_coroutine_threadsafe(
             self.session.send_client_content(
@@ -803,6 +804,12 @@ class AironLive:
         memory  = load_memory()
         mem_str = format_memory_for_prompt(memory)
         sys_p   = load_system_prompt()
+        voice   = str(get_app_config_value("voice", "Charon") or "Charon")
+        # Kadın seste asistan Daphne (bkz. app_config.assistant_name). Sohbet satırının
+        # öneki de bu addan; ses değişince oturum yeniden kurulduğu için burada tazelenir.
+        self._assistant_name = assistant_name(voice)
+        if self._assistant_name == "Daphne":
+            sys_p = sys_p.replace("Sen Chiron'sun", "Sen Daphne'sin", 1)
         now     = datetime.datetime.now()
         time_ctx = f"[ŞU ANKİ ZAMAN]\n{now.strftime('%A, %d %B %Y — %H:%M')}\n\n"
 
@@ -813,7 +820,7 @@ class AironLive:
 
         # Muhakeme akışı (2026-07-31): modelin düşünme adımları Timeline'da
         # görünsün diye isteniyor. `_thinking_supported` bir güvenlik valfi —
-        # bu ayarı reddeden bir model/sürümde oturum HİÇ kurulamazdı ve Aıron
+        # bu ayarı reddeden bir model/sürümde oturum HİÇ kurulamazdı ve Chiron
         # tamamen susardı (bağlantı sonsuz yeniden deniyor). Reddedilirse
         # aşağıdaki bağlantı hatası dalında kapatılıp hemen tekrar deneniyor.
         thinking = (
@@ -831,7 +838,7 @@ class AironLive:
                 language_code="tr-TR",
                 voice_config=types.VoiceConfig(
                     prebuilt_voice_config=types.PrebuiltVoiceConfig(
-                        voice_name=str(get_app_config_value("voice", "Charon") or "Charon")
+                        voice_name=voice
                     )
                 )
             ),
@@ -840,7 +847,7 @@ class AironLive:
     async def _execute_tool(self, fc) -> types.FunctionResponse:
         name = fc.name
         args = dict(fc.args or {})
-        logger.info(f"[AIRON] 🔧 {name} {args}")
+        logger.info(f"[CHIRON] 🔧 {name} {args}")
         # Her araç "THINKING" değil: ekranı ele geçirmek (AUTOMATION), belleğe
         # yazmak (MEMORY) ve kameraya bakmak (VISION) çekirdekte ayrı görünüyor.
         # Sınıflandırma core/web_ui.py'de — bkz. state_for_tool.
@@ -863,7 +870,7 @@ class AironLive:
         except Exception as e:
             result = fail(f"Hata: {e}")
             had_exception = True
-            logger.exception(f"[AIRON] Arac calistirilirken hata: {name}")
+            logger.exception(f"[CHIRON] Arac calistirilirken hata: {name}")
             self.speak_error(name, e)
 
         tool_failed = not result.get("success", True)
@@ -877,7 +884,7 @@ class AironLive:
         if not tool_failed and not self.ui.muted:
             self.ui.set_state("LISTENING")
 
-        logger.info(f"[AIRON] 📤 {name} → {str(result.get('message', ''))[:80]}")
+        logger.info(f"[CHIRON] 📤 {name} → {str(result.get('message', ''))[:80]}")
         log_event("tool", f"{name}: {result.get('message', '')}", tool_name=name)
         return types.FunctionResponse(
             id=fc.id, name=name,
@@ -933,7 +940,7 @@ class AironLive:
 
     def _proactive_checks_allowed(self, block_on_webcam: bool = False) -> bool:
         """Tüm proaktif bekçilerin (ekran, sistem sağlığı, özel izleme) ortak ön
-        koşulu — duraklatılmışken, susturulmuşken, Aıron zaten konuşurken veya
+        koşulu — duraklatılmışken, susturulmuşken, Chiron zaten konuşurken veya
         oturum hazır değilken hiçbiri çalışmamalı."""
         # Uzak modda mikrofon teknik olarak kapalı ama kullanıcı "beni rahat
         # bırak" demedi — tam tersine telefondan "bitince haber ver" diyebilmeli.
@@ -958,7 +965,7 @@ class AironLive:
                 turn_complete=True,
             )
         except Exception:
-            logger.exception("[AIRON] Proaktif mesaj gönderilemedi")
+            logger.exception("[CHIRON] Proaktif mesaj gönderilemedi")
 
     async def _watch_screen_for_issues(self):
         """Proaktif ekran izleme (YAPILACAKLAR.md #4). Periyodik olarak aktif pencereyi
@@ -966,7 +973,7 @@ class AironLive:
         görürse kendiliğinden sesli haber verir. Aynı sorunu tekrar tekrar bildirmemek
         için basit bir imza+cooldown mekanizması var (bkz. _last_issue_signature).
 
-        KOTA: bu bekçi Aıron'un en pahalı arka plan işi — her kontrol bir Gemini
+        KOTA: bu bekçi Chiron'un en pahalı arka plan işi — her kontrol bir Gemini
         görü çağrısı. Üç katmanlı bütçe için modül başındaki SCREEN_WATCH_*
         sabitlerine bak."""
         RENOTIFY_COOLDOWN_SECONDS = 180.0
@@ -998,7 +1005,7 @@ class AironLive:
                 atlanan += 1
                 if atlanan == 1:
                     logger.info(
-                        "[AIRON] Ekran bekçisi saatlik kota tavanına ulaştı "
+                        "[CHIRON] Ekran bekçisi saatlik kota tavanına ulaştı "
                         f"({SCREEN_WATCH_MAX_CALLS_PER_HOUR}/saat), bekliyor"
                     )
                 continue
@@ -1010,7 +1017,7 @@ class AironLive:
                 result = await loop.run_in_executor(
                     None, lambda: check_for_issue(api_key, window_title))
             except Exception:
-                logger.exception("[AIRON] Proaktif ekran taraması başarısız")
+                logger.exception("[CHIRON] Proaktif ekran taraması başarısız")
                 continue
 
             # Gemini'ye gerçekten gidildiyse tavana say. "unchanged" ile dönen
@@ -1034,7 +1041,7 @@ class AironLive:
 
             self._last_issue_signature = signature
             self._last_issue_notified_at = now
-            logger.info(f"[AIRON] 👁️ Proaktif ekran uyarısı: {signature}")
+            logger.info(f"[CHIRON] 👁️ Proaktif ekran uyarısı: {signature}")
 
             await self._handle_detected_issue(description, window_title, api_key, loop)
 
@@ -1044,7 +1051,7 @@ class AironLive:
         """Tespit edilen sorunu teşhis eder ve politikaya göre KENDİ düzeltir.
 
         Kullanıcı isteği (2026-08-01): "hata buluyorsa çözümü de bulsun ve kendi
-        yapsın." Öncesinde Aıron yalnızca haber verip tavsiye ediyordu; ekranda
+        yapsın." Öncesinde Chiron yalnızca haber verip tavsiye ediyordu; ekranda
         bir şey yapması için kullanıcının "düzelt" demesi ve sonra bir de onay
         vermesi gerekiyordu.
 
@@ -1069,7 +1076,7 @@ class AironLive:
         # çalmak demek. Hata diyaloğu zaten onu durdurmuş olacağı için kısa bir
         # sessizlik beklemek pratikte gecikme yaratmıyor.
         if _idle_seconds() < AUTO_FIX_MIN_IDLE_S:
-            logger.info("[AIRON] Otomatik düzeltme ertelendi — kullanıcı yazıyor")
+            logger.info("[CHIRON] Otomatik düzeltme ertelendi — kullanıcı yazıyor")
             return
 
         plan = await loop.run_in_executor(
@@ -1148,7 +1155,7 @@ class AironLive:
             try:
                 issues = await loop.run_in_executor(None, check_health_thresholds)
             except Exception:
-                logger.exception("[AIRON] Sistem sağlığı kontrolü başarısız")
+                logger.exception("[CHIRON] Sistem sağlığı kontrolü başarısız")
                 continue
 
             now = time.monotonic()
@@ -1162,7 +1169,7 @@ class AironLive:
                     continue
 
                 self._last_health_notified_at[metric] = now
-                logger.info(f"[AIRON] 🩺 Sistem sağlığı uyarısı ({metric}): {message}")
+                logger.info(f"[CHIRON] 🩺 Sistem sağlığı uyarısı ({metric}): {message}")
 
                 await self._send_proactive_system_message(
                     "[SİSTEM — proaktif sistem sağlığı bekçisi, kullanıcı bunu sormadı] "
@@ -1190,7 +1197,7 @@ class AironLive:
             for watch in list(self._active_watches):
                 if now >= watch["deadline"]:
                     self._active_watches.remove(watch)
-                    logger.info(f"[AIRON] ⏱️ İzleme süresi doldu: {watch['instruction']}")
+                    logger.info(f"[CHIRON] ⏱️ İzleme süresi doldu: {watch['instruction']}")
                     await self._send_proactive_system_message(
                         "[SİSTEM — proaktif izleyici, kullanıcı bunu sormadı] "
                         f"'{watch['instruction']}' için '{watch['condition']}' koşulunu "
@@ -1206,7 +1213,7 @@ class AironLive:
                             api_key, w["instruction"], w["condition"], window_title),
                     )
                 except Exception:
-                    logger.exception(f"[AIRON] İzleme kontrolü başarısız: {watch['instruction']}")
+                    logger.exception(f"[CHIRON] İzleme kontrolü başarısız: {watch['instruction']}")
                     continue
 
                 if not result.get("condition_met"):
@@ -1214,7 +1221,7 @@ class AironLive:
 
                 detail = str(result.get("detail", "")).strip()
                 self._active_watches.remove(watch)
-                logger.info(f"[AIRON] 👀 İzleme koşulu gerçekleşti: {watch['instruction']} — {detail}")
+                logger.info(f"[CHIRON] 👀 İzleme koşulu gerçekleşti: {watch['instruction']} — {detail}")
 
                 await self._send_proactive_system_message(
                     "[SİSTEM — proaktif izleyici, kullanıcı bunu sormadı] "
@@ -1253,7 +1260,7 @@ class AironLive:
             update_memory({"scheduled_briefing": {"config": {
                 "value": target_time, "last_briefed_date": today_str,
             }}})
-            logger.info(f"[AIRON] 🌅 Günlük brifing zamanı geldi: {target_time}")
+            logger.info(f"[CHIRON] 🌅 Günlük brifing zamanı geldi: {target_time}")
 
             try:
                 weather_result = await loop.run_in_executor(None, lambda: get_weather_summary())
@@ -1280,8 +1287,8 @@ class AironLive:
 
         Windows'ta bir mikrofon uç noktası AKTİF ve sesi açık görünürken bile tam
         dijital sessizlik üretebiliyor; PyAudio bunu hata olarak bildirmez. Bu
-        durumda Gemini hiç konuşma duymaz, Aıron da hiç yanıt vermez — kullanıcıya
-        "Aıron'un sesi gelmiyor" gibi görünen sessiz arıza tam olarak budur.
+        durumda Gemini hiç konuşma duymaz, Chiron da hiç yanıt vermez — kullanıcıya
+        "Chiron'un sesi gelmiyor" gibi görünen sessiz arıza tam olarak budur.
         Kontrol mikrofon akışı açılmadan ÖNCE yapılır (aynı cihaz iki kez
         açılmasın diye) ve süreç başına YALNIZCA BİR KEZ: bağlantı koptuğunda
         oturum yeniden kurulur, her yeniden denemede 2 saniye dinlemeye geç
@@ -1299,7 +1306,7 @@ class AironLive:
         )
         problem = describe_input_problem(probe)
         if problem:
-            logger.warning("[AIRON] 🎤 Mikrofon sağlık kontrolü başarısız (%s)", detail)
+            logger.warning("[CHIRON] 🎤 Mikrofon sağlık kontrolü başarısız (%s)", detail)
             self.ui.write_log(f"ERR: {problem}")
             self.ui.write_debug(f"Mikrofon sondası: {detail}", level="ERROR")
             return
@@ -1311,10 +1318,10 @@ class AironLive:
         # geliştirici akışında uyarı olarak duruyor.
         observation = describe_input_observation(probe)
         if observation:
-            logger.info("[AIRON] 🎤 Mikrofon açılışta sessizdi (%s)", detail)
+            logger.info("[CHIRON] 🎤 Mikrofon açılışta sessizdi (%s)", detail)
             self.ui.write_debug(f"Mikrofon sondası: {detail} — {observation}", level="WARN")
         else:
-            logger.info("[AIRON] 🎤 Mikrofon sağlıklı (%s)", detail)
+            logger.info("[CHIRON] 🎤 Mikrofon sağlıklı (%s)", detail)
 
     @staticmethod
     def _mic_level(chunk: bytes) -> float:
@@ -1337,7 +1344,7 @@ class AironLive:
         return min(1.0, math.sqrt(mean_square) / _MIC_LEVEL_FULL_SCALE)
 
     async def _listen_audio(self):
-        logger.info("[AIRON] 🎤 Mikrofon başladı")
+        logger.info("[CHIRON] 🎤 Mikrofon başladı")
         # Cihaz seçimi: config'te "mic_device" varsa ona uyan cihaz, yoksa sistem
         # varsayılanı. Varsayılan cihaz sessiz kaldığında kullanıcının koda
         # dokunmadan başka bir mikrofona geçebilmesi için.
@@ -1357,12 +1364,12 @@ class AironLive:
                 raw = await asyncio.to_thread(
                     stream.read, CHUNK_SIZE, exception_on_overflow=False)
                 # Seviye göstergesi de gönderilen sesten hesaplanıyor, ham
-                # tampondan değil: dalga formu Aıron'un GERÇEKTEN duyduğu şeyi
+                # tampondan değil: dalga formu Chiron'un GERÇEKTEN duyduğu şeyi
                 # göstermeli.
                 data = downsample_int16(raw, capture_rate, SEND_SAMPLE_RATE)
                 with self._speaking_lock:
-                    airon_speaking = self._is_speaking
-                listening = not airon_speaking and not self.ui.muted and not self._paused
+                    chiron_speaking = self._is_speaking
+                listening = not chiron_speaking and not self.ui.muted and not self._paused
                 # Dalga formu (2026-07-30): sohbet dock'undaki görsel geri
                 # bildirim. Susturulmuş/duraklatılmışken sıfır gönderiliyor —
                 # mikrofon kapalıyken dalgalanan bir çubuk, kapalı olmadığını
@@ -1383,12 +1390,12 @@ class AironLive:
             # bağlanma, arıza gibi okunuyordu. Sessiz arıza kadar pahalı olan
             # şey, arıza olmayanı arıza diye raporlamaktır.
             if "after shutdown" in str(e):
-                logger.info("[AIRON] 🎤 Mikrofon döngüsü kapanışta durdu (normal).")
+                logger.info("[CHIRON] 🎤 Mikrofon döngüsü kapanışta durdu (normal).")
                 return
-            logger.exception("[AIRON] Mikrofon hatasi")
+            logger.exception("[CHIRON] Mikrofon hatasi")
             raise
         except Exception:
-            logger.exception("[AIRON] Mikrofon hatasi")
+            logger.exception("[CHIRON] Mikrofon hatasi")
             raise
         finally:
             stream.close()
@@ -1411,7 +1418,7 @@ class AironLive:
         self.ui.emit_reasoning(text)
 
     async def _receive_audio(self):
-        logger.info("[AIRON] 👂 Alım başladı")
+        logger.info("[CHIRON] 👂 Alım başladı")
         self._logged_part_shape = False
         out_buf, in_buf, thought_buf = [], [], []
         output_noise = False
@@ -1444,7 +1451,7 @@ class AironLive:
                                 if piece and not self._logged_part_shape:
                                     self._logged_part_shape = True
                                     logger.info(
-                                        "[AIRON] 🧠 model_turn parçası: thought=%r (%d karakter)",
+                                        "[CHIRON] 🧠 model_turn parçası: thought=%r (%d karakter)",
                                         thought_flag,
                                         len(piece),
                                     )
@@ -1486,14 +1493,14 @@ class AironLive:
 
                             full_out = " ".join(out_buf).strip()
                             if full_out:
-                                self.ui.write_log(f"Aıron: {full_out}")
+                                self.ui.write_log(f"{self._assistant_name}: {full_out}")
                                 if output_noise_samples:
                                     self.ui.write_debug(
                                         "Kısmen filtrelenen ses transcripti: " + " | ".join(output_noise_samples),
                                         level="WARN",
                                     )
                             elif output_noise:
-                                self.ui.write_log("ERR: Aıron sesli yanıtını çözümlerken bir hata oluştu.")
+                                self.ui.write_log("ERR: Chiron sesli yanıtını çözümlerken bir hata oluştu.")
                                 if output_noise_samples:
                                     self.ui.write_debug(
                                         "Filtrelenen ham transcript: " + " | ".join(output_noise_samples),
@@ -1502,14 +1509,14 @@ class AironLive:
                                 self.ui.set_state("ERROR")
 
                             if full_in and full_out:
-                                log_event("conversation", f"Siz: {full_in} | Aıron: {full_out}")
+                                log_event("conversation", f"Siz: {full_in} | {self._assistant_name}: {full_out}")
                             elif full_in:
                                 log_event("conversation", f"Siz: {full_in}")
                             elif full_out:
                                 # full_in bos ama full_out var -> kullanicidan gelen
                                 # gercek konusma degil, proaktif bir bekci mesaji
                                 # (ekran/sistem sagligi uyarisi, gunluk brifing vb.)
-                                log_event("conversation", f"Aıron (kendiliğinden): {full_out}")
+                                log_event("conversation", f"Chiron (kendiliğinden): {full_out}")
 
                             out_buf = []
                             output_noise = False
@@ -1518,20 +1525,20 @@ class AironLive:
                     if response.tool_call:
                         fn_responses = []
                         for fc in response.tool_call.function_calls:
-                            logger.info(f"[AIRON] 📞 {fc.name}")
+                            logger.info(f"[CHIRON] 📞 {fc.name}")
                             fr = await self._execute_tool(fc)
                             fn_responses.append(fr)
                         await self.session.send_tool_response(
                             function_responses=fn_responses)
 
         except Exception as e:
-            logger.exception("[AIRON] Alim hatasi")
+            logger.exception("[CHIRON] Alim hatasi")
             raise
 
     async def _play_audio(self):
-        logger.info("[AIRON] 🔊 Ses çalma başladı")
+        logger.info("[CHIRON] 🔊 Ses çalma başladı")
         # Cihaz seçimi (config: "speaker_device"). Windows varsayılan çıkışı
-        # kulaklık jakına düşmüşken kullanıcı hoparlörden dinliyorsa Aıron'un sesi
+        # kulaklık jakına düşmüşken kullanıcı hoparlörden dinliyorsa Chiron'un sesi
         # "gelmiyor" gibi görünür — bu ayar kodu değiştirmeden hedefi sabitler.
         device_index = await asyncio.to_thread(
             resolve_device_index,
@@ -1569,7 +1576,7 @@ class AironLive:
                 speaking_overlay.push_level(self._mic_level(chunk))
                 await asyncio.to_thread(stream.write, chunk)
         except Exception as e:
-            logger.exception("[AIRON] Ses calma hatasi")
+            logger.exception("[CHIRON] Ses calma hatasi")
             raise
         finally:
             self.set_speaking(False)
@@ -1591,7 +1598,7 @@ class AironLive:
                     api_key=get_api_key(),
                     http_options={"api_version": "v1alpha"}
                 )
-                logger.info("[AIRON] 🔌 Bağlanıyor...")
+                logger.info("[CHIRON] 🔌 Bağlanıyor...")
                 self.ui.set_state("THINKING")
                 config = self._build_config()
 
@@ -1604,10 +1611,10 @@ class AironLive:
                     self.audio_in_queue = asyncio.Queue()
                     self.out_queue      = asyncio.Queue(maxsize=10)
 
-                    logger.info("[AIRON] ✅ Bağlandı.")
+                    logger.info("[CHIRON] ✅ Bağlandı.")
                     connect_attempts = 0          # başarılı bağlantı → sayaç sıfırla
                     self.ui.set_state("LISTENING")
-                    self.ui.write_log("SYS: Aıron hazır. Dinliyorum...")
+                    self.ui.write_log("SYS: Chiron hazır. Dinliyorum...")
 
                     tg.create_task(self._send_realtime())
                     tg.create_task(self._listen_audio())
@@ -1630,7 +1637,7 @@ class AironLive:
 
                 if _is_reset_exception(e):
                     # Kullanıcı sohbeti sıfırladı — sessizce, hemen yeni bir oturum aç.
-                    logger.info("[AIRON] ♻️ Sohbet sıfırlandı, yeni oturum açılıyor...")
+                    logger.info("[CHIRON] ♻️ Sohbet sıfırlandı, yeni oturum açılıyor...")
                     self.ui.write_debug("Sohbet sıfırlandı, yeni oturum açılıyor.", level="INFO")
                     connect_attempts = 0
                     await asyncio.sleep(0.3)
@@ -1638,31 +1645,31 @@ class AironLive:
 
                 # Güvenlik valfi: model `thinking_config`i kabul etmiyorsa onu
                 # kapatıp HEMEN tekrar dene. Aksi hâlde bağlantı her seferinde
-                # aynı sebeple düşer ve Aıron hiç açılmaz — muhakeme akışı güzel
+                # aynı sebeple düşer ve Chiron hiç açılmaz — muhakeme akışı güzel
                 # ama sesli asistanın çalışması pazarlık konusu değil.
                 if self._thinking_supported and _is_thinking_rejection(e):
                     self._thinking_supported = False
-                    logger.warning("[AIRON] 🧠 Model düşünme akışını kabul etmedi — kapatıldı.")
+                    logger.warning("[CHIRON] 🧠 Model düşünme akışını kabul etmedi — kapatıldı.")
                     self.ui.write_debug(
                         "Model `thinking_config` kabul etmedi; muhakeme akışı bu oturumda kapalı.",
                         level="WARN",
                     )
                     continue
 
-                logger.exception(f"[AIRON] Baglanti hatasi: {e}")
+                logger.exception(f"[CHIRON] Baglanti hatasi: {e}")
                 connect_attempts += 1
                 # İlk birkaç deneme sessiz: yeni girilen API anahtarı Google
                 # tarafında saniyeler içinde aktifleşebilir. Kullanıcıya hemen
                 # "hatalı anahtar" göstermeyip kısa aralıkla otomatik tekrar dene.
                 if connect_attempts <= 3:
                     self.ui.set_state("INITIALISING")
-                    logger.info(f"[AIRON] 🔄 Bağlanmayı tekrar deniyor ({connect_attempts}/3)...")
+                    logger.info(f"[CHIRON] 🔄 Bağlanmayı tekrar deniyor ({connect_attempts}/3)...")
                     await asyncio.sleep(2)
                 else:
                     self.ui.write_log(
-                        f"ERR: Aıron baglanamiyor — API anahtarini ve internet "
+                        f"ERR: Chiron baglanamiyor — API anahtarini ve internet "
                         f"baglantisini kontrol et. ({e})"
                     )
                     self.ui.set_state("ERROR")
-                    logger.warning("[AIRON] 🔄 5 saniyede yeniden bağlanıyor...")
+                    logger.warning("[CHIRON] 🔄 5 saniyede yeniden bağlanıyor...")
                     await asyncio.sleep(5)

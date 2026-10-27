@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Aıron uygulama ikonu — prosedürel üretim.
+Chiron uygulama ikonu — prosedürel üretim.
 
 KOMPOZİSYON: sıcak plazma çekirdeği + etrafında segmentli yörünge halkaları +
 halka üzerinde düğüm noktaları. Yani 3D sahnenin (Energy Core + OrbitNodes)
@@ -25,9 +25,9 @@ ayrı bir marka gibi değil. Çekirdeğin gövde gradyanı + platin fresnel kena
 3D sahnedeki Energy Core'un (three/shaders/energyCore.ts) iki boyutlu özeti.
 
 Çalıştırma:  venv\\Scripts\\python.exe make_icon.py
-Çıktı:       Icon/airon.ico          — pencere, görev çubuğu, kısayol
-             Icon/airon.png          — 256px, genel kullanım
-             Icon/airon-tray.png     — 32px, sistem tepsisi (küçük varyant)
+Çıktı:       Icon/chiron.ico          — pencere, görev çubuğu, kısayol
+             Icon/chiron.png          — 256px, genel kullanım
+             Icon/chiron-tray.png     — 32px, sistem tepsisi (küçük varyant)
              frontend/app/favicon.ico — tarayıcı geliştirme modunda aynı ikon
 """
 
@@ -263,7 +263,7 @@ def build() -> Path:
     frames.update({size: large_master.resize((size, size), Image.LANCZOS) for size in LARGE_SIZES})
 
     ICON_DIR.mkdir(parents=True, exist_ok=True)
-    ico_path = ICON_DIR / "airon.ico"
+    ico_path = ICON_DIR / "chiron.ico"
 
     # Pillow'un ICO yazıcısı `append_images` içinde TAM boyut eşleşmesi arıyor;
     # eşleşen bulunca kendisi küçültmüyor, verdiğimiz kareyi olduğu gibi gömüyor.
@@ -276,11 +276,11 @@ def build() -> Path:
         append_images=[frames[size] for size in ordered if size != 256],
     )
 
-    frames[256].save(ICON_DIR / "airon.png")
+    frames[256].save(ICON_DIR / "chiron.png")
     # Sistem tepsisi ikonu 16-24px arasında çiziliyor (bkz. desktop.py
     # TrayController) — oraya büyük kompozisyonun ezilmiş hâli değil, küçük
     # varyantın 32'liği gidiyor.
-    frames[32].save(ICON_DIR / "airon-tray.png")
+    frames[32].save(ICON_DIR / "chiron-tray.png")
 
     if FAVICON_PATH.parent.is_dir():
         shutil.copyfile(ico_path, FAVICON_PATH)
@@ -310,9 +310,9 @@ def _build_remote_icons(master: Image.Image) -> None:
         canvas.alpha_composite(master.resize((inner, inner), Image.LANCZOS), (offset, offset))
         return canvas
 
-    on_background(192, 0.92).save(REMOTE_ICON_DIR / "airon-192.png")
-    on_background(512, 0.92).save(REMOTE_ICON_DIR / "airon-512.png")
-    on_background(512, 0.66).save(REMOTE_ICON_DIR / "airon-maskable-512.png")
+    on_background(192, 0.92).save(REMOTE_ICON_DIR / "chiron-192.png")
+    on_background(512, 0.92).save(REMOTE_ICON_DIR / "chiron-512.png")
+    on_background(512, 0.66).save(REMOTE_ICON_DIR / "chiron-maskable-512.png")
     on_background(180, 0.86).convert("RGB").save(REMOTE_ICON_DIR / "apple-touch-icon.png")
 
 

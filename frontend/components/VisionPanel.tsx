@@ -19,7 +19,7 @@ import {
 import { playSfx } from '@/services/sfxPlayer';
 import { GlassPanel } from './GlassPanel';
 
-// AIRON Vision paneli — Notes/Tasarim-Kurallari.md § Panel yerleşimi (Vision / Camera / Object
+// CHIRON Vision paneli — Notes/Tasarim-Kurallari.md § Panel yerleşimi (Vision / Camera / Object
 // Detection). Kullanıcı isteğiyle (2026-07-30) sıfırdan yazıldı.
 //
 // Backend zaten kameranın karelerini `webcam_frame` olayıyla yayınlıyordu ama
@@ -306,7 +306,7 @@ function VisionCard({
           Önceden `available === false` ile de kilitleniyordu; ses döngüsü
           arayüzden sonra ayağa kalktığında bu bayrak "false"ta takılı kalıyor ve
           düğme hiç açılmıyordu. Artık her zaman basılabiliyor: kamera kapalıysa
-          backend onu kendisi açıp tarıyor (bkz. AironLive._on_vision_detect_ui),
+          backend onu kendisi açıp tarıyor (bkz. ChironLive._on_vision_detect_ui),
           gerçekten bir sorun varsa da aşağıdaki mesaj söylüyor. */}
       <div className="mt-3 grid grid-cols-2 gap-2">
         <ActionButton
@@ -329,7 +329,7 @@ function VisionCard({
           <div className="flex items-baseline justify-between gap-2">
             <span className="label-micro">{mode === 'text' ? 'Okunan' : 'Tespit'}</span>
             {detectionSource === 'assistant' && (
-              <span className="label-micro text-primary/70">Aıron baktı</span>
+              <span className="label-micro text-primary/70">Chiron baktı</span>
             )}
           </div>
 
@@ -366,7 +366,7 @@ function VisionCard({
       {notice && <p className="mt-3 text-[11px] text-[#ff8f8f]">{notice}</p>}
 
       {/* OCR ve yüz tanıma henüz yok — panelin bunları varmış gibi göstermemesi
-          için hiçbir yerde yer almıyorlar (bkz. Docs/AIRON_UI_ROADMAP.md). */}
+          için hiçbir yerde yer almıyorlar (bkz. Docs/CHIRON_UI_ROADMAP.md). */}
     </GlassPanel>
   );
 }

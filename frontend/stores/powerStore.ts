@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 
-// AIRON — uyku/uyanıklık.
+// CHIRON — uyku/uyanıklık.
 //
 // Kullanıcı isteğiyle (2026-07-30): sahnenin ortasındaki çekirdek tıklanabilir
-// ve tıklayınca Aıron "kapanıyor" — ortam karanlığa bürünüyor, çekirdek sönük
+// ve tıklayınca Chiron "kapanıyor" — ortam karanlığa bürünüyor, çekirdek sönük
 // bir nefese düşüyor (bkz. three/EnergyCore.tsx, components/SleepVeil.tsx).
 //
 // UYGULAMA KAPANMIYOR, uyuyor. Bu bilinçli bir karar: çekirdek ekrandaki en

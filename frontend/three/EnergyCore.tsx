@@ -11,7 +11,7 @@ import { getRevealProgress } from './reveal';
 import { ENERGY_CORE_VERTEX_SHADER } from './shaders/energyCore';
 import { WIRE_CORE_FRAGMENT_SHADER } from './shaders/wireCore';
 
-// Notes/Tasarim-Kurallari.md § Enerji çekirdeği — "The center of AIRON is alive... It constantly
+// Notes/Tasarim-Kurallari.md § Enerji çekirdeği — "The center of CHIRON is alive... It constantly
 // breathes, rotates slowly, emits particles, changes glow."
 //
 // ── FORM DEĞİŞTİ, DAVRANIŞ DEĞİŞMEDİ (2026-08-06, kullanıcı isteği) ──────────
@@ -95,7 +95,7 @@ const MID_TILT = 0.46;
 const CORE_TILT = -0.32;
 
 // ── Uyku (kullanıcı isteği, 2026-07-30) ─────────────────────────────────────
-// Çekirdeğe tıklayınca Aıron uyuyor (bkz. stores/powerStore.ts). Değerler
+// Çekirdeğe tıklayınca Chiron uyuyor (bkz. stores/powerStore.ts). Değerler
 // "sönmüş" değil "dinlenen" bir cisim hedefliyor: nefes çok yavaşlıyor, kafes
 // neredeyse düzleşiyor, ışıma dibe iniyor ama SIFIR OLMUYOR — sıfır olsa
 // uygulama çökmüş gibi görünürdü.
@@ -153,7 +153,7 @@ function getExtraScale(state: AIState): number {
   return 0;
 }
 
-// Dönüş hızı: otomasyonun asıl imzası. Renk "bir şey değişti" der, HIZ "Aıron
+// Dönüş hızı: otomasyonun asıl imzası. Renk "bir şey değişti" der, HIZ "Chiron
 // şu an senin makinende çalışıyor" der — kullanıcı ekrana bakmıyorken bile göz
 // ucuyla yakalanan sinyal bu. Tel kafeste bu sinyal DAHA güçlü okunuyor: dolu
 // kürede dönüşü yalnızca yüzey deseni ele veriyordu, kafeste çizgilerin kendisi
@@ -289,7 +289,7 @@ export function EnergyCore() {
     <group ref={groupRef}>
       <mesh
         ref={outerRef}
-        // Çekirdeğe tıklamak Aıron'u uyutuyor (kullanıcı isteği, 2026-07-30).
+        // Çekirdeğe tıklamak Chiron'u uyutuyor (kullanıcı isteği, 2026-07-30).
         // Tıklama hedefi DIŞ KAFES: `wireframe` yalnızca ÇİZİMİ değiştiriyor,
         // ışın-kesişimi (raycast) hâlâ üçgenlerin tamamına bakıyor — yani
         // kullanıcı çizgiyi nişan almak zorunda değil, orb'un herhangi bir

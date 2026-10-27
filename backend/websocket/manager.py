@@ -8,7 +8,7 @@ from fastapi import WebSocket
 from backend.core.remote_auth import REMOTE_EVENTS
 from backend.models.events import WSEvent
 
-logger = logging.getLogger("airon.backend")
+logger = logging.getLogger("chiron.backend")
 
 
 class ConnectionManager:

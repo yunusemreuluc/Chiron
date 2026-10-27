@@ -3,7 +3,7 @@
 Ofis kendi ajanını çalıştırmaz; var olan düzeni GÖZLER. İki kaynak var:
 
 1. Claude Code hook olayları — `~/.claude/hooks/ofis-olay.py` her olayı
-   `%LOCALAPPDATA%\\airon\\ofis\\events.jsonl`'e tek satır yazar. Claude ana döngüsü,
+   `%LOCALAPPDATA%\\chiron\\ofis\\events.jsonl`'e tek satır yazar. Claude ana döngüsü,
    alt ajanlar ve Bash/PowerShell ile çağrılan Codex/Bunny/Gemini/OpenCode lane'leri
    buradan çıkarılır.
 2. Codex'in kendi oturum kayıtları — `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`.
@@ -33,10 +33,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable
 
-logger = logging.getLogger("airon.ofis")
+logger = logging.getLogger("chiron.ofis")
 
 EVENTS_PATH = (
-    Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "airon" / "ofis" / "events.jsonl"
+    Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "chiron" / "ofis" / "events.jsonl"
 )
 CODEX_SESSIONS = Path.home() / ".codex" / "sessions"
 
@@ -1167,7 +1167,7 @@ class OfficeWatcher:
     def start(self) -> None:
         if self._thread is not None:
             return
-        self._thread = threading.Thread(target=self._run, name="airon-ofis", daemon=True)
+        self._thread = threading.Thread(target=self._run, name="chiron-ofis", daemon=True)
         self._thread.start()
 
     def stop(self) -> None:

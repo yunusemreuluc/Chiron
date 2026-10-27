@@ -22,9 +22,9 @@ EventType = Literal[
     "notification",
     "energy_state",
     # 2026-07-29 — sesli asistan (main.py) artık aynı süreçte, Tkinter yerine bu
-    # arayüzü kullanıyor (bkz. core/web_ui.py). Aşağıdakiler AironUI'nin ekrana
+    # arayüzü kullanıyor (bkz. core/web_ui.py). Aşağıdakiler ChironUI'nin ekrana
     # yazdığı şeylerin WebSocket karşılığı.
-    "log",  # sohbet satırı: "Siz: ..." / "Aıron: ..." / "SYS:" / "ERR:"
+    "log",  # sohbet satırı: "Siz: ..." / "Chiron: ..." / "SYS:" / "ERR:"
     "debug",  # geliştirici günlüğü (seviye: INFO/WARN/ERROR)
     "panel_focus",  # bir aracın ilgili paneli vurgulaması (saat/hava/sistem)
     "webcam_state",  # webcam açıldı/kapandı

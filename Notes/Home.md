@@ -1,15 +1,15 @@
 ---
-tags: [airon, moc]
+tags: [chiron, moc]
 ---
 
-# Aıron — Not Haritası (MOC)
+# Chiron — Not Haritası (MOC)
 
-Bu klasör, Aıron Windows projesinin kod tabanını özetleyen Obsidian notlarını içerir.
+Bu klasör, Chiron Windows projesinin kod tabanını özetleyen Obsidian notlarını içerir.
 Amaç: kaynak kodun tamamını her seferinde yeniden okumadan, kısa notlardan bağlam almak.
 Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse oradan bakılır.
 
 ## Çekirdek
-- [[Mimari]] — main.py, AironLive, WebcamStreamer, bağlantı/olay döngüsü
+- [[Mimari]] — main.py, ChironLive, WebcamStreamer, bağlantı/olay döngüsü
 - [[Arac-Tanimlari]] — tool_defs.py (Gemini function declarations) ve core/prompt.txt (sistem promptu)
 - [[Bellek-ve-Config]] — memory_manager.py (kalıcı hafıza), app_config.py (API anahtarları/ayarlar)
 - [[Arayuz]] — 3D sahne ve paneller: Vision, Timeline, uyku modu, sol panel modülleri, telemetri
@@ -21,7 +21,7 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 - `Docs/Son-Oturum.md` + `Docs/Acik-Konular.md` — oturumlar arası süreklilik;
   `.claude/hooks/` üçlüsü ilkini açılışta context'e enjekte eder, kasa
   güncellenmeden biten oturumu işaretler ([[Gelistirme-Ortami]] § Süreklilik)
-- [[Airon-Mobil]] — telefondaki Aıron (Kotlin, `Projects/airon-mobile`): Gemini Live,
+- [[Chiron-Mobil]] — telefondaki Chiron (Kotlin, `Projects/chiron-mobile`): Gemini Live,
   arama/WhatsApp/cihaz araçları, PC köprüsü (`/api/remote/ask|desktop|note`)
 - [[Plan-Play-Yayini]] — mobili Play Store'a çıkarma: `play` flavor'ı, kullanıcının kendi anahtarı,
   üyelik yok, kapalı test (12 kişi/14 gün)
@@ -29,12 +29,12 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 - [[Ajan-Ofisi]] — Claude, alt ajanlar ve Codex/Bunny/Gemini masalarda: kim ne yapıyor, görev panosu, kota
 - [[Plan-Claude-Entegrasyonu]] — telefondan sesle verilen işi PC'de Claude Code yapar;
   önce Faz 0 (performans ölçümü, test, temizlik)
-- [[Uzaktan-Erisim]] — telefondan Aıron: Tailscale + PIN kapısı (`backend/core/remote_auth.py`),
+- [[Uzaktan-Erisim]] — telefondan Chiron: Tailscale + PIN kapısı (`backend/core/remote_auth.py`),
   uzak mod (PC sessiz), telefon arayüzü `frontend/app/m`, kurulum adımları
-- [[Kurulum-ve-Baslatma]] — kurulum ve çalıştırma: requirements.txt, AIRON.bat, make_shortcut.py,
+- [[Kurulum-ve-Baslatma]] — kurulum ve çalıştırma: requirements.txt, CHIRON.bat, make_shortcut.py,
   bellek profili; ayrıca `desktop.py` (WebView2 penceresi), `frontend/` (Next.js + Three.js) ve
   `core/web_ui.py` (ses döngüsü ↔ arayüz adaptörü)
-- [[Gelistirme-Ortami]] — Aıron'un kodu değil, onu geliştirirken kullanılan araçlar:
+- [[Gelistirme-Ortami]] — Chiron'un kodu değil, onu geliştirirken kullanılan araçlar:
   Claude Code alt-ajanları (agency-agents), kurulum kapsamı ve kebab-case `name` tuzağı
 
 ## Araçlar (actions/*.py — Gemini'nin çağırdığı fonksiyonlar)
@@ -64,7 +64,7 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 - [[Video-Analizi]] — YouTube linki veya yerel video dosyasını Gemini'ye izletip rapor aldırma
 
 ## Genel akış
-1. `main.py` içindeki `AironLive.run()` Gemini Live API'ye bağlanır (`LIVE_MODEL`).
+1. `main.py` içindeki `ChironLive.run()` Gemini Live API'ye bağlanır (`LIVE_MODEL`).
 2. Ses/webcam akışları `asyncio.TaskGroup` ile paralel task'lar olarak yürür.
 3. Model bir `function_call` döndürdüğünde `_execute_tool()` ilgili `actions/*.py` fonksiyonunu çağırır.
 4. Sonuç `FunctionResponse` olarak modele geri gönderilir; `write_log` ile arayüze (WebSocket) akar.
@@ -76,14 +76,14 @@ kullanılmayan frontend bileşenleri ve iskelet backend uçları da kaldırıld�
 
 **Kural:** bir modül `tool_defs.py`'de tanımlı değilse ve hiçbir yerden import
 edilmiyorsa yaşamıyordur. "İleride lazım olur" diye tutulan kod, gerçekten lazım
-olduğunda zaten yeniden yazılıyor — bkz. `Docs/AIRON_UI_ROADMAP.md`.
+olduğunda zaten yeniden yazılıyor — bkz. `Docs/CHIRON_UI_ROADMAP.md`.
 
 Aynı kural 2026-08-06'da tekrar uygulandı: iskelet backend uçları
 (`GET /api/system/status`, `GET /api/settings/status` — ikisi de "hazır" yazıp
 boş dönüyordu, arayüz hiçbirini çağırmıyordu), hiçbir yerden import edilmeyen
 `GlassButton`, boş `.gitkeep` klasörleri (`animations/`, `assets/`, `effects/`,
 `styles/`, `types/`, `utils/`, `backend/services/`) ve git'te izlenen bir hata
-ayıklama artığı (`logs/airon_ses_ornegi.pcm`) silindi. Aynı turda beş servis
+ayıklama artığı (`logs/chiron_ses_ornegi.pcm`) silindi. Aynı turda beş servis
 dosyasındaki tekrar `frontend/services/apiClient.ts` altında toplandı
 ([[Arayuz]] § Veri akışı).
 
@@ -107,7 +107,7 @@ olmuş bir arayüzü tarif ediyordu. Kodun kendisi hakkında yazdığı şey de�
 **Ölü sanılıp bırakılanlar** (silmek ölçüsüz olurdu, ikisi de kayıt altında):
 - `frontend/services/voiceApi.ts` → `setPaused` — zincirin tamamı hazır
   (`backend/api/voice.py` → `core/web_ui.py` → `main.py._paused`, beş kullanım),
-  eksik olan yalnızca kullanıcının basacağı düğme. `Docs/AIRON_UI_ROADMAP.md`
+  eksik olan yalnızca kullanıcının basacağı düğme. `Docs/CHIRON_UI_ROADMAP.md`
   § Küçük artıklar'da açıkça bekleyen iş olarak duruyor — yani kural gereği
   "ölü" görünen bir satır, yol haritasında iş varsa **canlıdır**.
 - `Fonts/` — üç Grift `.ttf`, koda bağlı değil; kullanıcı kararıyla marka fontu
@@ -130,7 +130,7 @@ duruyor. Ölü kod ararken registry, `TOOL_DECLARATIONS` ve `core/prompt.txt`
 `ui.py` (3108 satır, "UI v6 Holo Prime") ve `wakeup_listener.py` kullanıcı isteğiyle
 tamamen silindi. Tkinter Canvas gerçek blur/bloom/parçacık üretemediği için yaklaşık bir
 karşılık çiziyordu; yerini WebGL tabanlı gerçek 3D arayüz aldı (`frontend/`, `desktop.py`).
-`AironLive` bu geçişte **değişmedi** — arayüz bağımlılığı `core/web_ui.py` adaptörüyle
+`ChironLive` bu geçişte **değişmedi** — arayüz bağımlılığı `core/web_ui.py` adaptörüyle
 karşılandı. Daha öncesinde aynı orb'u PySide6 ile render etme denemesi de yapılmış ve
 CPU maliyeti (~%100 tek çekirdek) yüzünden geri alınmıştı; WebGL yolunda o sorun yok
 (GPU'da çalışıyor, bkz. [[Kurulum-ve-Baslatma]] bellek/performans ölçümü).

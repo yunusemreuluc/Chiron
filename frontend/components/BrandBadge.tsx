@@ -5,7 +5,7 @@ import { AI_STATE_LABELS, useAIStateStore, type AIState } from '@/stores/aiState
 import { useAmbientContext } from '@/hooks/useAmbientContext';
 import { useRailHoverStore } from '@/stores/railHoverStore';
 
-// Kullanıcı isteğiyle (2026-07-28) — üst panel tamamen kaldırıldı; AIRON adı ve
+// Kullanıcı isteğiyle (2026-07-28) — üst panel tamamen kaldırıldı; CHIRON adı ve
 // canlı durum sahnenin sol üstünde küçük, çerçevesiz bir imza olarak duruyor
 // (gökyüzünü kapatan bir çubuk yerine). Bildirim/profil ikonları Sidebar'ın altına
 // taşındı, bkz. Sidebar.tsx.
@@ -65,12 +65,12 @@ export function BrandBadge() {
             transition={{ duration: pulseSeconds, repeat: Infinity, ease: 'easeOut' }}
           />
         </span>
-        <span className="text-foreground text-[13px] font-semibold tracking-[0.42em]">AIRON</span>
+        <span className="text-foreground text-[13px] font-semibold tracking-[0.42em]">CHIRON</span>
       </div>
       <span className="label-micro pl-[18px]">{AI_STATE_LABELS[aiState]}</span>
 
-      {/* Ambient bağlam — Aıron'un farkında OLDUĞU şey (2026-08-01).
-          Durum satırından bir kademe daha kısık: bu Aıron'un ne yaptığı değil,
+      {/* Ambient bağlam — Chiron'un farkında OLDUĞU şey (2026-08-01).
+          Durum satırından bir kademe daha kısık: bu Chiron'un ne yaptığı değil,
           kullanıcının ne yaptığı. Aynı vurguyla yazılsaydı ikisi tek bir cümle
           gibi okunurdu. Veri yoksa satır hiç çizilmiyor (bkz. useAmbientContext). */}
       {context && (

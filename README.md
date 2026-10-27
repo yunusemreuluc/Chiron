@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="Icon/airon.png" alt="Aıron" width="120" />
+<img src="Icon/chiron.png" alt="Chiron" width="120" />
 
-# Aıron
+# Chiron
 
 **Sesle konuşulan, ekranı gören, kendiliğinden harekete geçen bir masaüstü yapay zekâ ortamı.**
 
@@ -14,16 +14,16 @@
 
 ## Bu ne?
 
-Aıron bir sohbet botu değil. Kendi penceresinde çalışan, sürekli açık duran bir
+Chiron bir sohbet botu değil. Kendi penceresinde çalışan, sürekli açık duran bir
 **yapay zekâ ortamı**: konuşarak yönetiliyor, kamerayı ve ekranı görüyor,
 bilgisayarı kullanabiliyor ve bazı şeyleri sen istemeden kendisi fark edip haber
 veriyor.
 
-Arayüz gerçek bir 3D sahne — ortadaki enerji çekirdeği Aıron'un durumuna göre
+Arayüz gerçek bir 3D sahne — ortadaki enerji çekirdeği Chiron'un durumuna göre
 davranıyor: dinlerken nabzı hızlanıyor, düşünürken sakinleşiyor, konuşurken
 turkuaz-yeşile dönüyor.
 
-![Aıron arayüzü](Docs/ekran.png)
+![Chiron arayüzü](Docs/ekran.png)
 
 ---
 
@@ -62,7 +62,7 @@ bir **Gemini API anahtarı**.
 
 ```bash
 git clone <bu-depo>
-cd Airon
+cd Chiron
 
 python -m venv venv
 venv\Scripts\activate
@@ -80,7 +80,7 @@ Arayüz ilk çalıştırmada otomatik derleniyor; elle derlemek istersen:
 cd frontend && npm install && npm run build
 ```
 
-**İsteğe bağlı yetenekler** ayrı paketlere bağlı — kurulu değilse Aıron o
+**İsteğe bağlı yetenekler** ayrı paketlere bağlı — kurulu değilse Chiron o
 özelliği kapalı gösterir, çökmez:
 
 | Yetenek | Paket | Not |
@@ -98,7 +98,7 @@ cd frontend && npm install && npm run build
 
 | Komut | Ne yapar |
 |---|---|
-| `AIRON.bat` | Uygulama — 3D pencere + sesli asistan, tek süreç |
+| `CHIRON.bat` | Uygulama — 3D pencere + sesli asistan, tek süreç |
 | `WEB-BASLAT.bat` | Geliştirme — `npm run dev` + tarayıcı (hot reload) |
 | `python desktop.py --sadece-arayuz` | Yalnızca arayüz — mikrofonu ve API kotasını meşgul etmez |
 | `python make_shortcut.py` | Masaüstü kısayolu oluşturur |
@@ -116,12 +116,12 @@ Tek Python süreci, iki katman:
                                        ├── /api/*   REST
                                        └── /ws      canlı durum akışı
 
-[Gemini Live] <──ses/görüntü/araçlar──> [AironLive]  ──core/web_ui.py──> arayüz
+[Gemini Live] <──ses/görüntü/araçlar──> [ChironLive]  ──core/web_ui.py──> arayüz
 ```
 
 Ses döngüsü ve arayüz aynı süreçte ama birbirine bağlı değil: `core/web_ui.py`
 arayüz yüzeyini taklit ediyor ve olayları WebSocket'e yayınlıyor. Arayüz kapalı
-olsa bile Aıron konuşmaya devam ediyor.
+olsa bile Chiron konuşmaya devam ediyor.
 
 ```
 main.py            Gemini Live oturumu, ses döngüsü, araç yürütme
@@ -166,4 +166,4 @@ yaptığını* anlatıyor. Girişi [`Notes/Home.md`](Notes/Home.md).
 
 Kişisel bir proje ve aktif geliştiriliyor. Çalışan her şey yukarıda; eksikler ve
 sıradaki işler [`Docs/YAPILACAKLAR.md`](Docs/YAPILACAKLAR.md) ile
-[`Docs/AIRON_UI_ROADMAP.md`](Docs/AIRON_UI_ROADMAP.md) içinde açıkça yazıyor.
+[`Docs/CHIRON_UI_ROADMAP.md`](Docs/CHIRON_UI_ROADMAP.md) içinde açıkça yazıyor.

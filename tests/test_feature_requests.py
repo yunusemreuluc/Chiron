@@ -123,7 +123,7 @@ def test_remote_request_endpoints(monkeypatch, tmp_path):
                 "title": "Takvim hatırlatıcısı",
                 "said": "yarın beni uyar",
                 "device": "Redmi",
-                "detail": "Takvim açıktı; Aıron hatırlatıcı oluşturmayı denedi.",
+                "detail": "Takvim açıktı; Chiron hatırlatıcı oluşturmayı denedi.",
             },
         ).json()
         assert added == {
@@ -149,7 +149,7 @@ def test_remote_request_endpoints(monkeypatch, tmp_path):
                         "count": 1,
                         "last_said": "yarın beni uyar",
                         "last_detail": (
-                            "Takvim açıktı; Aıron hatırlatıcı oluşturmayı denedi."
+                            "Takvim açıktı; Chiron hatırlatıcı oluşturmayı denedi."
                         ),
                     }
                 ]
@@ -305,13 +305,13 @@ def test_detail_merge_count_and_list_items_are_read_only(monkeypatch, tmp_path):
         "uygulamayı öne getirdi",
         "Android Auto",
         "sonra",
-        "Aıron uygulamayı açtı.\nİdeal davranış listeyi oynatmak.",
+        "Chiron uygulamayı açtı.\nİdeal davranış listeyi oynatmak.",
     )
     merged_text = store.read_text(encoding="utf-8")
     _, first_end, _, _ = feature_requests._sections(merged_text)[0]
     merged_section = merged_text[:first_end]
     assert (
-        "  - Ayrıntı: Aıron uygulamayı açtı. İdeal davranış listeyi oynatmak."
+        "  - Ayrıntı: Chiron uygulamayı açtı. İdeal davranış listeyi oynatmak."
         in merged_section
     )
     assert feature_requests._count(merged_section.replace(" · **Sayı:** 2", "")) == 2
@@ -342,7 +342,7 @@ def test_detail_merge_count_and_list_items_are_read_only(monkeypatch, tmp_path):
             "status": "Bakıldı",
             "count": 2,
             "last_said": "",
-            "last_detail": "Aıron uygulamayı açtı. İdeal davranış listeyi oynatmak.",
+            "last_detail": "Chiron uygulamayı açtı. İdeal davranış listeyi oynatmak.",
         },
         {
             "number": "İ-002",

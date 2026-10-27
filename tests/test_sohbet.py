@@ -143,7 +143,7 @@ def test_lost_job_marks_message_failed(tmp_path):
     store, jobs = _setup(tmp_path)
     chat = store.create("claude")
     store.send(chat["id"], "iş")
-    jobs.jobs.clear()  # Aıron yeniden başladı, iş kaydı yok
+    jobs.jobs.clear()  # Chiron yeniden başladı, iş kaydı yok
     assert store.get(chat["id"])["messages"][-1]["status"] == "hata"
 
 
@@ -168,7 +168,7 @@ def test_terminal_sessions_lists_only_interactive(tmp_path):
     projects = tmp_path / "projects"
     _session_file(projects, "1111-aaaa", tmp_path)
     _session_file(projects, "2222-aaaa", tmp_path, title="Açık olan")
-    _session_file(projects, "3333-aaaa", tmp_path, entrypoint="sdk-cli")  # Aıron'un kendi işi
+    _session_file(projects, "3333-aaaa", tmp_path, entrypoint="sdk-cli")  # Chiron'un kendi işi
     _session_file(projects, "4444-aaaa", tmp_path, title="Yeni yazılmış", age=10)
     sessions = {s["session_id"]: s for s in store.terminal_sessions()}
     assert set(sessions) == {"1111-aaaa", "2222-aaaa", "4444-aaaa"}

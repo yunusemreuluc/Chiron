@@ -100,7 +100,7 @@ async def dispatch_tool(name: str, raw_args: dict, *, instance: Any = None, loop
     """Kayıtlı bir aracı bulur, argümanlarını bağlar ve çalıştırır.
 
     - `instance` verilirse ve fonksiyonun imzasında `self` varsa, ilk argüman
-      olarak enjekte edilir (AironLive metodu olan araçlar için — bkz. main.py).
+      olarak enjekte edilir (ChironLive metodu olan araçlar için — bkz. main.py).
     - Fonksiyon zaten async ise doğrudan awaitlenir; değilse (çoğu araç bloklayıcı
       I/O yaptığı için) run_in_executor ile ayrı bir thread'de çalıştırılır.
     - Kayıtlı değilse veya çalıştırma sırasında exception fırlatırsa standart

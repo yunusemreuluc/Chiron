@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 /* ══════════════════════════════════════════════════════════════════════════
-   AIRON — Tasarım Sistemi. Sabit koyu tema; açık mod yok.
+   CHIRON — Tasarım Sistemi. Sabit koyu tema; açık mod yok.
 
    PALET (kullanıcı isteğiyle, 2026-07-28 — "daha profesyonel"):
    Tek vurgu renkli, nötr tabanlı "Platin + Buz Mavisi" sistemi. Önceki sıcak
@@ -239,7 +239,7 @@ body {
 /* ══════════════════════════════════════════════════════════════════════════
    İSKELET — Sidebar / Scene
    3D sahne tüm viewport'u kaplayan arka plan; Sidebar onun üzerinde yüzen bir
-   HUD paneli. Üst panel (TopBar) yok — AIRON adı + canlı durum BrandBadge.tsx'te.
+   HUD paneli. Üst panel (TopBar) yok — CHIRON adı + canlı durum BrandBadge.tsx'te.
    ══════════════════════════════════════════════════════════════════════════ */
 .app-shell {
   position: relative;

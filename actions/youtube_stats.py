@@ -107,7 +107,7 @@ def _api_get(endpoint: str, params: dict, api_key: str) -> dict:
         f"{API_ROOT}/{endpoint}",
         params={**params, "key": api_key},
         timeout=TIMEOUT,
-        headers={"User-Agent": "Airon Windows"},
+        headers={"User-Agent": "Chiron Windows"},
     )
     if response.ok:
         return response.json()

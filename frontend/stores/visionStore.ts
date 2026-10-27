@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-// AIRON — görü (vision) durumu.
+// CHIRON — görü (vision) durumu.
 //
 // Kullanıcı isteğiyle (2026-07-30) Vision paneli yapıldı. Backend zaten
 // kameranın karelerini yayınlıyordu (`webcam_frame`, ~8 FPS, bkz. core/web_ui.py)
@@ -26,7 +26,7 @@ export interface TextLine {
   box: [number, number, number, number] | null;
 }
 
-/** Sonucun kaynağı: kullanıcı düğmeye bastı mı, Aıron kendi mi baktı. */
+/** Sonucun kaynağı: kullanıcı düğmeye bastı mı, Chiron kendi mi baktı. */
 export type DetectionSource = 'panel' | 'assistant';
 
 /**

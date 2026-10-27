@@ -1,5 +1,5 @@
 ---
-tags: [airon, altyapi]
+tags: [chiron, altyapi]
 ---
 
 # Yerel Model — Ollama
@@ -26,7 +26,7 @@ Kurulan sürüm: **Ollama 0.32.5**, model **`qwen2.5:7b`** (4.7 GB).
 Beklentiyi baştan doğru kurmak önemli, çünkü ilk düşünce "kotadan kurtulduk"
 oluyor. İki şeyin yerel karşılığı **yok**:
 
-1. **Gemini Live ses oturumu** — Aıron'un kalbi, gerçek zamanlı sesten sese.
+1. **Gemini Live ses oturumu** — Chiron'un kalbi, gerçek zamanlı sesten sese.
    Ollama metin üretir, konuşmaz.
 2. **Hassas ekran konumlandırma** — [[Ekran-Mudahale]] "şu düğmeyi bul, piksel
    koordinatını ver" istiyor ve [[Otonom-Duzeltme]] buna bağlı. Yerel görü
@@ -51,7 +51,7 @@ VRAM'den yer yiyor. Ölçüldü (aynı prompt, `auto_fix.py` özeti):
 | 8192 | 22.0 tok/sn | %24 CPU / %76 GPU |
 | 32768 (varsayılan) | 14.9 tok/sn | %39 CPU / %61 GPU |
 
-**Varsayılanı kullanmak %40 hız kaybettiriyor.** Aıron'un prompt'ları ~2100
+**Varsayılanı kullanmak %40 hız kaybettiriyor.** Chiron'un prompt'ları ~2100
 token; 32K bağlam gereksiz ve zararlı. Seçilen değer **4096**: 2048'in kazancı
 1.6 tok/sn ile marjinal, ama uzun dosyalarda kırpılma riski getiriyor.
 
@@ -111,5 +111,5 @@ komutu tekrar çalıştırmak yeterli; ikinci denemede tamamlandı.
 ## Model seçimi neden Qwen
 
 Türkçe belirleyici oldu. Açık modellerin Türkçesi eşit değil: Qwen2.5 ve Gemma
-iyi, Llama 3.1 daha popüler ama Türkçesi belirgin zayıf. Aıron baştan sona
+iyi, Llama 3.1 daha popüler ama Türkçesi belirgin zayıf. Chiron baştan sona
 Türkçe konuşuyor.

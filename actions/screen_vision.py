@@ -69,7 +69,7 @@ def _capture_active_window() -> tuple[bool, str, str]:
 
     try:
         handle = tempfile.NamedTemporaryFile(
-            prefix="airon-screen-", suffix=".png", delete=False
+            prefix="chiron-screen-", suffix=".png", delete=False
         )
         tmp_path = Path(handle.name)
         handle.close()
@@ -129,7 +129,7 @@ def _vision_prompt(query: str, window_title: str) -> str:
     label = window_title or "aktif pencere"
     user_query = (query or "Ekranda ne var?").strip()
     return (
-        "Sen Windows üzerinde Aıron için ekran analizi yapan bir görüntü yorumlayıcısısın.\n"
+        "Sen Windows üzerinde Chiron için ekran analizi yapan bir görüntü yorumlayıcısısın.\n"
         "Aşağıdaki ekran görüntüsü aktif pencereye aittir.\n"
         f"Pencere başlığı: {label}\n\n"
         "Görevlerin:\n"

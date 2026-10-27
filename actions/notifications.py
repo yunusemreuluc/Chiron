@@ -6,7 +6,7 @@ Merkezi'nde duran) toast bildirimlerini okur — `winsdk` paketi gerekiyor
 (Microsoft'un resmi WinRT Python projeksiyonu). İlk kullanımda Windows bir izin
 kontrolü yapar (Ayarlar > Gizlilik ve güvenlik > Bildirimler ile eşdeğer);
 kullanıcı reddederse veya izin yoksa bu araç sessizce "izin verilmedi" döner,
-Aıron çökmez.
+Chiron çökmez.
 
 Bu, main.py'deki diğer proaktif bekçilerin (ekran/sistem sağlığı/genel izleme)
 aksine kendiliğinden konuşmaz — kullanıcı "bildirimlerim var mı" gibi bir şey
@@ -62,7 +62,7 @@ async def get_recent_notifications(limit: int = 10) -> dict:
         if status != UserNotificationListenerAccessStatus.ALLOWED:
             return fail(
                 "Bildirimlere erişim izni verilmedi. Windows Ayarlar > Gizlilik ve güvenlik > "
-                "Bildirimler bölümünden Aıron'a izin vermen gerekebilir."
+                "Bildirimler bölümünden Chiron'a izin vermen gerekebilir."
             )
 
         notifications = await listener.get_notifications_async(NotificationKinds.TOAST)

@@ -1,6 +1,6 @@
 """Telefondan Claude Code'a iş — PC ucu (Faz 1, 2026-10-03).
 
-Kullanıcı isteği (2026-09-30): "ben işteyken telefonla görev verince Aıron senin
+Kullanıcı isteği (2026-09-30): "ben işteyken telefonla görev verince Chiron senin
 sisteminle yapabilir mi?" Telefon `POST /api/remote/claude` ile görev bırakır;
 burada `claude -p` başlatılır — normal oturumun aynısı: `~/.claude/CLAUDE.md`,
 Jarvis hafızası, skill'ler, Codex lane'leri. Telefon `GET` ile durumu ve özeti alır.
@@ -40,7 +40,7 @@ from typing import Any, Callable
 
 from backend.core import bekci
 
-logger = logging.getLogger("airon.claude_jobs")
+logger = logging.getLogger("chiron.claude_jobs")
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 JOBS_DIR = BASE_DIR / "logs" / "claude-jobs"
@@ -57,7 +57,7 @@ MAX_LOG_BYTES = 20 * 1024 * 1024  # iş başına; aşan kısım loga yazılmaz, 
 APPROVAL_MARKER = "ONAY_GEREKLI:"
 
 SYSTEM_NOTE = f"""\
-Bu iş Yunus'un telefonundan, Aıron üzerinden geldi. Yunus PC başında değil; \
+Bu iş Yunus'un telefonundan, Chiron üzerinden geldi. Yunus PC başında değil; \
 soru sorarsan cevabı ancak sonra, telefondan gelir.
 - İşi uçtan uca kendin bitir; netleştirme gerekiyorsa makul varsayımla ilerle ve varsayımı özette söyle.
 - Geri alınamayan bir adıma gelirsen (toplu silme, üzerine yazma, ödeme, başkasına mesaj/e-posta/yayın, \
@@ -67,10 +67,10 @@ force push, Drive/Etsy yüklemesi) O ADIMI YAPMA. Oraya kadar hazırla, sonra so
 Yunus'un yapması gereken bir şey var mı. Tablo, kod bloğu, uzun yol listesi yok.
 """
 
-# Panodan (Aıron'un Ajan Ofisi, PC başında) başlatılan iş. Yunus ekranın başında
+# Panodan (Chiron'un Ajan Ofisi, PC başında) başlatılan iş. Yunus ekranın başında
 # olabilir ya da olmayabilir; özet sesli okunmuyor, karta yazılıyor.
 PANO_NOTE = f"""\
-Bu iş Aıron'un görev panosundan, bir karttan geldi. Yunus sonucu kartta okuyacak; \
+Bu iş Chiron'un görev panosundan, bir karttan geldi. Yunus sonucu kartta okuyacak; \
 soru sorarsan cevabı ancak sonra, kart üzerinden gelir.
 - İşi uçtan uca kendin bitir; netleştirme gerekiyorsa makul varsayımla ilerle ve varsayımı özette söyle.
 - Geri alınamayan bir adıma gelirsen (toplu silme, üzerine yazma, ödeme, başkasına mesaj/e-posta/yayın, \
@@ -82,7 +82,7 @@ Yunus'un yapması gereken bir şey var mı.
 
 # Sohbet (Komuta ekranı, 2026-10-27): Yunus ajanla yazışıyor; her mesaj aynı oturumu sürdürür.
 CHAT_NOTE = f"""\
-Bu mesaj Aıron'un sohbet ekranından geldi; Yunus seninle yazışıyor ve aynı oturum her mesajda sürüyor.
+Bu mesaj Chiron'un sohbet ekranından geldi; Yunus seninle yazışıyor ve aynı oturum her mesajda sürüyor.
 - Normal bir sohbet gibi davran: önceki mesajları biliyorsun, gerekirse soru sor — cevabı bir sonraki mesajda gelir.
 - Geri alınamayan bir adıma gelirsen (toplu silme, üzerine yazma, ödeme, başkasına mesaj/e-posta/yayın, \
 force push, Drive/Etsy yüklemesi, git push) O ADIMI YAPMA. Oraya kadar hazırla, sonra son mesajını \
@@ -174,7 +174,7 @@ def find_claude_exe() -> str | None:
 # tutarsa ebeveyn yok, çocuklar bulunamıyor, okuma EOF'a hiç ulaşmıyor ve kuyruk
 # sonsuza kadar kilitleniyordu. Job Object'e atanan sürecin TÜM torunları job'da
 # kalır; TerminateJobObject hepsini tek çağrıda öldürür. KILL_ON_JOB_CLOSE:
-# Aıron çökerse/kapanırsa tutamaç kapanır, Windows ağacı kendisi öldürür.
+# Chiron çökerse/kapanırsa tutamaç kapanır, Windows ağacı kendisi öldürür.
 # Süreç askıda (CREATE_SUSPENDED) başlatılıp job'a atandıktan sonra uyandırılır —
 # atamadan önce çocuk başlatıp job dışında kalamasın.
 
@@ -371,10 +371,10 @@ class ClaudeJobs:
             except Exception:
                 continue
             if job.status in ACTIVE:
-                # Aıron kapanırken yarıda kalan iş. Süreç ağacı Job Object'le
-                # Aıron'a bağlıydı (KILL_ON_JOB_CLOSE) — Aıron ölünce o da öldü.
+                # Chiron kapanırken yarıda kalan iş. Süreç ağacı Job Object'le
+                # Chiron'a bağlıydı (KILL_ON_JOB_CLOSE) — Chiron ölünce o da öldü.
                 job.status = "interrupted"
-                job.error = "Aıron kapandığı için iş yarıda kaldı."
+                job.error = "Chiron kapandığı için iş yarıda kaldı."
                 job.finished_at = job.finished_at or time.time()
                 self._save(job)
             self._jobs[job.id] = job
@@ -431,7 +431,7 @@ class ClaudeJobs:
             raise ValueError("Geçersiz oturum kimliği.")
         with self._lock:
             if self._closed:
-                raise ValueError("Aıron kapanıyor; iş alınmıyor.")
+                raise ValueError("Chiron kapanıyor; iş alınmıyor.")
             parent = None
             if resume_of:
                 parent = self._jobs.get(resume_of)
@@ -527,7 +527,7 @@ class ClaudeJobs:
         with self._lock:
             self._closed = True
             for job_id in list(self._queue):
-                self._finish(self._jobs[job_id], "cancelled", error="Aıron kapandı.")
+                self._finish(self._jobs[job_id], "cancelled", error="Chiron kapandı.")
             self._queue.clear()
             tree = self._tree
         if tree:
@@ -612,9 +612,9 @@ class ClaudeJobs:
                     "--approval-mode", "plan", "-o", "text", "-p", "Görev standart girişte; onu yap.",
                 ]
         env = dict(os.environ)
-        # Aıron bir Claude oturumundan başlatıldıysa iç içe oturum işareti taşınmasın.
+        # Chiron bir Claude oturumundan başlatıldıysa iç içe oturum işareti taşınmasın.
         env.pop("CLAUDECODE", None)
-        env["AIRON_CLAUDE_JOB"] = job.id
+        env["CHIRON_CLAUDE_JOB"] = job.id
         # Pano worktree'si: bekçi bu kökün dışına yazmayı yakalar. Kökü olmayan işte (WORK_DIR) bakılmaz.
         env.pop(bekci.ROOT_ENV, None)
         if job.cwd:
@@ -709,7 +709,7 @@ class ClaudeJobs:
         with self._lock:
             if job.id in self._cancel or self._closed:
                 self._cancel.discard(job.id)
-                self._finish(job, "cancelled", error="İptal edildi." if not self._closed else "Aıron kapandı.")
+                self._finish(job, "cancelled", error="İptal edildi." if not self._closed else "Chiron kapandı.")
             elif timed_out:
                 self._finish(job, "timeout", error=f"{self.time_limit // 60:.0f} dk sınırı doldu, durduruldu.")
             elif result is None:

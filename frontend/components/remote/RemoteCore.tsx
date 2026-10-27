@@ -8,7 +8,7 @@ import { SLEEP_PALETTE, STATE_PALETTE } from '@/three/coreColors';
 // Neden WebGL değil: telefonda sürekli açık bir bloom sahnesi pili bitirir ve
 // Three.js paketi mobil veride ağır. Kural yine aynı (Notes/Tasarim-Kurallari.md
 // § Enerji çekirdeği): asla durağan değil, durumu RENKLE anlatıyor ve renk
-// palette.ts'in TEK kaynağından geliyor — telefonda konuşan Aıron da turkuaz.
+// palette.ts'in TEK kaynağından geliyor — telefonda konuşan Chiron da turkuaz.
 //
 // Hareket hızları duruma göre DEĞİŞMİYOR, bilerek: CSS'te çalışan bir
 // animasyonun süresini değiştirmek dönüşü o anda ileri/geri sıçratıyor

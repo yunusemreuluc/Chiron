@@ -150,8 +150,8 @@ async def set_remote_mode(command: ToggleCommand) -> dict:
     return {"success": True, "message": "güncellendi", "data": {"remote": command.value}}
 
 
-# ── Telefondaki Aıron'un masaüstü köprüsü (2026-09-15) ───────────────────────
-# Android uygulaması (airon-mobile) bu uçları kendi araçlarından çağırıyor.
+# ── Telefondaki Chiron'un masaüstü köprüsü (2026-09-15) ───────────────────────
+# Android uygulaması (chiron-mobile) bu uçları kendi araçlarından çağırıyor.
 # Hepsi uzak kapının arkasında: PIN oturumu olmadan ulaşılamaz.
 
 ASK_TIMEOUT_SECONDS = 90.0
@@ -327,7 +327,7 @@ def _fit_status_response(response: dict[str, Any], limit: int = 4096) -> None:
 
 @router.get("/status")
 async def remote_status() -> dict:
-    """Telefondan, sesli Aıron oturumuna sormadan okunabilen kısa PC özeti."""
+    """Telefondan, sesli Chiron oturumuna sormadan okunabilen kısa PC özeti."""
     pc, foreground, claude, office, assistant = await asyncio.gather(
         _status_section(_pc_status),
         _status_section(_foreground_status),
@@ -356,7 +356,7 @@ class AskRequest(BaseModel):
 
 @router.post("/ask")
 async def ask_desktop(body: AskRequest) -> dict:
-    """PC'deki Aıron'a sorar ve CEVABI BEKLER (`query_desktop_airon`).
+    """PC'deki Chiron'a sorar ve CEVABI BEKLER (`query_desktop_chiron`).
 
     `/api/voice/text` gönder-unut; cevap WebSocket'e log olarak düşüyor. Telefon
     ise cevabı kendi sesiyle okuyacak, yani HTTP cevabında metni istiyor.
@@ -366,7 +366,7 @@ async def ask_desktop(body: AskRequest) -> dict:
     if not text:
         return {"success": False, "message": "boş soru", "data": {}}
     if not commands.is_ready():
-        return {"success": False, "message": "PC'deki Aıron hazır değil.", "data": {}}
+        return {"success": False, "message": "PC'deki Chiron hazır değil.", "data": {}}
 
     async with _ask_lock:
         loop = asyncio.get_running_loop()
@@ -385,7 +385,7 @@ async def ask_desktop(body: AskRequest) -> dict:
             answer, ok = await asyncio.wait_for(future, ASK_TIMEOUT_SECONDS)
         except asyncio.TimeoutError:
             commands.dispatch("ask_cancel", {})
-            return {"success": False, "message": "PC'deki Aıron zamanında cevap vermedi.", "data": {}}
+            return {"success": False, "message": "PC'deki Chiron zamanında cevap vermedi.", "data": {}}
     return {"success": ok, "message": "cevap" if ok else answer, "data": {"answer": answer}}
 
 
@@ -416,7 +416,7 @@ class NoteRequest(BaseModel):
 async def save_note(body: NoteRequest) -> dict:
     """Telefonda alınan hızlı notu PC hafızasına da yazar (`save_quick_note`).
 
-    `notes` kategorisine zaman damgalı anahtarla gidiyor: PC'deki Aıron sonraki
+    `notes` kategorisine zaman damgalı anahtarla gidiyor: PC'deki Chiron sonraki
     oturumda bunu sistem promptunda görür, Hafıza panelinde de listelenir.
     """
     import datetime
@@ -437,7 +437,7 @@ async def save_note(body: NoteRequest) -> dict:
     return {"success": True, "message": "Not PC hafızasına yazıldı.", "data": {"key": key}}
 
 
-# ── Telefondaki Aıron'un istek listesi (2026-09-17) ─────────────────────────
+# ── Telefondaki Chiron'un istek listesi (2026-09-17) ─────────────────────────
 
 
 class FeatureRequest(BaseModel):

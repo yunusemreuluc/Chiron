@@ -184,7 +184,7 @@ def _capture_desktop() -> tuple[bool, str, int, int, int, int]:
         return False, f"Ekran görüntüsü alınamadı: {exc}", 0, 0, 0, 0
 
     try:
-        handle = tempfile.NamedTemporaryFile(prefix="airon-intervene-", suffix=".png", delete=False)
+        handle = tempfile.NamedTemporaryFile(prefix="chiron-intervene-", suffix=".png", delete=False)
         tmp_path = Path(handle.name)
         handle.close()
         img.save(str(tmp_path), format="PNG")

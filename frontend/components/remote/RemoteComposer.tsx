@@ -30,7 +30,7 @@ export const RemoteComposer = forwardRef<RemoteComposerHandle>(function RemoteCo
   const [error, setError] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Duraklatılmış Aıron metni SESSİZCE yutuyor (main.py _on_text_command) —
+  // Duraklatılmış Chiron metni SESSİZCE yutuyor (main.py _on_text_command) —
   // yazma kutusunu açık bırakmak, kaybolacak bir mesaj yazdırmak olurdu.
   const canSend = connected && ready && running !== false && !paused;
   const placeholder = !connected
@@ -38,13 +38,13 @@ export const RemoteComposer = forwardRef<RemoteComposerHandle>(function RemoteCo
     : running === false
       ? 'Sesli asistan PC’de kapalı'
       : paused
-        ? 'Aıron duraklatılmış'
+        ? 'Chiron duraklatılmış'
         : ready
-          ? 'Aıron’a yaz…'
-          : 'Aıron bağlanıyor…';
+          ? 'Chiron’a yaz…'
+          : 'Chiron bağlanıyor…';
 
   const hasConversation = useConversationStore((state) =>
-    state.lines.some((line) => line.kind === 'user' || line.kind === 'airon'),
+    state.lines.some((line) => line.kind === 'user' || line.kind === 'chiron'),
   );
   const showChips = canSend && hasConversation && !draft && !sending;
 
@@ -126,7 +126,7 @@ export const RemoteComposer = forwardRef<RemoteComposerHandle>(function RemoteCo
           className="ease-out-quint border-primary/35 text-primary flex h-[52px] w-full items-center justify-center gap-2 rounded-[26px] border bg-[rgba(127,178,255,0.1)] text-[14px] font-medium transition-all duration-300 active:scale-[0.98]"
         >
           <LuPlay size={15} strokeWidth={1.9} />
-          Aıron’u devam ettir
+          Chiron’u devam ettir
         </button>
       ) : (
         <div className="glass-panel flex items-end gap-2 p-1.5 pl-4">

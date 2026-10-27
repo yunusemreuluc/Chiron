@@ -1,6 +1,6 @@
-"""Ambient bağlam — Aıron'un "kullanıcı şu an ne yapıyor" farkındalığı.
+"""Ambient bağlam — Chiron'un "kullanıcı şu an ne yapıyor" farkındalığı.
 
-Aıron'un en büyük boşluğu şuydu: "bunu kaydet", "şurayı kapat", "burada ne
+Chiron'un en büyük boşluğu şuydu: "bunu kaydet", "şurayı kapat", "burada ne
 yazıyor" dendiğinde neyden bahsedildiğini bilmiyordu. Tek çare `analyze_screen`
 çağırmaktı — o da Gemini kotası harcıyor ([[Bilinen-Tuzaklar]] § Gemini yerine
 yerel modeli tercih et). Bu modül aynı sorunun **kotasız** cevabı: aktif
@@ -17,9 +17,9 @@ SDK'sı (2.12.1) `send_client_content` docstring'inde bunu açıkça uyarıyor:
       in the same conversation is not recommended and can lead to
       unexpected results.
 
-Aıron'un TÜM ses döngüsü `send_realtime_input` üzerinde. `turn_complete=False`
+Chiron'un TÜM ses döngüsü `send_realtime_input` üzerinde. `turn_complete=False`
 ayrıca turu AÇIK bırakıyor ("will not return until you send
-turn_complete=True") — en kötü senaryoda model sese cevap veremez, yani Aıron
+turn_complete=True") — en kötü senaryoda model sese cevap veremez, yani Chiron
 susar. Bu, bir bağlam özelliği için alınacak risk değil:
 [[Bilinen-Tuzaklar]] § Live oturum yapılandırmasına yeni alan eklemek riskli
 maddesindeki kural aynen geçerli — *bir arayüz özelliği, sesli asistanın
@@ -63,7 +63,7 @@ class _LASTINPUTINFO(ctypes.Structure):
 def _idle_seconds() -> float:
     """Klavye/fareye en son dokunulalı kaç saniye geçti.
 
-    `GetLastInputInfo` SİSTEM GENELİ çalışıyor — Aıron'un kendi penceresi
+    `GetLastInputInfo` SİSTEM GENELİ çalışıyor — Chiron'un kendi penceresi
     odakta olmasa da doğru cevap veriyor. Bu önemli: kullanıcı başka bir
     uygulamadayken de "orada mı" bilgisini istiyoruz.
     """
@@ -94,7 +94,7 @@ def _active_window() -> tuple[str, str]:
             baslik = buf.value.strip()[:MAX_TITLE_CHARS]
 
         # Program adı başlıktan DAHA güvenilir: başlık uygulamaya göre değişiyor
-        # ("main.py - Aıron - Visual Studio Code" / "Aıron" / bazen boş), süreç
+        # ("main.py - Chiron - Visual Studio Code" / "Chiron" / bazen boş), süreç
         # adı ise sabit. Model "hangi uygulamadasın" sorusuna buradan cevap veriyor.
         if HAS_PSUTIL:
             pid = wintypes.DWORD()
@@ -125,7 +125,7 @@ _PROGRAM_ADLARI = {
     "discord.exe": "Discord",
     "obsidian.exe": "Obsidian",
     "python.exe": "Python",
-    "pythonw.exe": "Aıron",
+    "pythonw.exe": "Chiron",
 }
 
 
@@ -135,7 +135,7 @@ def _program_adi(surec: str) -> str:
     return _PROGRAM_ADLARI.get(surec.lower(), surec.rsplit(".exe", 1)[0])
 
 
-# `strftime("%A")` C yerelini kullanıyor ve "Saturday" döndürüyor — Aıron
+# `strftime("%A")` C yerelini kullanıyor ve "Saturday" döndürüyor — Chiron
 # Türkçe konuşuyor. Sistem yereline (`locale.setlocale`) dokunulmadı: o
 # süreç geneli bir yan etki ve başka modülleri (sayı/tarih ayrıştırma)
 # sessizce etkileyebilir.

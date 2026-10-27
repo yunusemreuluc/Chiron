@@ -1,5 +1,5 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # Dosya Yönetimi — file_manager.py
@@ -8,7 +8,7 @@ Bağlı: [[Home]] · [[Arac-Tanimlari]] · [[Dosya]] · [[Ekran-Mudahale]] · [[
 
 Araç: `manage_files`. Kullanıcı isteği (2026-08-01).
 
-Öncesinde Aıron'da dosya **değiştiren** hiçbir şey yoktu — [[Dosya]]'daki iki
+Öncesinde Chiron'da dosya **değiştiren** hiçbir şey yoktu — [[Dosya]]'daki iki
 araç sadece okuyordu (`search_files` bulur, `summarize_file` okur). `shell_run`
 ile `ren` komutu uydurulabilirdi ama her çağrıda onay istediği için toplu işte
 kullanılamazdı.
@@ -51,7 +51,7 @@ sıralarken hedef adların hepsi zaten mevcuttur.
 
 Bu yüzden `sequence` iki fazlı çalışıyor:
 
-1. Her kaynak, çakışması imkânsız geçici bir ada taşınır (`.airon-<uuid>-<ad>`)
+1. Her kaynak, çakışması imkânsız geçici bir ada taşınır (`.chiron-<uuid>-<ad>`)
 2. Geçici adlar nihai hedeflere taşınır
 
 Test edildi: içinde `1.jpg`, `2.jpg`, `adana.jpg` olan bir klasör sıralandığında

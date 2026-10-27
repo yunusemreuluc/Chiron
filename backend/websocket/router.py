@@ -17,7 +17,7 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     await manager.connect(websocket, remote=remote)
     # Kalıcı bayraklar (susturma, duraklatma, uzak mod) yalnızca DEĞİŞTİKLERİ an
     # yayınlanıyor. Sonradan bağlanan istemci — ör. telefondan uzak mod açıldıktan
-    # sonra açılan PC penceresi — onları hiç öğrenmiyordu ve Aıron'un neden
+    # sonra açılan PC penceresi — onları hiç öğrenmiyordu ve Chiron'un neden
     # sustuğunu göstermiyordu (2026-09-15, görsel testte yakalandı).
     status = commands.read_provider("assistant_status")
     if status:

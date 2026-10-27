@@ -2,7 +2,7 @@
 
 Kullanıcı isteğiyle (2026-07-30) eklendi. Hafızanın aksine bu verinin dosyada
 karşılığı YOK: aktif izlemeler (`start_watch` ile kurulanlar) ses döngüsünün
-belleğinde, `AironLive._active_watches` içinde yaşıyor. Bu yüzden okuma
+belleğinde, `ChironLive._active_watches` içinde yaşıyor. Bu yüzden okuma
 `backend/core/commands.read_provider` üzerinden yapılıyor — ses döngüsü kendi
 durumunu okuyan bir fonksiyon bırakıyor, burası onu çağırıyor.
 

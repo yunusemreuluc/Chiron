@@ -5,11 +5,11 @@ import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { useConversationStore } from '@/stores/conversationStore';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
-// AIRON açılışı — "Ateşleme".
+// CHIRON açılışı — "Ateşleme".
 //
 // Kullanıcı isteğiyle (2026-07-31) yeniden tasarlandı. Önceki sürüm siyah bir
-// ekranda AIRON yazısı ve dolan bir ilerleme çubuğuydu: bu bir YÜKLEME EKRANI
-// dili ve AIRON'un dünyasına ait değil (CLAUDE.md § PROJECT — "bir gösterge
+// ekranda CHIRON yazısı ve dolan bir ilerleme çubuğuydu: bu bir YÜKLEME EKRANI
+// dili ve CHIRON'un dünyasına ait değil (CLAUDE.md § PROJECT — "bir gösterge
 // paneli DEĞİLDİR"). Sonrasındaki 3D kuruluş zaten iyiydi; sorun ondan
 // öncesiydi.
 //
@@ -129,7 +129,7 @@ export function BootOverlay() {
         >
           {reducedMotion ? (
             <span className="text-foreground pl-[0.4em] text-4xl font-semibold tracking-[0.4em]">
-              AIRON
+              CHIRON
             </span>
           ) : (
             <>
@@ -177,7 +177,7 @@ export function BootOverlay() {
                 initial="hidden"
                 animate="visible"
               >
-                AIRON
+                CHIRON
               </motion.span>
 
               {/* Gerçek durum — sahte bir yüzde değil (bkz. Notes/Bilinen-Tuzaklar

@@ -1,4 +1,4 @@
-# AIRON UI — Kalan İşler
+# CHIRON UI — Kalan İşler
 
 Bu dosya 17 fazlık bir plan olarak başladı. **Tamamlanan fazlar 2026-07-29'da silindi**
 (kullanıcı isteği) — burada yalnızca yapılmamış işler var. Biten bir madde bu dosyadan
@@ -53,5 +53,5 @@ gösterilecek bir veri **yok**, o yüzden dürüst boş durum gösteriyorlar:
 
 ## Bilinçli olarak yapılmayacaklar
 
-- **Mobil optimizasyon** — Aıron artık bir masaüstü uygulaması (WebView2 penceresi).
+- **Mobil optimizasyon** — Chiron artık bir masaüstü uygulaması (WebView2 penceresi).
   Tarayıcıda geliştirme modu hâlâ çalışıyor ama mobil bir hedef değil.

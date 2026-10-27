@@ -1,5 +1,5 @@
 """
-Airon MCP server — Airon'un dört salt-okunur aracını Model Context Protocol
+Chiron MCP server — Chiron'un dört salt-okunur aracını Model Context Protocol
 üzerinden (stdio) dışarı açar.
 
 Çalıştırma:  venv\\Scripts\\python.exe -m mcp_server
@@ -26,7 +26,7 @@ from pydantic import Field
 
 # stdio transport'ta stdout PROTOKOLÜN kendisi: oraya yazılan tek bir satır
 # istemcinin JSON-RPC ayrıştırmasını bozar. mcp 2.x servis sırasında fd 1'i
-# zaten stderr'e çeviriyor, ama Airon modülleri run()'dan ÖNCE import ediliyor —
+# zaten stderr'e çeviriyor, ama Chiron modülleri run()'dan ÖNCE import ediliyor —
 # import anında bir şey basan bir kütüphane olursa diye o pencereyi de kapatıyoruz.
 with contextlib.redirect_stdout(sys.stderr):
     from mcp_server import tools
@@ -36,14 +36,14 @@ with contextlib.redirect_stdout(sys.stderr):
 READ_ONLY = ToolAnnotations(readOnlyHint=True, destructiveHint=False, idempotentHint=True, openWorldHint=False)
 
 server = MCPServer(
-    name="airon",
-    title="Airon local tools",
+    name="chiron",
+    title="Chiron local tools",
     version="0.1.0",
     instructions=(
-        "Read-only tools from Airon, a Windows desktop assistant. They run fully "
+        "Read-only tools from Chiron, a Windows desktop assistant. They run fully "
         "locally (no API keys, no network). Use read_screen_text to see what is on the "
         "user's screen, get_active_context to learn which app they are in, "
-        "search_memory to recall facts Airon stored about them, and "
+        "search_memory to recall facts Chiron stored about them, and "
         "get_notifications for pending Windows notifications."
     ),
 )
@@ -84,7 +84,7 @@ async def search_memory(
     query: Annotated[str, Field(min_length=2, max_length=200, description="Words to look for, Turkish or English.")],
     limit: Annotated[int, Field(ge=1, le=50, description="Maximum number of matches.")] = 10,
 ) -> tools.MemorySearchResult:
-    """Search the long-term memory Airon keeps about the user (name, preferences, projects, notes, learned objects).
+    """Search the long-term memory Chiron keeps about the user (name, preferences, projects, notes, learned objects).
 
     Matching is accent- and case-insensitive. Contact phone numbers are never returned.
     """

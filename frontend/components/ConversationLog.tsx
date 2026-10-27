@@ -4,10 +4,10 @@ import { useEffect, useRef } from 'react';
 import { useConversationStore, type LogKind } from '@/stores/conversationStore';
 
 // Konuşma satırlarının görsel dili. Renk paletin tek vurgu kuralına uyuyor
-// (bkz. app/globals.css): Aıron buz mavisi, kullanıcı nötr platin, sistem
+// (bkz. app/globals.css): Chiron buz mavisi, kullanıcı nötr platin, sistem
 // sönük, hata ise tek kırmızımsı istisna — hatanın fark edilmesi gerekiyor.
 const KIND_STYLE: Record<LogKind, { label: string; className: string }> = {
-  airon: { label: 'Aıron', className: 'text-primary' },
+  chiron: { label: 'Chiron', className: 'text-primary' }, // Daphne satırında etiket ham önekten
   user: { label: 'Siz', className: 'text-foreground' },
   system: { label: 'Sistem', className: 'text-foreground-secondary' },
   error: { label: 'Hata', className: 'text-[#ff8f8f]' },
@@ -77,7 +77,7 @@ export function ConversationLog() {
   if (lines.length === 0) {
     return (
       <p className="text-foreground-secondary text-xs leading-relaxed">
-        Konuşma burada görünecek. Mikrofonun çalışmıyorsa aşağıya yazabilirsin — Aıron sana sesli
+        Konuşma burada görünecek. Mikrofonun çalışmıyorsa aşağıya yazabilirsin — Chiron sana sesli
         cevap verir.
       </p>
     );
@@ -93,7 +93,9 @@ export function ConversationLog() {
         const style = KIND_STYLE[line.kind];
         return (
           <div key={line.id} className="flex flex-col gap-0.5">
-            <span className="label-micro">{style.label}</span>
+            <span className="label-micro">
+              {line.kind === 'chiron' ? line.raw.split(':')[0].trim() || style.label : style.label}
+            </span>
             <span className={`text-xs leading-relaxed ${style.className}`}>{line.text}</span>
           </div>
         );

@@ -1,4 +1,4 @@
-// AIRON — atmosfer tozu. drei'nin <Sparkles> bileşeninin yerini aldı (2026-07-29).
+// CHIRON — atmosfer tozu. drei'nin <Sparkles> bileşeninin yerini aldı (2026-07-29).
 //
 // NEDEN KENDİ SHADER'IMIZ: drei'nin Sparkles fragment shader'ı alfayı
 //     strength = 0.05 / distanceToCenter - 0.1

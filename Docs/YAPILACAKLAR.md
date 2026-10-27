@@ -1,6 +1,6 @@
-# Aıron — Yapılacaklar
+# Chiron — Yapılacaklar
 
-**Vizyon (2026-07-26):** Aıron sadece "sesli asistan" değil — Iron Man'deki Jarvis gibi
+**Vizyon (2026-07-26):** Chiron sadece "sesli asistan" değil — Iron Man'deki Jarvis gibi
 ortamı sürekli/proaktif algılayıp gerektiğinde kendiliğinden harekete geçen bir sistem
 olacak. Aşağıdaki maddeler bu hedefe giden adımlar; **tek tek** yapılacak, her biri
 bitip test edilip onaylanınca bu dosyadan silinecek.
@@ -33,7 +33,7 @@ daha büyük bir görev. İleride dönülecek.
 ## 22. Görsel üretimini tarayıcıdan API'ye taşıma
 **Şimdilik ertelendi (2026-08-07)** — engel para değil, ödeme kurulumu.
 
-**İstenen:** "şu promptla 20 görsel üret" denince Aıron'un donmadan, fareyi
+**İstenen:** "şu promptla 20 görsel üret" denince Chiron'un donmadan, fareyi
 işgal etmeden, arka planda üretip indirmesi.
 
 **Bugünkü yol neden yetmiyor:** `gemini_desktop_task` ([[Gemini-Masaustu]])
@@ -87,7 +87,7 @@ listesindeki `thought=True` işaretli parçalar toplanıyor, cümle sınırında
 `reasoning` olayı olarak yayınlanıyor ve Timeline'da italik + beyin ikonuyla
 gösteriliyor. `TimelineKind` içindeki ölü `'reasoning'` üyesi canlandı.
 
-**Not:** ilk plan yanlış yeri işaret ediyordu — `out_buf` Aıron'un SÖYLEDİĞİ
+**Not:** ilk plan yanlış yeri işaret ediyordu — `out_buf` Chiron'un SÖYLEDİĞİ
 şey, o zaten sohbette görünüyor. Gerçek muhakeme `model_turn.parts` içinde
 ayrı bir bayrakla geliyor.
 
@@ -104,7 +104,7 @@ satırı hiç görünmüyorsa sebep budur; `debug` akışında uyarı satırı �
 
 ### İlk canlı deneme (2026-08-06) — sonuçsuz, teşhis eklendi
 
-Çok adımlı planlama sorusu soruldu (üç iş, üç kısıt, tek doğru sıra). Aıron
+Çok adımlı planlama sorusu soruldu (üç iş, üç kısıt, tek doğru sıra). Chiron
 doğru cevabı verdi ama **muhakeme satırı hiç çıkmadı**.
 
 Elenen ihtimal: valf devreye girmedi. Log'da 19:52:42'de tek bir "Bağlandı"
@@ -141,7 +141,7 @@ açısından hassas — kimin yüzünün nerede saklanacağı ayrıca kararlaşt
 (bkz. [[Ambient-Baglam]]). Sürekli enjeksiyon
 (`send_client_content(turn_complete=False)`) bilerek yapılmadı — SDK
 `send_realtime_input` ile karıştırmaya karşı uyarıyor ve açık bırakılan bir tur
-Aıron'u sese sağır bırakabilir.
+Chiron'u sese sağır bırakabilir.
 
 Denenecekse: kotanın bol olduğu bir anda, `_thinking_supported` desenindeki gibi
 bir güvenlik valfiyle (reddedilirse/susarsa anında kapat ve yeniden bağlan).
@@ -161,9 +161,9 @@ durumlar), cihaz seçimi (boş config → WASAPI kulaklık; `"Microphone Array"`
 WASAPI dizi, artık MME kopyası değil), hız uzlaşması (16 kHz reddedildi →
 48 kHz'de açıldı, 427 ms ham → 427 ms @16k).
 
-**Doğrulanmayan tek şey: Aıron gerçekten duyuyor mu.** Boru hattının tamamı
+**Doğrulanmayan tek şey: Chiron gerçekten duyuyor mu.** Boru hattının tamamı
 ayrı ayrı çalışıyor ama uçtan uca canlı bir oturumda konuşulup yanıt alınmadı.
-Aıron'u aç, konuş; yanıt veriyorsa bu madde silinir.
+Chiron'u aç, konuş; yanıt veriyorsa bu madde silinir.
 
 ---
 

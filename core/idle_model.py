@@ -22,7 +22,7 @@ import time
 from contextlib import contextmanager
 from typing import Any, Callable, Iterator
 
-logger = logging.getLogger("airon")
+logger = logging.getLogger("chiron")
 
 
 class IdleModel:
@@ -84,7 +84,7 @@ class IdleModel:
             self._timer.cancel()
         timer = threading.Timer(self.idle_seconds, self._release_if_idle)
         timer.daemon = True
-        timer.name = f"airon-idle-{self.name}"
+        timer.name = f"chiron-idle-{self.name}"
         self._timer = timer
         timer.start()
 

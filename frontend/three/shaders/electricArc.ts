@@ -1,4 +1,4 @@
-// AIRON Electric Arcs — ince, katkılı-harmanlanmış (additive) tüp geometrisi
+// CHIRON Electric Arcs — ince, katkılı-harmanlanmış (additive) tüp geometrisi
 // üzerinde uçlara doğru solan, titreşen bir ışıma. vUv.x tüpün uzunluğu boyunca
 // 0→1 gider; sin(π·x) iki ucu da sıfırlarken ortada en parlak noktayı verir.
 export const ELECTRIC_ARC_VERTEX_SHADER = /* glsl */ `

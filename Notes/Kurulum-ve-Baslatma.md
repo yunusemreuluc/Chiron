@@ -1,5 +1,5 @@
 ---
-tags: [airon, kurulum]
+tags: [chiron, kurulum]
 ---
 
 # Kurulum ve Başlatma
@@ -24,7 +24,7 @@ copy config\api_keys.example.json config\api_keys.json
 Gemini anahtarı `config/api_keys.json` içine yazılır — ya da uygulama açıkken
 ayarlar panelinden girilir (panel dosyaya yazıyor, yeniden başlatmak gerekmez).
 
-Arayüz ilk açılışta kendiliğinden derleniyor (`AIRON.bat` içinde). Elle:
+Arayüz ilk açılışta kendiliğinden derleniyor (`CHIRON.bat` içinde). Elle:
 `cd frontend && npm install && npm run build`.
 
 **İsteğe bağlı ağır bağımlılıklar** — kurulu değilse ilgili özellik kapalı
@@ -35,18 +35,18 @@ easyocr'ın `opencv-python`'u ezme tuzağı için [[Bilinen-Tuzaklar]].
 
 | Komut | Ne yapar |
 |---|---|
-| `AIRON.bat` | Uygulama. Arayüz derlenmemişse bir kereye mahsus derler, sonra `pythonw desktop.py` |
+| `CHIRON.bat` | Uygulama. Arayüz derlenmemişse bir kereye mahsus derler, sonra `pythonw desktop.py` |
 | `WEB-BASLAT.bat` | Geliştirme: `npm run dev` + tarayıcı. 3000 portu zaten dinlemedeyse ikinci sunucu açmaz |
 | `python desktop.py --sadece-arayuz` | Yalnızca 3D sahne — mikrofonu ve Gemini kotasını meşgul etmez |
 | `python make_shortcut.py` | Masaüstü kısayolu |
 | `python make_icon.py` | Uygulama ikonunu yeniden üretir |
 
-`AIRON.bat` derleme başarısız olursa duruyor ve npm çıktısına bakmayı söylüyor —
+`CHIRON.bat` derleme başarısız olursa duruyor ve npm çıktısına bakmayı söylüyor —
 eskiden sessizce hiç açılmayan bir uygulama bırakıyordu.
 
 ## Masaüstü kısayolları — make_shortcut.py
 
-**Tek uygulama, tek kısayol:** `Aıron.lnk` → `pythonw.exe desktop.py`.
+**Tek uygulama, tek kısayol:** `Chiron.lnk` → `pythonw.exe desktop.py`.
 (2026-07-29'a kadar ikinci bir kısayol daha vardı, `main.py`'yi Tkinter
 penceresiyle açıyordu; o arayüz kaldırılınca kısayol da kaldırıldı.)
 
@@ -89,29 +89,29 @@ Tek Python süreci, iki katman:
 
 ### Sesli asistan aynı süreçte (2026-07-29)
 
-`AironLive`'ın **tek satırı değişmedi**. Ses döngüsü arayüzüne 15 noktadan
+`ChironLive`'ın **tek satırı değişmedi**. Ses döngüsü arayüzüne 15 noktadan
 dokunuyordu (9 metot + 6 geri çağırma yuvası); `core/web_ui.py` tam olarak o
 yüzeyi taklit ediyor ama ekrana çizmek yerine olayları WebSocket'e yayınlıyor.
 Bağımlılık, ses döngüsü yeniden yazılarak değil **karşı taraf değiştirilerek**
 koparıldı.
 
 ```
-AironLive --(ui.set_state/write_log/...)--> WebUI --WS--> arayüz
-AironLive <--(on_text_command/on_pause)---- WebUI <--HTTP-- arayüz
+ChironLive --(ui.set_state/write_log/...)--> WebUI --WS--> arayüz
+ChironLive <--(on_text_command/on_pause)---- WebUI <--HTTP-- arayüz
 ```
 
 **Üç kural:**
 - `WebUI` içindeki hiçbir çağrı ses döngüsünü bloklamamalı ve patlamamalı.
-  Arayüz kapalıyken bile Aıron konuşmaya devam etmeli — olaylar sessizce düşer.
+  Arayüz kapalıyken bile Chiron konuşmaya devam etmeli — olaylar sessizce düşer.
 - `connected` ≠ `ready`. Ses döngüsü süreçte olabilir ama Gemini Live oturumu
   henüz kurulmamış olabilir; o aralıkta gönderilen komut **kaybolur**. Arayüz
   yazma kutusunu `ready` gelene kadar kilitliyor.
-- `"Siz: ..."` satırını `AironLive._on_text_command` zaten yazıyor; `WebUI`
+- `"Siz: ..."` satırını `ChironLive._on_text_command` zaten yazıyor; `WebUI`
   tekrar yazmamalı (ilk sürümde satır sohbette iki kez görünüyordu).
 
-## Ses cihazları ve "Aıron konuşmuyor" teşhisi
+## Ses cihazları ve "Chiron konuşmuyor" teşhisi
 
-Aıron'un sesli çalışması üç halkaya bağlı ve **herhangi biri koptuğunda belirti
+Chiron'un sesli çalışması üç halkaya bağlı ve **herhangi biri koptuğunda belirti
 aynı: sessizlik.** Bu belirsizlik gerçek bir arızada saatler kaybettirdi.
 
 > Bir zamanlar `ses_testi.py` adında ayrı bir teşhis betiği vardı; kaldırıldı.
@@ -143,7 +143,7 @@ Windows varsayılanı kulaklık jakına düştüğünde).
 **İsim tutuluyor, indeks değil:** PortAudio indeksleri cihaz takılınca kayar.
 Eşleşme bulunamazsa uygulama sessize düşmez, varsayılana döner (log'a uyarı yazar).
 
-**Mikrofon olmadan da Aıron konuşur:** arayüzdeki yazı kutusuna yazılan metin
+**Mikrofon olmadan da Chiron konuşur:** arayüzdeki yazı kutusuna yazılan metin
 `send_client_content` ile gönderiliyor ve oturum `response_modalities=["AUDIO"]`
 olduğu için cevap **sesli** geliyor.
 
@@ -151,7 +151,7 @@ olduğu için cevap **sesli** geliyor.
 
 | Klasör | İçerik |
 |---|---|
-| `Icon/` | `airon.ico` (10 boyutlu), `airon.png`, `airon-tray.png` — hepsi `make_icon.py` ile üretiliyor |
+| `Icon/` | `chiron.ico` (10 boyutlu), `chiron.png`, `chiron-tray.png` — hepsi `make_icon.py` ile üretiliyor |
 | `SFX/` | `Start` (açılış), `Done` (araç başarısı), `Error` (hata), `HUD` (uyku/uyanma, tepsi), `Think` (düşünme döngüsü) |
 | `Fonts/` | Grift ailesi (.ttf) — **hiçbir yerden çağrılmıyor**, bkz. aşağısı |
 
@@ -183,7 +183,7 @@ Sol ray > dişli ikon.
 | Ses (9 seçenek) | `voice` + oturumu anında yeniler |
 | Ses efektleri / seviye | `sfx_enabled`, `sfx_volume` (kaydırırken değil **bırakınca** yazılır) |
 | Açılışta başlat | Başlangıç klasörü kısayolu |
-| Masaüstüne kısayol | `Aıron.lnk` |
+| Masaüstüne kısayol | `Chiron.lnk` |
 
 "Tepsiye al" 2026-07-30'da bu panelden çıkarılıp sahnenin sağ üstüne taşındı
 ([[Arayuz]]).

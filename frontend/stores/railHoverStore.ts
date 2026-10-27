@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 // Sol raydaki hangi düğmenin üzerinde durulduğu.
 //
-// NEDEN PAYLAŞILAN DURUM: rayın hover etiketi ile sol üstteki AIRON imzası
+// NEDEN PAYLAŞILAN DURUM: rayın hover etiketi ile sol üstteki CHIRON imzası
 // AYNI yerde çiziliyor ve üst üste biniyordu (ölçüldü: ilk düğmede 19×9 px,
 // imzaya ambient bağlam satırı eklenince 37×30 px). İkisi de kendi bileşeninde
 // yaşadığı için hiçbiri diğerinin varlığını bilmiyordu.

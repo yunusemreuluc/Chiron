@@ -1,5 +1,5 @@
 """
-Aıron — Gemini Live araç (tool) tanımları
+Chiron — Gemini Live araç (tool) tanımları
 Windows masaüstü çekirdeği (main.py) kullanır.
 """
 
@@ -36,7 +36,7 @@ TOOL_DECLARATIONS = [
         "name": "get_weather",
         "description": (
             "Anlik hava durumunu ozetler. Kullanici hava durumunu, sicakligi veya yagmur "
-            "durumunu sordugunda kullan. Airon kullanicinin GERCEK konumunu kendisi tespit "
+            "durumunu sordugunda kullan. Chiron kullanicinin GERCEK konumunu kendisi tespit "
             "ediyor — konumsuz sorularda ('hava nasil', 'disarisi soguk mu') location'i BOS "
             "BIRAK, sehir tahmin etme."
         ),
@@ -441,7 +441,7 @@ TOOL_DECLARATIONS = [
     {
         "name": "set_auto_fix",
         "description": (
-            "Aıron'un ekranda gördüğü hatayı KENDİ düzeltme politikasını değiştirir. "
+            "Chiron'un ekranda gördüğü hatayı KENDİ düzeltme politikasını değiştirir. "
             "'off' = sadece haber ver, hiç dokunma. 'safe' = geri alınabilir tıklamaları "
             "(Tamam, Yeniden Dene, kapat) kendi yap, riskli olanları sor. 'all' = sormadan "
             "uygula. Kullanıcı 'kendin düzelt', 'bana sorma', 'otomatik düzeltmeyi kapat' "

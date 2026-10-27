@@ -1,7 +1,7 @@
 """Uzaktan erişim (telefon) — kimlik doğrulama ve istek sınıflandırma.
 
 NEDEN (2026-09-15, kullanıcı isteği): "evden uzaktayken telefonumdan PC'mi
-kontrol edeceğim". Aıron'un araçları arasında `shell_run`, `control_power`,
+kontrol edeceğim". Chiron'un araçları arasında `shell_run`, `control_power`,
 `manage_files` var — kimliği doğrulanmamış tek bir uzak istek, makinenin
 tamamını teslim etmek demek. Bu yüzden katmanlar:
 
@@ -33,14 +33,14 @@ from typing import Any
 
 from app_config import load_app_config, save_app_config
 
-logger = logging.getLogger("airon.backend")
+logger = logging.getLogger("chiron.backend")
 
 # desktop.py bu iki portu AYNI uvicorn sunucusunda dinliyor. Masaüstü penceresi
 # LOCAL_PORT'tan, `tailscale serve` REMOTE_PORT'tan geliyor.
 LOCAL_PORT = 8000
 REMOTE_PORT = 8001
 
-COOKIE_NAME = "airon_remote"
+COOKIE_NAME = "chiron_remote"
 SESSION_DAYS = 30
 MIN_PIN_LENGTH = 6
 MAX_PIN_LENGTH = 12

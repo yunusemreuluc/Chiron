@@ -2,7 +2,7 @@
 
 Kullanıcı isteği: "Onları çalıştırdığımda çalışsın, yoksa çalışmasın."
 
-NEDEN ALT SÜREÇ: YOLO-World ve EasyOCR bir kez kullanılınca torch yüzünden Aıron
+NEDEN ALT SÜREÇ: YOLO-World ve EasyOCR bir kez kullanılınca torch yüzünden Chiron
 süreci 1,3–1,8 GB özel bellek tutuyordu ve bunu süreç kapanana kadar bırakmıyordu.
 Modeli süreç İÇİNDE bırakmak (core/idle_model.py) ölçüldü ve işe yaramadı: torch'un
 ayırıcısı belleği Windows'a iade etmiyor (3 yükle/bırak turunda 1,67–1,77 GB sabit).
@@ -35,12 +35,12 @@ import threading
 from pathlib import Path
 from typing import Any
 
-logger = logging.getLogger("airon")
+logger = logging.getLogger("chiron")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-IDLE_EXIT_SECONDS = float(os.environ.get("AIRON_VISION_IDLE_S", "120"))  # testte kısaltılabilir
+IDLE_EXIT_SECONDS = float(os.environ.get("CHIRON_VISION_IDLE_S", "120"))  # testte kısaltılabilir
 # İlk çağrı torch + model yüklemesini de içeriyor (ölçüldü: ~2,5 sn OCR; YOLO-World
-# + CLIP daha uzun). Takılan bir çocuk Aıron'u sonsuza dek bekletmesin.
+# + CLIP daha uzun). Takılan bir çocuk Chiron'u sonsuza dek bekletmesin.
 CALL_TIMEOUT_SECONDS = 180.0
 
 _HEADER = struct.Struct("<I")
@@ -73,7 +73,7 @@ class _Worker:
     def _start(self) -> subprocess.Popen:
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
         proc = subprocess.Popen(
-            # Ebeveyn pid'i: çocuk onu izler, Aıron ölünce (çağrı ortasında bile) kapanır.
+            # Ebeveyn pid'i: çocuk onu izler, Chiron ölünce (çağrı ortasında bile) kapanır.
             [sys.executable, "-m", "core.vision_worker", "--child", str(os.getpid())],
             cwd=str(PROJECT_ROOT),
             stdin=subprocess.PIPE,
@@ -159,7 +159,7 @@ def shutdown() -> None:
 
 # ── Çocuk tarafı ─────────────────────────────────────────────────────────────
 def _watch_parent() -> None:
-    """Aıron ölünce çocuğu hemen kapat — model çağrısının ORTASINDA olsa bile.
+    """Chiron ölünce çocuğu hemen kapat — model çağrısının ORTASINDA olsa bile.
 
     Astra incelemesi (2026-10-02): kapanma yalnız ana döngüde kontrol edildiği
     için ebeveyn uzun bir çağrı sırasında ölürse çocuk yetim kalıyordu.
@@ -183,7 +183,7 @@ def _watch_parent() -> None:
         kernel32.WaitForSingleObject(handle, 0xFFFFFFFF)  # ebeveyn ölene kadar
         os._exit(0)
 
-    threading.Thread(target=watch, daemon=True, name="airon-vision-parent").start()
+    threading.Thread(target=watch, daemon=True, name="chiron-vision-parent").start()
 
 
 def _child_main() -> int:

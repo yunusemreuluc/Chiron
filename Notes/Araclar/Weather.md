@@ -1,5 +1,5 @@
 ---
-tags: [airon, arac]
+tags: [chiron, arac]
 ---
 
 # Weather — actions/weather.py + actions/location.py
@@ -10,7 +10,7 @@ Bağlı: [[Home]] · [[Arac-Tanimlari]] · [[Mimari]] · [[Arayuz]] · [[Bilinen
 
 1. Çağrıda verilen `location` — kullanıcı açıkça bir şehir söylediyse
    ("Ankara'da hava nasıl") o kazanır
-2. `AIRON_WEATHER_LOCATION` env değişkeni — elle konulmuş kalıcı geçersiz kılma
+2. `CHIRON_WEATHER_LOCATION` env değişkeni — elle konulmuş kalıcı geçersiz kılma
 3. **Gerçek konum** (`actions/location.py`)
 4. `DEFAULT_LOCATION` (`"Konya"`) — yalnızca yukarıdakilerin hepsi başarısızsa
 

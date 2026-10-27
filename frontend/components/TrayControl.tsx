@@ -6,20 +6,20 @@ import { LuMoonStar } from 'react-icons/lu';
 import { minimizeToTray } from '@/services/settingsApi';
 import { playSfx } from '@/services/sfxPlayer';
 
-// AIRON — "tepsiye al" kontrolü.
+// CHIRON — "tepsiye al" kontrolü.
 //
 // Kullanıcı isteğiyle (2026-07-30) ayarlar panelinden ÇIKARILDI. Orada dört
 // bölüm aşağıda, "Windows" başlığının altında gömülü bir düğmeydi: pencereyi
 // gizlemek gibi sık ve tek hamlelik bir eylem için üç tıklama (ray → ayarlar →
 // kaydır → düğme) gerekiyordu.
 //
-// NEDEN SAĞ ÜST: sol üst Aıron imzası (BrandBadge), sol kenar modül rayı
+// NEDEN SAĞ ÜST: sol üst Chiron imzası (BrandBadge), sol kenar modül rayı
 // (Sidebar), sol orta modül paneli (LeftPanel), sağ alt sohbet (AssistantDock).
 // Sağ üst, her masaüstü uygulamasında pencere kontrollerinin bulunduğu köşe —
 // "pencereyi gizle" oraya ait. Düğüm odak kartı da bu köşedeydi; çakışmasın
 // diye o bir sıra aşağı indi (bkz. NodeFocusCard.tsx).
 //
-// NEDEN AY+YILDIZ İKONU: eylem "küçült" değil, "Aıron'u arka plana uyut".
+// NEDEN AY+YILDIZ İKONU: eylem "küçült" değil, "Chiron'u arka plana uyut".
 // Klasik küçültme çizgisi (LuMinimize2) pencere yönetimi diliyle konuşuyor;
 // ay ise sistemin durumuyla. Aynı zamanda çekirdeğe tıklayınca girilen uyku
 // moduyla (SleepVeil) aynı dili paylaşıyor: biri sahneyi uyutuyor, bu

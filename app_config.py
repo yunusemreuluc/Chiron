@@ -55,3 +55,16 @@ def save_app_config(updates: dict) -> dict:
 
 def get_app_config_value(key: str, default=None):
     return load_app_config().get(key, default)
+
+
+# Asistanın adı seçili sese göre (kullanıcı kararı, 2026-10-28): erkek sesler
+# Chiron, kadın sesler Daphne. Uygulamanın adı her durumda Chiron; değişen yalnız
+# asistanın kendini tanıttığı ad, sohbet satırının öneki ve uyandırma sözü.
+FEMALE_VOICES = {"Aoede", "Kore", "Leda", "Zephyr"}
+
+
+def assistant_name(voice: str | None = None) -> str:
+    """Seçili sesin (ya da verilen sesin) asistan adı: "Chiron" veya "Daphne"."""
+    if voice is None:
+        voice = str(get_app_config_value("voice", "Charon") or "Charon")
+    return "Daphne" if voice in FEMALE_VOICES else "Chiron"

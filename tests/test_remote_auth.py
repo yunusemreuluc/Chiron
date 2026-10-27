@@ -61,7 +61,7 @@ def test_is_remote_scope_accepts_only_local_request_shape(host):
         _scope(client=("100.64.0.2", 50000)),
         _scope(headers=((b"host", b"localhost:8000"), (b"x-forwarded-for", b"100.64.0.2"))),
         _scope(headers=((b"host", b"localhost:8000"), (b"tailscale-user-login", b"user@example.com"))),
-        _scope(headers=((b"host", b"airon.tailnet.ts.net"),)),
+        _scope(headers=((b"host", b"chiron.tailnet.ts.net"),)),
         _scope(server=None),
         _scope(client=None),
     ],

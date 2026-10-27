@@ -34,7 +34,7 @@ from typing import Any, Callable
 
 from backend.core.pano import Pano, PanoError, pano
 
-logger = logging.getLogger("airon.dongu")
+logger = logging.getLogger("chiron.dongu")
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 STATE_PATH = BASE_DIR / "config" / "dongu.json"

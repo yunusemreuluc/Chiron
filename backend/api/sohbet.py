@@ -1,4 +1,4 @@
-"""Sohbet uçları — Aıron'dan ajanla süren konuşma (Komuta ekranı, 2026-10-27).
+"""Sohbet uçları — Chiron'dan ajanla süren konuşma (Komuta ekranı, 2026-10-27).
 
 Mantık `backend/core/sohbet.py`'de. Uzak istemci için RemoteAccessMiddleware kapısı geçerli
 (bütün /api/ yolları PIN'li).

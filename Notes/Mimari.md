@@ -1,5 +1,5 @@
 ---
-tags: [airon, mimari]
+tags: [chiron, mimari]
 ---
 
 # Mimari — main.py
@@ -23,7 +23,7 @@ sesli testiyle doğrulanmalı, otomatik test edilemez.
 ## Ana sınıflar
 - `WebcamStreamer` (main.py:47) — arka planda sürekli kare çeker, sadece en güncel JPEG'i tutar
   (queue yok). `start()/stop()/get_latest_frame()`. JPEG kalite 72, max boyut 640px.
-- `AironLive` (main.py:185) — tüm oturum yaşam döngüsünü yönetir:
+- `ChironLive` (main.py:185) — tüm oturum yaşam döngüsünü yönetir:
   - `_build_config()` — sistem promptu ([[Arac-Tanimlari]]) + hafıza ([[Bellek-ve-Config]]) + tool
     tanımlarını birleştirip `LiveConnectConfig` oluşturur.
   - `_execute_tool(fc)` (main.py:386) — model bir function_call döndürünce burada `if name == "..."`
@@ -35,7 +35,7 @@ sesli testiyle doğrulanmalı, otomatik test edilemez.
 
 ## Paralel task'lar (`run()` içinde `TaskGroup`)
 - `_send_realtime()` — mikrofon verisini session'a gönderir
-- `_listen_audio()` — pyaudio ile mikrofon okur (Aıron konuşurken/mute'ken göndermez)
+- `_listen_audio()` — pyaudio ile mikrofon okur (Chiron konuşurken/mute'ken göndermez)
 - `_receive_audio()` — modelden gelen ses/transkript/tool_call'ları işler
 - `_play_audio()` — gelen sesi çalar
 - `_stream_webcam_frames()` — webcam aktifse 1.5sn'de bir en güncel kareyi session'a yollar
@@ -46,7 +46,7 @@ sesli testiyle doğrulanmalı, otomatik test edilemez.
 ## Sohbeti sıfırlama (reset)
 Gemini Live oturumu sürekli/stateful olduğu için "sohbeti sıfırla" gerçek bir konuşma
 geçmişi temizleme değil, **oturumu kapatıp yenisini açmak** anlamına gelir:
-1. UI'de kullanıcı onaylayınca `ui.on_reset_command` → `AironLive._on_reset_command()`
+1. UI'de kullanıcı onaylayınca `ui.on_reset_command` → `ChironLive._on_reset_command()`
    çağrılır, bu da `_reset_event`'i thread-safe (`call_soon_threadsafe`) set eder.
 2. `_watch_reset()` task'ı uyanır, `_ConversationReset` (main.py üst kısmında tanımlı özel
    exception) fırlatır — bu `asyncio.TaskGroup`'u kırar ve `async with` bloğundan çıkar.
@@ -65,8 +65,8 @@ geçmişi temizleme değil, **oturumu kapatıp yenisini açmak** anlamına gelir
   bunları 3D sahnenin durumlarına çevirir (bkz. `STATE_MAP`)
 
 ## Giriş noktası
-**`main.py` giriş noktası DEĞİL** — `AironLive` sınıfını barındıran bir kütüphane modülü.
-Uygulama `desktop.py` ile başlar: FastAPI'yi arka plan thread'inde açar, `AironLive`'ı
+**`main.py` giriş noktası DEĞİL** — `ChironLive` sınıfını barındıran bir kütüphane modülü.
+Uygulama `desktop.py` ile başlar: FastAPI'yi arka plan thread'inde açar, `ChironLive`'ı
 `core/web_ui.WebUI` adaptörüyle ayrı bir thread'de çalıştırır, WebView2 penceresini
 ana thread'de gösterir. Bkz. [[Kurulum-ve-Baslatma]].
 

@@ -45,7 +45,7 @@ export interface PanoCard {
   stopping: boolean;
   can_resume: boolean;
   history: { job_id: string; kind: string; at: number }[];
-  // Proje kartı (adım 3): iş ayrı worktree'de, test Aıron'da, birleştirme onayla.
+  // Proje kartı (adım 3): iş ayrı worktree'de, test Chiron'da, birleştirme onayla.
   repo?: string | null;
   test_cmd?: string;
   worktree?: string | null;

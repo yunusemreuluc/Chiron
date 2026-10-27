@@ -107,9 +107,9 @@ _model = IdleModel("YOLO-World", _load_model, idle_seconds=120)
 def _apply_vocabulary(model, vocabulary: list[str]) -> None:
     # Dağarcık modele bağlı durum: model bırakılıp yeniden yüklenince sıfırlanır,
     # bu yüzden global değil modelin üstünde tutuluyor.
-    if getattr(model, "_airon_vocabulary", None) != vocabulary:
+    if getattr(model, "_chiron_vocabulary", None) != vocabulary:
         model.set_classes(vocabulary)
-        model._airon_vocabulary = list(vocabulary)
+        model._chiron_vocabulary = list(vocabulary)
 
 
 def detect_objects_in_jpeg(jpeg_bytes: bytes, extra_vocabulary: list[str] | None = None) -> list[dict]:

@@ -7,13 +7,13 @@ import { usePowerStore } from '@/stores/powerStore';
 
 // Uyarlanır kare hızı (Faz 0, 2026-10-02).
 //
-// ÖLÇÜM: pencere açık ve Aıron BOŞTAYKEN WebView2'nin GPU süreci 3D motoru
+// ÖLÇÜM: pencere açık ve Chiron BOŞTAYKEN WebView2'nin GPU süreci 3D motoru
 // ortalama ~%74 kullanıyordu (tepside %0). Sahne ekran yenileme hızında, hiç
 // durmadan çiziliyordu — kimse bakmazken ya da hiçbir şey olmazken bile.
-// Hedef: Claude/Codex işleri arka planda koşarken Aıron makineyi yormasın.
+// Hedef: Claude/Codex işleri arka planda koşarken Chiron makineyi yormasın.
 //
 // Kural: canlılık gerektiğinde tam akıcılık, gerekmediğinde tasarruf.
-//   • Aıron dinliyor/düşünüyor/konuşuyor, fare hareket ediyor ya da açılış
+//   • Chiron dinliyor/düşünüyor/konuşuyor, fare hareket ediyor ya da açılış
 //     sahnelemesi sürüyor → 60 FPS (yüksek tazelemeli ekranda da 60'ta sınırlı;
 //     CLAUDE.md § PERFORMANCE hedefi zaten 60).
 //   • Boşta ve pencere odakta → 30 FPS. Çekirdeğin yavaş nefesi ve tozun
@@ -56,13 +56,13 @@ export function FrameGovernor() {
     window.addEventListener('wheel', markInput, { passive: true });
     window.addEventListener('keydown', markInput);
 
-    // Tanı: `window.__aironGovernor()` — hangi kural, hangi hedef, kaç tick/kare.
+    // Tanı: `window.__chironGovernor()` — hangi kural, hangi hedef, kaç tick/kare.
     // FrameProbe ile aynı gerekçe: "boşta 30 FPS" bir iddia, ölçülebilir kalmalı.
     let rule = 'açılış';
     let ticks = 0;
     let requested = 0;
-    const diag = window as unknown as { __aironGovernor?: () => Record<string, unknown> };
-    diag.__aironGovernor = () => ({ rule, target: targetFps(performance.now()), ticks, requested });
+    const diag = window as unknown as { __chironGovernor?: () => Record<string, unknown> };
+    diag.__chironGovernor = () => ({ rule, target: targetFps(performance.now()), ticks, requested });
 
     const targetFps = (now: number): number => {
       if (usePowerStore.getState().powerState === 'asleep') return ((rule = 'uyku'), ASLEEP_FPS);
@@ -91,7 +91,7 @@ export function FrameGovernor() {
     raf = requestAnimationFrame(tick);
 
     return () => {
-      delete diag.__aironGovernor;
+      delete diag.__chironGovernor;
       cancelAnimationFrame(raf);
       window.removeEventListener('pointermove', markInput);
       window.removeEventListener('pointerdown', markInput);

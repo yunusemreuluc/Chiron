@@ -5,12 +5,12 @@ import { usePowerStore } from '@/stores/powerStore';
 import { playSfx } from '@/services/sfxPlayer';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 
-// AIRON uyku perdesi — çekirdeğe tıklanınca "ortam karanlığa bürünüyor"
+// CHIRON uyku perdesi — çekirdeğe tıklanınca "ortam karanlığa bürünüyor"
 // (kullanıcı isteği, 2026-07-30).
 //
 // NEDEN DÜZ SİYAH DEĞİL: tam opak bir perde sahneyi kapatır ve uygulama çökmüş
 // gibi görünür. Bunun yerine MERKEZİ AÇIK bir radyal gradyan: kenarlar dibe
-// iniyor, ortada çekirdeğin sönük nefesi görünmeye devam ediyor. Aıron kapanmış
+// iniyor, ortada çekirdeğin sönük nefesi görünmeye devam ediyor. Chiron kapanmış
 // değil, uyuyor — ve uyuduğu görülüyor.
 //
 // Perde tüm ekranı kaplıyor ve her yere tıklamak uyandırıyor: uyuyan bir
@@ -30,7 +30,7 @@ export function SleepVeil() {
       {isAsleep && (
         <motion.button
           type="button"
-          aria-label="Aıron'u uyandır"
+          aria-label="Chiron'u uyandır"
           onClick={() => {
             wake();
             playSfx('hud');

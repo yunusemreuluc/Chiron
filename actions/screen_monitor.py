@@ -4,7 +4,7 @@ pencereyi yakalayıp Gemini vision'a "kullanıcının dikkatini gerektiren açı
 sorun (hata/uyarı penceresi vb.) var mı" diye sorar.
 
 Bu bir "tool" DEĞİL — tool_defs.py'de yok, Gemini tarafından çağrılmaz. main.py'nin
-kendi arka plan görevi (AironLive._watch_screen_for_issues) bunu periyodik çağırıp
+kendi arka plan görevi (ChironLive._watch_screen_for_issues) bunu periyodik çağırıp
 sonucu proaktif bir konuşma tetikleyicisine çevirir (bkz. main.py).
 
 screen_vision.py/screen_control.py ile aynı desenler (mss capture + Gemini vision +
@@ -45,7 +45,7 @@ MONITOR_MAX_DIMENSION = 1200  # sadece "sorun var mı" tespiti — analyze_scree
 
 # ── Değişim kapısı (2026-08-01) ─────────────────────────────────────────────
 # Bekçi 25 sn'de bir Gemini'ye görü çağrısı atıyordu: saatte 144, günde 3456.
-# Gemini ÜCRETSİZ katmanı günde 1500 istek veriyor — yani Aıron ~10 saat açık
+# Gemini ÜCRETSİZ katmanı günde 1500 istek veriyor — yani Chiron ~10 saat açık
 # kalınca kota, kullanıcı tek kelime etmeden bitiyordu. Kasadaki "test ederken
 # kota dolmuştu" notlarının (gemini_desktop_task, search_files, activity_log)
 # gerçek sebebi test edilen araç değil, arka planda dönen bu bekçiydi.
@@ -143,7 +143,7 @@ def _capture_active_window() -> Path | None:
             img = Image.frombytes("RGB", shot.size, shot.bgra, "raw", "BGRX")
         if max(img.size) > MONITOR_MAX_DIMENSION:
             img.thumbnail((MONITOR_MAX_DIMENSION, MONITOR_MAX_DIMENSION), Image.Resampling.LANCZOS)
-        handle = tempfile.NamedTemporaryFile(prefix="airon-monitor-", suffix=".png", delete=False)
+        handle = tempfile.NamedTemporaryFile(prefix="chiron-monitor-", suffix=".png", delete=False)
         tmp_path = Path(handle.name)
         handle.close()
         img.save(str(tmp_path), format="PNG", optimize=True)

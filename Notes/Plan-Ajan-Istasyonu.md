@@ -1,5 +1,5 @@
 ---
-tags: [airon, ajan-ofisi, plan, 7-24]
+tags: [chiron, ajan-ofisi, plan, 7-24]
 ---
 
 # Plan: Ajan İstasyonu (ofisten iş veren, 7/24 çalışan sisteme)

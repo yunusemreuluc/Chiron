@@ -81,7 +81,7 @@ export function PinGate() {
       <div className="mt-7 flex flex-col items-center gap-2.5">
         <span className="label-micro">Uzaktan erişim</span>
         <h1 className="text-foreground text-[26px] leading-none font-semibold tracking-[-0.02em]">
-          Aıron
+          Chiron
         </h1>
         <p className="text-foreground-secondary max-w-[260px] text-center text-[13px] leading-relaxed">
           {pinSet
