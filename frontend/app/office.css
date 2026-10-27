@@ -1487,3 +1487,577 @@
     white-space: normal;
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Komuta (2026-10-27) — components/office/Komuta.tsx. Tek ekran: solda ekip ve
+   sohbetler, ortada canlı sohbet, sağda mini istasyon + senden bekleyenler.
+   Ajanın rengi `--member` ile gelir; durum renkleri ofisinkiyle aynı.
+   ══════════════════════════════════════════════════════════════════════════ */
+.komuta {
+  height: 100%;
+  display: grid;
+  grid-template-columns: minmax(230px, 280px) minmax(0, 1fr) minmax(280px, 340px);
+  gap: 14px;
+}
+.komuta-col {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(8, 12, 20, 0.62);
+  border: 1px solid var(--border-subtle);
+  backdrop-filter: blur(18px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.komuta-col::-webkit-scrollbar { width: 6px; }
+.komuta-col::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 6px; }
+.komuta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.komuta-row .pano-btn { display: inline-flex; align-items: center; gap: 4px; }
+.komuta-sep { height: 1px; flex: none; background: var(--border-subtle); }
+.komuta-hint,
+.komuta-empty-line {
+  font-size: 11.5px;
+  color: var(--foreground-secondary);
+  margin: 0;
+}
+.komuta-count {
+  font-family: var(--font-mono-ui);
+  font-size: 11px;
+  color: var(--foreground-secondary);
+}
+.komuta-count.is-wait { color: var(--office-wait); }
+
+/* Ekip */
+.komuta-crew { display: flex; flex-direction: column; gap: 4px; }
+.komuta-member {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px;
+  border-radius: 13px;
+  text-align: left;
+  border: 1px solid transparent;
+  transition:
+    background var(--duration-fast) var(--ease-out-quint),
+    border-color var(--duration-fast) var(--ease-out-quint);
+}
+.komuta-member:hover { background: rgba(255, 255, 255, 0.04); }
+.komuta-member.is-on {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: color-mix(in srgb, var(--member) 45%, transparent);
+}
+.komuta-member:focus-visible { outline: 2px solid rgba(127, 178, 255, 0.7); outline-offset: 2px; }
+.komuta-member__avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  font-family: var(--font-mono-ui);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--member);
+  background: color-mix(in srgb, var(--member) 14%, rgba(8, 12, 20, 0.9));
+  border: 1px solid color-mix(in srgb, var(--member) 40%, transparent);
+  box-shadow: 0 0 18px -6px var(--member);
+}
+.komuta-member__avatar.is-lg { width: 40px; height: 40px; font-size: 17px; }
+.komuta-member.is-work .komuta-member__avatar { animation: komuta-breathe 2.2s ease-in-out infinite; }
+.komuta-member.is-sleep { opacity: 0.62; }
+.komuta-member__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.komuta-member__head { display: flex; align-items: center; gap: 8px; }
+.komuta-member__head strong { font-size: 13.5px; font-weight: 600; color: var(--foreground); }
+.komuta-member__line {
+  font-size: 11.5px;
+  color: var(--foreground-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.komuta-pill {
+  font-size: 10.5px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: var(--foreground-secondary);
+  background: rgba(255, 255, 255, 0.06);
+}
+.komuta-member.is-work .komuta-pill { color: var(--office-ok); background: rgba(126, 224, 181, 0.12); }
+.komuta-member.is-wait .komuta-pill { color: var(--office-wait); background: rgba(255, 176, 32, 0.12); }
+.komuta-member.is-sleep .komuta-pill { color: #b794f6; background: rgba(183, 148, 246, 0.12); }
+
+/* Sohbet listesi */
+.komuta-chats { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.komuta-chats li { position: relative; }
+.komuta-chatrow {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 9px 30px 9px 11px;
+  border-radius: 11px;
+  text-align: left;
+  border: 1px solid transparent;
+}
+.komuta-chatrow:hover { background: rgba(255, 255, 255, 0.04); }
+.komuta-chatrow.is-on { background: rgba(127, 178, 255, 0.08); border-color: rgba(127, 178, 255, 0.28); }
+.komuta-chatrow__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.komuta-chatrow__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--foreground-secondary);
+  padding-left: 13px;
+}
+.komuta-chatrow__meta .is-work { color: var(--office-ok); }
+.komuta-chatrow__meta .is-wait,
+.komuta-session__meta .is-wait { color: var(--office-wait); }
+.komuta-chatrow__del {
+  position: absolute;
+  top: 8px;
+  right: 6px;
+  padding: 4px;
+  border-radius: 6px;
+  color: var(--foreground-secondary);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out-quint);
+}
+.komuta-chats li:hover .komuta-chatrow__del,
+.komuta-chatrow__del:focus-visible { opacity: 1; }
+.komuta-chatrow__del:hover { color: var(--office-err); background: rgba(255, 93, 108, 0.1); }
+.komuta-dot { flex: none; width: 6px; height: 6px; border-radius: 50%; background: #7aa2ff; }
+.komuta-dot.is-gemini { background: #b794f6; }
+.komuta-tag {
+  font-family: var(--font-mono-ui);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+/* Terminal oturumları */
+.komuta-terminal { margin-top: auto; }
+.komuta-terminal__toggle {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--foreground-secondary);
+  border: 1px dashed var(--border-subtle);
+}
+.komuta-terminal__toggle:hover { color: var(--foreground); border-color: var(--border-strong); }
+.komuta-terminal__list { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+.komuta-session {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+}
+.komuta-session__title { font-size: 12.5px; color: var(--foreground); }
+.komuta-session__meta { font-size: 11px; color: var(--foreground-secondary); }
+.komuta-session__done { font-size: 11px; color: var(--office-ok); }
+.komuta-session__warn { margin: 0; font-size: 11px; line-height: 1.45; color: var(--office-wait); }
+
+/* Orta: sohbet */
+.komuta-chat { padding: 0; gap: 0; overflow: hidden; }
+.komuta-chat__head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.komuta-chat__head .pano-btn { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; }
+.komuta-chat__title { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.komuta-chat__title strong {
+  font-size: 14.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.komuta-chat__title span {
+  font-family: var(--font-mono-ui);
+  font-size: 11px;
+  color: var(--foreground-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.komuta-chat__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px;
+}
+.komuta-chat__empty {
+  margin: auto;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--foreground-secondary);
+}
+.komuta-chat__empty strong { font-size: 15px; font-weight: 600; color: var(--foreground); }
+.komuta-msg {
+  max-width: min(680px, 82%);
+  padding: 10px 14px;
+  border-radius: 15px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.komuta-msg.is-me {
+  align-self: flex-end;
+  border-bottom-right-radius: 5px;
+  color: #eef3ff;
+  background: linear-gradient(180deg, rgba(92, 128, 230, 0.42), rgba(70, 100, 200, 0.36));
+  border: 1px solid rgba(127, 178, 255, 0.3);
+}
+.komuta-msg.is-agent {
+  max-width: 100%;
+  border-bottom-left-radius: 5px;
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--border-subtle);
+}
+.komuta-msg.is-error { border-color: rgba(255, 93, 108, 0.35); }
+.komuta-msg code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-family: var(--font-mono-ui);
+  font-size: 0.88em;
+  background: rgba(255, 255, 255, 0.08);
+}
+.komuta-msg strong { font-weight: 600; color: #fff; }
+.komuta-code {
+  margin: 8px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  overflow-x: auto;
+  font-family: var(--font-mono-ui);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre;
+  background: rgba(4, 6, 12, 0.75);
+  border: 1px solid var(--border-subtle);
+}
+.komuta-msg.is-system {
+  align-self: center;
+  max-width: 560px;
+  font-size: 12px;
+  text-align: center;
+  color: var(--foreground-secondary);
+  border: 1px dashed var(--border-subtle);
+}
+.komuta-msg__state {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-mono-ui);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--office-err);
+}
+.komuta-msg__time { font-size: 10.5px; color: var(--foreground-disabled); padding-left: 4px; }
+.komuta-agent {
+  align-self: flex-start;
+  max-width: min(720px, 88%);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.komuta-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 9px 11px;
+  border-radius: 12px;
+  background: rgba(4, 6, 12, 0.7);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono-ui);
+  font-size: 11.5px;
+}
+.komuta-steps__more {
+  align-self: flex-start;
+  font-size: 11px;
+  color: var(--foreground-secondary);
+  padding: 0 0 3px;
+}
+.komuta-steps__more:hover { color: var(--foreground); }
+.komuta-step { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.komuta-step__tool {
+  flex: none;
+  min-width: 44px;
+  text-align: center;
+  padding: 1px 6px;
+  border-radius: 5px;
+  color: #b8c4dc;
+  background: rgba(255, 255, 255, 0.06);
+}
+.komuta-step__tool.is-read,
+.komuta-step__tool.is-grep,
+.komuta-step__tool.is-glob { color: #7aa2ff; }
+.komuta-step__tool.is-edit,
+.komuta-step__tool.is-write { color: var(--office-wait); }
+.komuta-step__tool.is-bash,
+.komuta-step__tool.is-powershell { color: var(--office-ok); }
+.komuta-step__target {
+  min-width: 0;
+  color: var(--foreground-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.komuta-typing {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 8px 13px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  color: var(--foreground-secondary);
+  background: rgba(255, 255, 255, 0.045);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.komuta-typing__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--office-ok);
+  box-shadow: 0 0 10px var(--office-ok);
+  animation: komuta-blink 1.2s ease-in-out infinite;
+}
+.komuta-approval {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 11px 13px;
+  border-radius: 13px;
+  background: rgba(255, 176, 32, 0.08);
+  border: 1px solid rgba(255, 176, 32, 0.32);
+}
+.komuta-approval .label-micro { color: var(--office-wait); }
+.komuta-approval p { margin: 0; font-size: 13px; line-height: 1.5; }
+.komuta-approval__actions { display: flex; gap: 8px; }
+.komuta-approval__actions .pano-btn { flex: 1; padding: 7px 11px; }
+.komuta-guardnote { margin: 0; font-size: 11px; color: var(--office-wait); }
+.komuta-chat__foot {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px 16px 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+.komuta-compose {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 6px 6px 6px 14px;
+  border-radius: 15px;
+  background: rgba(4, 6, 12, 0.7);
+  border: 1px solid var(--border-subtle);
+  transition:
+    border-color var(--duration-fast) var(--ease-out-quint),
+    box-shadow var(--duration-fast) var(--ease-out-quint);
+}
+.komuta-compose:focus-within {
+  border-color: rgba(127, 178, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(127, 178, 255, 0.1);
+}
+.komuta-compose textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 34px;
+  max-height: 160px;
+  padding: 8px 0;
+  resize: none;
+  field-sizing: content;
+  font: inherit;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--foreground);
+  background: none;
+  border: none;
+  outline: none;
+}
+.komuta-compose textarea::placeholder { color: var(--foreground-disabled); }
+.komuta-send {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  color: #071022;
+  background: #7aa2ff;
+  box-shadow: 0 0 20px -6px #7aa2ff;
+  transition:
+    opacity var(--duration-fast) var(--ease-out-quint),
+    transform var(--duration-fast) var(--ease-out-quint);
+}
+.komuta-send:hover:not(:disabled) { transform: translateY(-1px); }
+.komuta-send:disabled { opacity: 0.35; box-shadow: none; cursor: not-allowed; }
+.komuta-send:focus-visible { outline: 2px solid rgba(127, 178, 255, 0.8); outline-offset: 2px; }
+.komuta-foot-note { margin: 0; font-size: 11px; color: var(--foreground-disabled); padding-left: 4px; }
+.komuta-notice { margin: 0; font-size: 12px; color: var(--office-err); }
+.komuta-locked {
+  margin: 0;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--foreground-secondary);
+  border: 1px dashed var(--border-subtle);
+}
+
+/* Sağ: mini istasyon */
+.komuta-station {
+  position: relative;
+  flex: none;
+  height: 214px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #04060c;
+}
+.station.is-mini { inset: 0; background: none; }
+.station.is-mini .station__box { border-width: 1px; border-radius: 8px; box-shadow: none; }
+.station.is-mini .station__tag { font-size: 8px; }
+.station.is-mini .station__bub {
+  max-width: 120px;
+  padding: 1px 4px;
+  font-size: 8.5px;
+  border-width: 1px;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+}
+
+/* Sağ: bekleyenler, sıra, anahtarlar */
+.komuta-pending { display: flex; flex-direction: column; gap: 8px; }
+.komuta-wait {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 11px 12px;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--border-subtle);
+}
+.komuta-wait.is-wait { border-color: rgba(255, 176, 32, 0.32); }
+.komuta-wait.is-ok { border-color: rgba(126, 224, 181, 0.3); }
+.komuta-wait > .komuta-approval__actions { align-self: stretch; }
+.komuta-wait__tag {
+  font-family: var(--font-mono-ui);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 5px;
+  color: var(--office-wait);
+  background: rgba(255, 176, 32, 0.12);
+}
+.komuta-wait.is-ok .komuta-wait__tag { color: var(--office-ok); background: rgba(126, 224, 181, 0.12); }
+.komuta-wait__title { margin: 0; font-size: 13px; line-height: 1.4; color: var(--foreground); }
+.komuta-wait__detail {
+  margin: 0;
+  max-width: 100%;
+  font-family: var(--font-mono-ui);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--foreground-secondary);
+  overflow-wrap: anywhere;
+}
+.komuta-queue { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.komuta-queue li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  border: 1px solid var(--border-subtle);
+}
+.komuta-queue__who { flex: none; font-size: 11px; color: var(--foreground-secondary); }
+.komuta-switch { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.komuta-switch > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.komuta-switch strong { font-size: 12.5px; font-weight: 600; }
+.komuta-switch span { font-size: 11px; color: var(--foreground-secondary); }
+.komuta-toggle {
+  flex: none;
+  min-width: 92px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  font-size: 11.5px;
+  color: var(--foreground-secondary);
+  border: 1px solid var(--border-subtle);
+}
+.komuta-toggle:hover { background: rgba(255, 255, 255, 0.05); }
+.komuta-toggle.is-ok { color: var(--office-ok); border-color: rgba(126, 224, 181, 0.35); }
+.komuta-toggle.is-wait { color: var(--office-wait); border-color: rgba(255, 176, 32, 0.35); }
+
+@keyframes komuta-blink { 50% { opacity: 0.3; } }
+@keyframes komuta-breathe { 50% { box-shadow: 0 0 26px -4px var(--member); } }
+@media (prefers-reduced-motion: reduce) {
+  .komuta-typing__dot,
+  .komuta-member.is-work .komuta-member__avatar { animation: none; }
+}
+
+@media (max-width: 1180px) {
+  .komuta { grid-template-columns: minmax(210px, 240px) minmax(0, 1fr) minmax(250px, 290px); }
+}
+/* Telefon: tek sütun; sohbet önce, ekip ve bekleyenler aşağıda */
+@media (max-width: 860px) {
+  .komuta {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .komuta-col { flex: none; overflow: visible; }
+  .komuta-chat { order: -1; height: 78vh; overflow: hidden; }
+  .komuta-chat__scroll { padding: 16px; }
+  .komuta-msg,
+  .komuta-agent { max-width: 94%; }
+}

@@ -80,7 +80,19 @@ force push, Drive/Etsy yüklemesi, git push) O ADIMI YAPMA. Oraya kadar hazırla
 Yunus'un yapması gereken bir şey var mı.
 """
 
-ORIGINS = ("telefon", "pano")
+# Sohbet (Komuta ekranı, 2026-10-27): Yunus ajanla yazışıyor; her mesaj aynı oturumu sürdürür.
+CHAT_NOTE = f"""\
+Bu mesaj Aıron'un sohbet ekranından geldi; Yunus seninle yazışıyor ve aynı oturum her mesajda sürüyor.
+- Normal bir sohbet gibi davran: önceki mesajları biliyorsun, gerekirse soru sor — cevabı bir sonraki mesajda gelir.
+- Geri alınamayan bir adıma gelirsen (toplu silme, üzerine yazma, ödeme, başkasına mesaj/e-posta/yayın, \
+force push, Drive/Etsy yüklemesi, git push) O ADIMI YAPMA. Oraya kadar hazırla, sonra son mesajını \
+"{APPROVAL_MARKER} <tek cümlede ne yapacağın>" satırıyla bitir ve dur; onayı Yunus bir sonraki mesajda verir.
+- Cevapların Türkçe, kısa ve doğrudan olsun.
+"""
+
+ORIGINS = ("telefon", "pano", "sohbet")
+NOTES = {"telefon": SYSTEM_NOTE, "pano": PANO_NOTE, "sohbet": CHAT_NOTE}
+MAX_TRAIL = 30  # iş başına saklanan araç adımı satırı (sohbette "ne yaptı" listesi)
 
 # Motorlar (Ajan İstasyonu adım 4, 2026-10-26): pano kartı Claude'a, Codex'e ya da
 # Gemini'ye gidebilir. Hepsi aynı kuyrukta, aynı Job Object ve süre sınırıyla.
@@ -130,6 +142,7 @@ class Job:
     engine: str = "claude"  # claude | codex | gemini
     mode: str = "auto"  # Claude izin modu: auto | plan (salt okunur, lider ajan)
     bekci: list[dict[str, Any]] = field(default_factory=list)  # bekçinin uyarıları (yalnız Claude işleri)
+    trail: list[str] = field(default_factory=list)  # araç adımları, sırayla (en fazla MAX_TRAIL)
 
     def public(self) -> dict[str, Any]:
         data = asdict(self)
@@ -397,7 +410,10 @@ class ClaudeJobs:
         cwd: str | None = None,
         engine: str = "claude",
         mode: str = "auto",
+        session_id: str | None = None,
     ) -> Job:
+        """`resume_of`: bir önceki işin oturumunu sürdürür. `session_id`: oturumu kimliğiyle sürdürür
+        (sohbet ve terminalden devralınan oturum; `cwd` oturumun açıldığı klasör olmalı)."""
         task = task.strip()
         if not task:
             raise ValueError("Görev boş.")
@@ -409,8 +425,10 @@ class ClaudeJobs:
             raise ValueError(f"Çalışma klasörü yok: {cwd}")
         if engine not in ENGINES or mode not in MODES:
             raise ValueError("Bilinmeyen ajan ya da mod.")
-        if resume_of and engine != "claude":
+        if (resume_of or session_id) and engine != "claude":
             raise ValueError("Bu ajan oturum sürdürmüyor; görev baştan verilir.")
+        if session_id and not re.fullmatch(r"[0-9a-fA-F-]{8,64}", session_id):
+            raise ValueError("Geçersiz oturum kimliği.")
         with self._lock:
             if self._closed:
                 raise ValueError("Aıron kapanıyor; iş alınmıyor.")
@@ -432,6 +450,8 @@ class ClaudeJobs:
                 job.session_id = parent.session_id
                 # Claude oturumları klasöre bağlı: devam, oturumun açıldığı klasörde olmalı.
                 job.cwd = parent.cwd
+            elif session_id:
+                job.session_id = session_id
             self._jobs[job.id] = job
             self._queue.append(job.id)
             self._save(job)
@@ -566,12 +586,13 @@ class ClaudeJobs:
                 "--permission-mode",
                 job.mode if job.mode == "plan" else PERMISSION_MODE,
                 "--append-system-prompt",
-                PANO_NOTE if job.origin == "pano" else SYSTEM_NOTE,
+                NOTES[job.origin],
                 # Bekçi (adım 7): PreToolUse hook'u yalnız bu oturuma; global ayara dokunulmaz.
                 "--settings",
                 str(bekci.settings_path()),
             ]
-            if job.resume_of and job.session_id:
+            # Başlarken oturum kimliği yalnız sürdürülen işte dolu (yenisinde olaylardan gelir).
+            if job.session_id:
                 args += ["--resume", job.session_id]
         else:
             node = shutil.which("node")
@@ -649,7 +670,7 @@ class ClaudeJobs:
             task = job.task
             if job.engine != "claude":
                 # Codex/Gemini'de --append-system-prompt yok: kural notu görevin başına.
-                task = f"{PANO_NOTE if job.origin == 'pano' else SYSTEM_NOTE}\n\n{job.task}"
+                task = f"{NOTES[job.origin]}\n\n{job.task}"
             threading.Thread(target=_feed_stdin, args=(proc, task), daemon=True).start()
             reader = threading.Thread(
                 target=self._read_output, args=(job, proc, log_path, events, tail, texts), daemon=True
@@ -853,6 +874,8 @@ class ClaudeJobs:
                     if block.get("type") == "tool_use":
                         job.steps += 1
                         job.last_step = _tool_line(str(block.get("name")), block.get("input") or {})
+                        if len(job.trail) < MAX_TRAIL:
+                            job.trail.append(job.last_step)
                     elif block.get("type") == "text" and str(block.get("text", "")).strip():
                         job.last_step = " ".join(str(block["text"]).split())[:160]
         return None

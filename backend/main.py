@@ -19,7 +19,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.api import automation, memory, office, pano, remote, settings, system, vision, voice
+from backend.api import automation, memory, office, pano, remote, settings, sohbet, system, vision, voice
 from backend.core import claude_jobs
 from backend.core.dongu import dongu
 from backend.core.config import CORS_ORIGINS
@@ -78,7 +78,7 @@ app.add_middleware(
 # katman en dışta çalışır. Bkz. backend/core/remote_auth.py.
 app.add_middleware(RemoteAccessMiddleware)
 
-for router_module in (voice, system, settings, vision, memory, automation, remote, office, pano):
+for router_module in (voice, system, settings, vision, memory, automation, remote, office, pano, sohbet):
     app.include_router(router_module.router)
 
 app.include_router(websocket_router)

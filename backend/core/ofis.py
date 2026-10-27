@@ -374,6 +374,13 @@ class OfficeState:
         self.last_event_ts: float | None = None
         self.version = 0
 
+    def session_active(self, session_id: str, horizon: float = 6 * 3600) -> bool:
+        """Bu Claude oturumu açık görünüyor mu: SessionEnd gelmemiş ve son olayı `horizon` içinde.
+        Pencere kapatılınca SessionEnd gelmeyebilir — ufuk bu yüzden var."""
+        with self._lock:
+            w = self.workers.get(self._chief_id(session_id))
+            return bool(w and w.status != LEFT and w.last_ts > time.time() - horizon)
+
     # ── yardımcılar ──
     def _touch(self) -> None:
         self.version += 1

@@ -148,7 +148,19 @@ function screenOf(goal: Goal): Screen {
   return goal.mood === 'work' ? 'on' : goal.mood === 'fail' ? 'err' : goal.mood === 'done' ? 'ok' : 'off';
 }
 
-export function StationScene({ paused }: { paused: boolean }) {
+export type CrewId = Member['id'];
+
+/** `mini`: Komuta ekranının sağ üstündeki küçük pencere (2026-10-27). `onPick` verilirse karaktere
+ *  tıklamak masa kartını değil o ajanın sohbetini açar. */
+export function StationScene({
+  paused,
+  mini = false,
+  onPick,
+}: {
+  paused: boolean;
+  mini?: boolean;
+  onPick?: (id: CrewId) => void;
+}) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -303,6 +315,10 @@ export function StationScene({ paused }: { paused: boolean }) {
         if (d < 18 && (!best || d < best.d)) best = { m, d };
       }
     }
+    if (onPick) {
+      if (best) onPick(best.m.id);
+      return;
+    }
     if (!best) {
       selectDesk(null);
       return;
@@ -312,7 +328,7 @@ export function StationScene({ paused }: { paused: boolean }) {
   };
 
   return (
-    <div ref={wrapRef} className="station">
+    <div ref={wrapRef} className={`station ${mini ? 'is-mini' : ''}`}>
       <div ref={boxRef} className="station__box" onClick={onClick}>
         <canvas ref={canvasRef} width={W} height={H} className="station__canvas" aria-label="Ajan İstasyonu" />
         {CREW.map((m) => (

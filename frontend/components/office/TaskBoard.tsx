@@ -45,8 +45,8 @@ export function TaskBoard() {
   }, [snapshot]);
 
   const open = (t: OfficeTask) => {
-    // Karttan masaya: ofis görünümüne dön, ilgili masayı ve işçiyi seç.
-    setTab('ofis');
+    // Karttan masaya: Komuta'ya dön, ilgili masayı ve işçiyi seç.
+    setTab('komuta');
     selectDesk(deskOf(t));
     selectWorker(t.worker_id);
   };

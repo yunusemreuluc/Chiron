@@ -120,7 +120,8 @@ export interface OfficeSnapshot {
 }
 
 // pano = yazılabilir kart panosu (CardBoard), etkinlik = oturumların gözlem panosu (TaskBoard).
-export type OfficeTab = 'ofis' | 'pano' | 'etkinlik';
+// Komuta (2026-10-27): sohbet + mini istasyon + senden bekleyenler · İşler: kart panosu · Geçmiş: görev akışı.
+export type OfficeTab = 'komuta' | 'isler' | 'gecmis';
 
 interface OfficeStore {
   snapshot: OfficeSnapshot | null;
@@ -139,7 +140,7 @@ export const useOfficeStore = create<OfficeStore>((set) => ({
   snapshot: null,
   selectedDesk: null,
   selectedWorker: null,
-  tab: 'ofis',
+  tab: 'komuta',
   // Eski bir görüntü (yeniden bağlanırken gelen HTTP cevabı) yenisini ezmesin.
   setSnapshot: (snapshot) =>
     set((state) =>

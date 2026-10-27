@@ -50,6 +50,8 @@ logs/claude-jobs/
 config/pano.json
 # 7/24 döngünün durumu ve son raporu (dongu.py) — kart başlıkları içerir
 config/dongu.json
+# Sohbetler (sohbet.py) — konuşmaların metni
+config/sohbet.json
 # Claude işlerinin tam akışı (claude_jobs.py) — konuşma kaydı, depoya girmez
 logs/claude-jobs/
 # Bekçinin araç günlüğü ve modu (bekci.py) — komut metinleri, depoya girmez

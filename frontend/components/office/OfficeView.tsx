@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LuX } from 'react-icons/lu';
 import { fetchOfficeState } from '@/services/officeApi';
@@ -10,24 +9,22 @@ import { useNavigationStore } from '@/stores/navigationStore';
 import { isActive, useOfficeStore } from '@/stores/officeStore';
 import { AgentCard } from './AgentCard';
 import { CardBoard } from './CardBoard';
+import { Komuta } from './Komuta';
 import { TaskBoard } from './TaskBoard';
-
-const TABS = [
-  { id: 'ofis', label: 'Ofis' },
-  { id: 'pano', label: 'Pano' },
-  { id: 'etkinlik', label: 'Etkinlik' },
-] as const;
 import { ago } from './format';
+
+// Komuta (2026-10-27) eski "Ofis" sekmesinin yerine: istasyon artık Komuta'nın sağ üstünde
+// küçük bir pencere — tam ekran sahne kalktı ("istasyon gözümün önünde olsun").
+const TABS = [
+  { id: 'komuta', label: 'Komuta' },
+  { id: 'isler', label: 'İşler' },
+  { id: 'gecmis', label: 'Geçmiş' },
+] as const;
 
 // Ajan Ofisi ekranı (2026-10-02). Kenar çubuğundaki "Ajanlar" modülü burayı
 // açar. Tam ekran: 286 px'lik sol panel bir ofis sahnesi için fazla dar.
 // Ofis açıkken ana sahne durur (three/Scene.tsx frameloop) — GPU iki sahneyi
 // birden çizmesin (Faz 0 performans hedefi).
-
-// 2D uzay istasyonu (adım 5, 2026-10-26) — eski 3D hologram sahnenin (three/office) yerine.
-const StationScene = dynamic(() => import('./station/StationScene').then((m) => m.StationScene), {
-  ssr: false,
-});
 
 function useNow(): number {
   const [now, setNow] = useState(() => Date.now() / 1000);
@@ -127,10 +124,6 @@ export function OfficeView() {
           exit={{ opacity: 0, scale: 1.02, filter: 'blur(10px)' }}
           transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
         >
-          <div className="office-view__stage">
-            <StationScene paused={tab !== 'ofis'} />
-          </div>
-
           {/* Üst şerit */}
           <header className="office-top">
             <div className="glass-panel office-top__brand">
@@ -192,52 +185,21 @@ export function OfficeView() {
             </div>
           </header>
 
-          {/* Pano görünümü sahnenin üstüne cam bir katman olarak gelir */}
-          <AnimatePresence>
-            {tab !== 'ofis' && (
-              <motion.div
-                key={tab}
-                className="office-board-layer"
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 14 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {tab === 'pano' ? <CardBoard /> : <TaskBoard />}
-              </motion.div>
-            )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab}
+              className="office-board-layer"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 14 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            >
+              {tab === 'komuta' ? <Komuta /> : tab === 'isler' ? <CardBoard /> : <TaskBoard />}
+            </motion.div>
           </AnimatePresence>
 
-          {/* Onay kuyruğu — geri alınamayan adım bekleyen işler tek yerde */}
-          <AnimatePresence>
-            {tab === 'ofis' && snapshot && snapshot.approvals.length > 0 && (
-              <motion.div
-                key="approvals"
-                className="office-approvals"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-              >
-                <span className="label-micro">Onay bekliyor</span>
-                {snapshot.approvals.slice(-3).map((a) => (
-                  <p key={a.id}>
-                    <strong>{a.tool}</strong> {a.what}
-                  </p>
-                ))}
-                <p className="text-foreground-disabled">Onay Claude Code penceresinde veriliyor.</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {tab === 'ofis' && !snapshot?.tracking.events_seen && (
-            <div className="office-hint">
-              {offline
-                ? 'Aıron backend’ine ulaşılamıyor — ofis verisi oradan geliyor.'
-                : 'Henüz olay yok. Claude Code’da bir iş başladığında masalar canlanacak.'}
-            </div>
-          )}
-
-          <AnimatePresence>{tab === 'ofis' && desk && <AgentCard key={desk.id} desk={desk} />}</AnimatePresence>
+          {/* Geçmiş'teki bir görevden açılan masa kartı (canlı akış) Komuta'nın üstüne gelir. */}
+          <AnimatePresence>{tab === 'komuta' && desk && <AgentCard key={desk.id} desk={desk} />}</AnimatePresence>
         </motion.div>
       )}
     </AnimatePresence>
