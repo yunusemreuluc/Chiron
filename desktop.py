@@ -622,7 +622,13 @@ def main() -> int:
     # Açıkça belirtilmezse pywebview eski MSHTML/EdgeHTML'e düşebilir — orada
     # WebGL2 ve modern CSS (backdrop-filter) çalışmaz, arayüz boş/siyah görünürdü.
     webview.start(gui="edgechromium")
-    return 0
+    # NEDEN (2026-10-28): pencere kapanınca main dönüyor ama süreç ÖLMÜYORDU — yorumlayıcı kapanışta
+    # asyncio'nun executor iş parçacıklarını bekliyor, biri (mikrofon/ağ çağrısı) hiç dönmüyor; sağlık
+    # bekçisi de dakikada bir "cannot schedule new futures after shutdown" yazıyordu. Tepsi simgesi
+    # gittiği için kullanıcı süreci ancak Görev Yöneticisi'nden kapatabiliyordu. Loglar boşaltılıp
+    # süreç kesin olarak bitiriliyor; kalıcı durum zaten anında diske yazılıyor.
+    logging.shutdown()
+    os._exit(0)
 
 
 if __name__ == "__main__":
