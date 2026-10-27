@@ -507,7 +507,72 @@ def _start_voice_assistant() -> None:
     threading.Thread(target=runner, name="airon-voice", daemon=True).start()
 
 
+# Arayüz kaynağı: bunlardan biri derlenmiş kopyadan (out/index.html) yeniyse açılışta yeniden derlenir.
+# NEDEN (2026-10-27): kısayol desktop.py'yi doğrudan açıyor, AIRON.bat yalnız "out yoksa" derliyordu —
+# arayüz değişiklikleri haftalarca eski kopyayla açıldı ("hâlâ aynı görünüyor").
+FRONTEND_SOURCES = ("app", "components", "hooks", "layouts", "public", "services", "stores", "three")
+FRONTEND_CONFIGS = ("package.json", "next.config.ts", "postcss.config.mjs")
+FRONTEND_BUILD_TIMEOUT = 600
+
+
+def _frontend_is_stale() -> bool:
+    index = FRONTEND_EXPORT_DIR / "index.html"
+    if not index.exists():
+        return True
+    built = index.stat().st_mtime
+    root = BASE_DIR / "frontend"
+    for name in FRONTEND_CONFIGS:
+        path = root / name
+        if path.exists() and path.stat().st_mtime > built:
+            return True
+    for name in FRONTEND_SOURCES:
+        for dirpath, _dirs, files in os.walk(root / name):
+            for file in files:
+                try:
+                    if os.path.getmtime(os.path.join(dirpath, file)) > built:
+                        return True
+                except OSError:
+                    continue
+    return False
+
+
+def _rebuild_frontend_if_stale() -> None:
+    """Kaynak derlenmiş kopyadan yeniyse `npm run build` (bir iki dakika). Olmazsa eski kopyayla açılır."""
+    log = logging.getLogger("airon")
+    try:
+        if not _frontend_is_stale():
+            return
+    except Exception:
+        log.exception("[Aıron] Arayüzün güncelliği denetlenemedi")
+        return
+    import shutil
+    import subprocess
+
+    npm = shutil.which("npm.cmd") or shutil.which("npm")
+    if not npm:
+        log.warning("[Aıron] Arayüz eski ama npm bulunamadı; eski kopyayla açılıyor")
+        return
+    log.info("[Aıron] Arayüz kaynağı değişmiş, yeniden derleniyor…")
+    try:
+        result = subprocess.run(
+            [npm, "run", "build"],
+            cwd=BASE_DIR / "frontend",
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=FRONTEND_BUILD_TIMEOUT,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+    except Exception:
+        log.exception("[Aıron] Arayüz derlenemedi; eski kopyayla açılıyor")
+        return
+    if result.returncode != 0:
+        log.error("[Aıron] Arayüz derlemesi başarısız (%s): %s", result.returncode, result.stdout[-2000:])
+
+
 def main() -> int:
+    _rebuild_frontend_if_stale()
     if not FRONTEND_EXPORT_DIR.is_dir():
         return _fatal(
             "Arayüz henüz derlenmemiş.\n\n"

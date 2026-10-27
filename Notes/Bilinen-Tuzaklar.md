@@ -554,3 +554,12 @@ Python hook'u (`bekci.py`) `sys.stdout.write` ile JSON cevap verdiğinde Windows
 Türkçe gerekçe ("Aıron bekçisi…") UTF-8 bekleyen tarafta bozuluyor/çözülemiyordu. İlk canlı deneme ASCII
 gerekçeyle yapıldığı için görünmedi, Türkçe testte yakalandı (2026-10-26). **Kural:** Claude Code hook'u
 yazan her Python betiği `sys.stdin`/`sys.stdout`'u `reconfigure(encoding="utf-8")` ile açar.
+
+## Masaüstü Aıron derlenmiş kopyayı açar, geliştirme sunucusunu değil
+
+Kısayol `desktop.py`'yi açar; o `frontend/out` (statik `next build` çıktısı) sunar. `AIRON.bat` yalnız `out`
+yoksa derliyordu — 2026-10-26 03:11'den sonraki bütün arayüz işi (bekçi, 7/24, Komuta) Yunus'un Aıron'unda
+görünmedi; denemeler `next dev`'de yapıldığı için fark edilmedi ("hâlâ aynı görünüyor", 2026-10-27).
+**Çözüm:** `desktop.py` açılışta kaynak (`app`, `components`, `services`, `stores`… ve config) `out/index.html`'den
+yeniyse `npm run build` çalıştırır (`_rebuild_frontend_if_stale`). **Kural:** arayüz işi bitince `npm run build`
+de çalıştır; "çalışıyor" demeden önce derlenmiş kopyada (ya da Aıron'un kendisinde) bak.
