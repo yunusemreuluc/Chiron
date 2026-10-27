@@ -15,11 +15,15 @@ sese göre — erkek sesler Chiron, kadın sesler Daphne (`app_config.assistant_
 mobil 7ff500e (`com.chiron.mobile`, derlendi + birim testleri), wake ce2f44e. Genel hook `ofis-olay.py` ve
 `yedek.ps1` Chiron yollarında. GitHub depoları Chiron / chiron-mobile / chiron-wake oldu, push'landı.
 
-**Nerede kalındı:** Yerel klasörler hâlâ `Projects\Airon`, `airon-mobile`, `airon-wake` — Aıron açıktı, Claude
-kapatamadı (izin). Adlandırınca: kısayol Aıron.lnk → Chiron.lnk (`make_shortcut.py`), `claude mcp` airon → chiron,
-Obsidian kasa kaydı, `%LOCALAPPDATA%\Airon` → `Chiron` (ofis olayları artık oraya yazılıyor), `OneDrive\Yedekler\Airon`.
-Yeni APK telefona kurulmadı. Uyandırma modeli hâlâ "Aıron" (Yunus kayıtları sonra alacak). GitHub `main` eski
-içerikte — feature/ajan-ofisi birleştirilmedi. Marka tescili satışa çıkarken.
+Sonra: GitHub `main` = feature/ajan-ofisi (hızlı ileri). Portfolyo yayında: Chiron (36 araç) + Dilcep bölümü.
+Yerel klasörler `Projects\Chiron`, `chiron-mobile`, `chiron-wake`; kısayol Chiron.lnk, `claude mcp` chiron (bağlı),
+Obsidian kasa kaydı, `%LOCALAPPDATA%\Chiron` (ofis geçmişi birleştirildi), `OneDrive\Yedekler\Chiron`. Kapanış hatası
+bulundu ve düzeltildi (307b58a): Çıkış'tan sonra süreç executor iş parçacığında asılı kalıyordu → `os._exit(0)`.
+Chiron yeni yoldan açıldı, Gemini'ye bağlandı, `logs/chiron.log`.
+
+**Nerede kalındı:** Yeni mobil APK (`com.chiron.mobile`) telefona kurulmadı — eskisi kaldırılıp izinler yeniden
+verilecek. Uyandırma modeli hâlâ "Aıron" (Yunus Chiron/Daphne kayıtlarını uyandırmaya geçince alacak). CV PDF'i hâlâ
+"Airon/33 araç". Marka tescili satışa çıkarken. Kapanış düzeltmesi bir sonraki Çıkış'ta canlı denenmeli.
 
 ## Oturum: 2026-10-27 — Komuta ekranı + süren sohbet + terminali devral
 
