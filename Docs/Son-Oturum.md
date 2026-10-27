@@ -7,15 +7,19 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
-## Oturum: 2026-10-28 — İsim araştırması: Chiron (erkek) + Daphne (kadın)
+## Oturum: 2026-10-28 — Ad değişikliği: Aıron → Chiron (kadın seste Daphne)
 
-**Ne yapıldı:** ~90 isim web'de tarandı (aynı adla AI ürünü var mı); liste ve gerekçeler `Acik-Konular.md` →
-"Ürün adı". Yunus'un kararı: erkek ses **Chiron**, kadın ses **Daphne**, uygulama adı Aıron → Chiron; uyandırma
-kelimesi sese göre (Chiron sesinde "Chiron", Daphne sesinde "Daphne"). Kod değişmedi.
+**Ne yapıldı:** ~90 isim tarandı (liste `Acik-Konular.md` → "Ürün adı"). Karar: uygulama **Chiron**, asistan adı
+sese göre — erkek sesler Chiron, kadın sesler Daphne (`app_config.assistant_name`; prompt, "Daphne:" sohbet öneki,
+/ask ayrıştırması, arayüz etiketleri). Üç depoda ad değişti ve commit'li: bu depo 854c996 (288/288, arayüz derlendi),
+mobil 7ff500e (`com.chiron.mobile`, derlendi + birim testleri), wake ce2f44e. Genel hook `ofis-olay.py` ve
+`yedek.ps1` Chiron yollarında. GitHub depoları Chiron / chiron-mobile / chiron-wake oldu, push'landı.
 
-**Nerede kalındı:** Tescil (Türk Patent/EUIPO) sorgusu yapılamadı, Yunus "şimdilik kendim kullanacağım, çıkarırken
-bakarız" dedi. Not: Bugatti Chiron ünlü marka. **Sırada:** ad değişikliği (arayüz/prompt/mobil + iki uyandırma
-kelimesi kaydı; klasör/MCP adı `airon` kalır) ya da önceki planlanan Komuta geri bildirimi — Yunus seçecek.
+**Nerede kalındı:** Yerel klasörler hâlâ `Projects\Airon`, `airon-mobile`, `airon-wake` — Aıron açıktı, Claude
+kapatamadı (izin). Adlandırınca: kısayol Aıron.lnk → Chiron.lnk (`make_shortcut.py`), `claude mcp` airon → chiron,
+Obsidian kasa kaydı, `%LOCALAPPDATA%\Airon` → `Chiron` (ofis olayları artık oraya yazılıyor), `OneDrive\Yedekler\Airon`.
+Yeni APK telefona kurulmadı. Uyandırma modeli hâlâ "Aıron" (Yunus kayıtları sonra alacak). GitHub `main` eski
+içerikte — feature/ajan-ofisi birleştirilmedi. Marka tescili satışa çıkarken.
 
 ## Oturum: 2026-10-27 — Komuta ekranı + süren sohbet + terminali devral
 
