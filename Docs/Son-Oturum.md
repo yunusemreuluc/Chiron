@@ -16,8 +16,11 @@ onay akışı; PC'deki terminal oturumunu devralma, açıksa uyarı), `claude_jo
 `Komuta.tsx` (ekip, sohbet, bekleyenler, bekçi/7/24). Sekmeler: Komuta · İşler · Geçmiş. Canlı: sohbet ikinci mesajda
 ilkini hatırladı, arayüzden uçtan uca denendi, masaüstü + telefon ekran görüntüsü. 246/246. İsim değişikliği ertelendi.
 
-**Nerede kalındı:** Commit'li (feature/ajan-ofisi). İşler sekmesi henüz eski Pano (üç şerit duruyor) — taslaktaki tek
-satır form + 4 sütun hali yapılmadı. Gerçek terminal oturumu devralınarak denenmedi. Codex yok, çapraz inceleme yok.
+**Nerede kalındı:** Commit'li (feature/ajan-ofisi, f6fd84e + 540aa8b). Yunus "hâlâ aynı görünüyor" dedi: masaüstü
+Aıron `frontend/out`'u açıyor ve 10-26 03:11'den beri derlenmemişti → yeniden derlendi, desktop.py artık kaynak
+yeniyse açılışta derliyor. Yunus "yarın devam ederiz" dedi. **Yarın:** önce Aıron'u açıp Komuta'yı Yunus'la birlikte
+gör (derlenmiş kopyada), geri bildirimini al; sonra İşler sekmesinin taslaktaki sade hali (tek satır form + 4 sütun,
+üç şerit kalkar); bir terminal oturumunu devralmayı Yunus'la önemsiz bir oturumda dene. Codex yok, çapraz inceleme yok.
 
 ## Oturum: 2026-10-26 (6) — Bekçi (adım 7) + 7/24 döngü (adım 8)
 
