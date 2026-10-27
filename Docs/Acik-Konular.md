@@ -13,7 +13,10 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 **Durum:** Plan yazıldı (2026-10-14, [[Plan-Play-Yayini]]); hedef "benim telefonumdaki gibi": özellik kesilmeyecek, kod başlamadı
 
 ### Ajan İstasyonu — ofisten iş verme, 7/24 döngü
-**Durum:** 8 adımın hepsi bitti ve commit'li (2026-10-26); döngü kapalı, bekçi `uyar` — ikisini açmak Yunus'ta
+**Durum:** 8 adımın hepsi bitti ve commit'li (2026-10-26); döngü kapalı, bekçi `uyar` — ikisini açmak Yunus'ta. 2026-10-27: Komuta ekranı + süren sohbet + terminali devral yapıldı ve commit'li; açık: İşler sekmesinin taslaktaki sade hali
+
+### Ürün adı — "Aıron" yerine piyasaya uygun isim
+**Durum:** Ertelendi (2026-10-27, "sonra değiştiririz"). Ölçüt: anlamlı, tescil edilebilir, uyandırma kelimesine uygun. Aranıp elenenler (benzer yapay zekâ ürünü var): Atlas, Vega, Vivel, Joi, Vox, Tet, Navi, Zazu, Nemon, Korvus, Vigil, Custos, Alaz, Zorvan, Korix, Valtor, Torva, Kestrin, Ravik, Sirvo, Vikel, Velda, Velkin, Vikra. Temiz çıkan ama Yunus'un beğenmedikleri: Tarazed, Tarvo, Kavro, Teyvan, Draxo, Ulvar, Vekra, Livak, Tamga, Kopuz, Hemdem, Sırdaş. Aranmamış öneriler: Durandal, Hugi, Nabu, Bilig, Ziggy, Orac. Değişince: arayüz/prompt/mobil + uyandırma kelimesi yeniden kayıt; klasör/MCP adı kalabilir
 
 ### Ajan Ofisi — kim ne yapıyor (Faz A)
 **Durum:** Commit'lendi (`0506718`, `feature/ajan-ofisi`); kullanıcı "güzel, görseli sonra ayarlarız" dedi → [[Ajan-Ofisi]]

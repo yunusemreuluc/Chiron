@@ -280,3 +280,29 @@ Telefondan da açılıp kapanır (açmak korumayı gevşetmez; bekçi ve kota fr
   maliyetinden; rapor aralığından önceki harcamayı da içerebilir (~ işareti bu yüzden).
 
 Testler: `tests/test_dongu.py` (9). Paket 235/235. Canlı: 2 Claude + 4 Gemini kartı döngüyle sırayla yürüdü.
+
+## Komuta ekranı ve sohbet (2026-10-27)
+
+Yunus: "sana terminalde nasıl iş veriyorsam Aıron'da da öyle olsun" + mevcut ofis/pano "kullanışsız" (boş
+sütunlar, üç şerit, iş üç sekmeye dağılmış). Taslak: https://claude.ai/artifact/9gfiWpCSyYSWTGuTxU1SYU.
+
+- **Sekmeler:** Komuta · İşler (eski Pano, `CardBoard`) · Geçmiş (eski Etkinlik, `TaskBoard`). Tam ekran
+  istasyon sahnesi kalktı; istasyon Komuta'nın sağ üstünde küçük pencere (`StationScene mini onPick`) —
+  karaktere tıklamak o ajanın sohbetini açar.
+- **Komuta** (`components/office/Komuta.tsx`): solda ekip (durum ofis masalarından + sohbetten, Terra kota
+  uykusu panodan) ve sohbet listesi + "PC'deki oturumlar"; ortada sohbet (araç adımları, canlı satır, onay
+  kutusu, hafif Markdown); sağda mini istasyon, senden bekleyenler (sohbet onayları, kart onay/birleştirme,
+  PC'deki Claude Code izinleri), sıra, bekçi ve 7/24 anahtarı.
+- **Sohbet** (`backend/core/sohbet.py`, `/api/sohbet`): her mesaj `claude_jobs`'a `origin="sohbet"` iş; ilk
+  mesaj oturum açar, sonrakiler `submit(session_id=...)` ile `--resume`. Kimlik her iş bitince işten alınır
+  (`-p --resume` yeni kimlik dönerse izlenir; canlıda aynı kaldı). Gemini oturum sürdürmez: son 8 mesaj bağlam
+  olarak görevin başına. Onay: `ONAY_GEREKLI` → mesaj "onay", Onayla/Reddet aynı oturuma yazar. Kayıt
+  `config/sohbet.json` (gitignore). İşte `trail` alanı: araç adımları sırayla (en fazla 30).
+- **Terminali devral:** `~/.claude/projects/*/<id>.jsonl` içinden son 14 günün etkileşimli (`entrypoint: cli`)
+  oturumları; başlık `ai-title`, son mesaj `last-prompt` (dosyanın yalnız başı + son 256 KB okunur). Açık sayılır:
+  kayıt son 2 dk'da değişti ya da ofis SessionEnd görmedi (`office.session_active`, 6 sa ufuk). Açıksa "Yine de
+  devral" onayı istenir. Devralınan sohbet oturumun kendi klasöründe sürer.
+- Canlı: iki mesajlı sohbette ikinci mesaj ilkini hatırladı (KARPUZ / `pwd`), arayüzden uçtan uca denendi.
+  Gerçek bir terminal oturumu devralınarak denenmedi (Yunus'un kayıtlarına yazardı) — birim testte.
+
+Testler: `tests/test_sohbet.py` (11). Paket 246/246.
