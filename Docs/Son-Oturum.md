@@ -7,6 +7,16 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-10-29 — Çıkış uyarısı + telefondan Komuta ("Jarvis gibi")
+
+**Ne yapıldı:** Çalışan iş varken Çıkış (pencere X'i ve tepsi) onay soruyor (`QuitGuard`, c1301f6). Yunus telefonda
+"Claude'a vereyim mi" sorusunu ve Komuta'dan kopukluğu istemedi → sesli iş artık son Komuta sohbetine yazılıyor
+(`/api/remote/komuta`, origin `sohbet_tel`, 3b619a3); Chiron "hallediyorum" diyor, Claude'dan söz etmiyor; telefonda
+Komuta ekranı (chiron-mobile 6bdbb90). Hızlı yol kapısı `UntrustedInput`: son 3 dk dışarıdan metin girdiyse eski sesli onay.
+**Nerede kalındı:** APK kuruldu, PC yeni kodla açık. Telefonda Komuta ekranı ve sesli hızlı yol Yunus'la denenmedi
+(Xiaomi adb dokunmaya izin vermiyor). Chiron 00:59'da log bırakmadan kapanmıştı (RAM %93, gradle derlemesi sırasında).
+`test_bekci::test_write_rules` basetemp `Temp\claude` altındayken düşüyor (bekçi orayı serbest sayıyor) — kod hatası değil.
+
 ## Oturum: 2026-10-28 — Ad değişikliği: Aıron → Chiron (kadın seste Daphne)
 
 **Ne yapıldı:** ~90 isim tarandı (liste `Acik-Konular.md` → "Ürün adı"). Karar: uygulama **Chiron**, asistan adı

@@ -22,7 +22,7 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 **Durum:** Commit'lendi (`0506718`, `feature/ajan-ofisi`); kullanıcı "güzel, görseli sonra ayarlarız" dedi → [[Ajan-Ofisi]]
 
 ### Claude Code entegrasyonu — telefondan Claude'a iş
-**Durum:** PC + telefon tarafı yazıldı, commit'li, APK kuruldu (2026-10-03); gerçek cihazda uçtan uca deneme bekliyor
+**Durum:** 2026-10-29: sesli iş Komuta sohbetine gidiyor, onay sorusu yok (hızlı yol), telefonda Komuta ekranı; APK kurulu, Yunus'la uçtan uca deneme bekliyor
 Ayrıntı: [[Plan-Claude-Entegrasyonu]].
 
 ### MCP server — Aıron araçları Claude'a açık

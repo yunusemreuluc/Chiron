@@ -230,6 +230,27 @@ Kullanıcı isteği: "msjlaşma şeyi mobile gelsin, Claude ile yazışma gibi o
   uptime, CPU/RAM, boşta süre, kilit, ön pencere, Claude işleri, ofis, `voice_ready`. 04:55'teki
   `query_desktop_chiron` hatasının kök nedeni kanıtlanmadı (log yok); olası: PC sesli oturumu duraklı.
 
+## 2026-10-29 — Komuta telefonda, sesli işte onay sorusu yok
+
+Kullanıcı: "Claude'a iş verdim şeklinde olmasın, hemen hallediyorum deyip arka planda yapsın; arada biri var gibi
+oluyor" + Komuta'dan kopukluk + ne yaptığını görememe + fazla onay.
+- **Sesli iş Komuta'ya:** `delegate_to_claude` → PC `POST /api/remote/komuta {text, new_topic}`. PC son Claude
+  sohbetine yazar (aynı `--resume` oturumu); `new_topic` ya da hiç sohbet yoksa yeni sohbet. Son sohbet meşgulse 409
+  "önceki iş sürüyor". Onay cevabı `POST /api/remote/komuta/onay {job_id, approved}`; sohbete ait olmayan eski işte
+  eski `/api/remote/claude` resume yolu.
+- **origin `sohbet_tel`** (backend/core/claude_jobs.py): telefondan gelen sohbet mesajı — sonucu telefona bildirilir
+  (`PHONE_ORIGINS`), not "son mesajın sesli okunabilir" der. Telefondaki Komuta ekranından yazılan mesaj da
+  böyle: `/api/sohbet/{id}/mesaj` uzak istekte `via=telefon` (`request.state.remote`).
+- **Kişilik:** prompt Chiron'a işi kendisi yapıyormuş gibi konuşturur ("Hemen hallediyorum", sonuçta "Hallettim");
+  balonlar "PC'de · bitti", şerit "Chiron · <adım>".
+- **Hızlı yol kapısı `UntrustedInput`** (tools/ClaudeJobs.kt): taslaksız gönderim yalnız kullanıcının son sözü
+  2 dk içindeyse VE son 3 dk modele dışarıdan metin girmediyse. İşaretleyenler: `[YENİ MESAJ]`/`[CLAUDE İŞİ]`
+  enjeksiyonu, bildirim/PC cevabı/PC durumu/iş durumu/istek listesi araç sonuçları, Live `groundingMetadata`
+  (Google Arama). Kapı kapalıysa eski iki aşamalı akış ("Başlayayım mı?"). JVM testi `UntrustedInputTest`.
+- **Komuta ekranı** (`ui/KomutaScreen.kt`): üst çubuktaki sohbet ikonu ya da turuncu şerit açar. Liste → sohbet;
+  canlı adımlar (son 6), Onayla/Reddet, Durdur, yazma kutusu; yoklama meşgulken 2 sn, değilken 8 sn.
+- Gerçek cihazda Yunus'la denenmedi (Xiaomi `input tap` yetkisi yok).
+
 ## Sıradaki
 
 - Gerçek kullanımda uyandırma geri bildirimi; arabada 2 ortam kaydı → yeniden eğitim;
