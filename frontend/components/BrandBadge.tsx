@@ -3,7 +3,6 @@
 import { motion } from 'framer-motion';
 import { AI_STATE_LABELS, useAIStateStore, type AIState } from '@/stores/aiStateStore';
 import { useAmbientContext } from '@/hooks/useAmbientContext';
-import { useRailHoverStore } from '@/stores/railHoverStore';
 
 // Kullanıcı isteğiyle (2026-07-28) — üst panel tamamen kaldırıldı; CHIRON adı ve
 // canlı durum sahnenin sol üstünde küçük, çerçevesiz bir imza olarak duruyor
@@ -32,22 +31,16 @@ export function BrandBadge() {
   const aiState = useAIStateStore((state) => state.aiState);
   const { color, pulseSeconds } = STATE_DOT[aiState];
   const context = useAmbientContext();
-  // Ray etiketi imzanın ÜSTÜNE biniyor (ölçüldü, bkz. stores/railHoverStore.ts).
-  // Çakışmayı gizlemek yerine imza geri çekiliyor: o an bakılan şey kazanır.
-  const railHovered = useRailHoverStore((state) => state.hoveredLabel) !== null;
 
   return (
-    // left-[104px]: Sidebar rayının (18px + 68px genişlik) hemen sağında, ondan
-    // bir "nefes payı" bırakarak başlar.
+    // left-7: sol ray 2026-10-29'da kalktı, imza sağ sütunla (right-7) simetrik köşede.
     //
     // Sönme framer-motion ile DEĞİL Tailwind ile: bu düz bir div ve satır içi
     // stil yazan bir motion bileşeni değil — tersi olsaydı satır içi opacity
     // sınıfı ezerdi (bkz. Notes/Bilinen-Tuzaklar.md § framer-motion opacity'yi
     // satır içi yazar).
     <div
-      className={`pointer-events-none absolute top-7 left-[104px] z-30 flex flex-col gap-1.5 transition-opacity duration-200 ${
-        railHovered ? 'opacity-15' : 'opacity-100'
-      }`}
+      className="pointer-events-none absolute top-7 left-7 z-30 flex flex-col gap-1.5"
     >
       <div className="flex items-center gap-3">
         <span className="relative flex h-1.5 w-1.5 items-center justify-center">

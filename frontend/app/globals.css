@@ -248,13 +248,11 @@ body {
   overflow: hidden;
 }
 
-.app-shell__sidebar {
+/* Sol alt gezinme (Ajanlar + Ayarlar) — sağ alttaki sohbet dock'unun aynası (bottom-7 / right-7). */
+.app-shell__nav {
   position: absolute;
-  top: 18px;
-  bottom: 18px;
-  left: 18px;
-  width: 68px;
-  z-index: 20;
+  bottom: 28px;
+  left: 28px;
 }
 
 .app-shell__scene {
@@ -284,11 +282,9 @@ body {
 
 /* 1366-1440px sınıfı ekranlarda ray ve paneller orantılı olarak daralıyor. */
 @media (max-width: 1440px) {
-  .app-shell__sidebar {
-    top: 14px;
-    bottom: 14px;
-    left: 14px;
-    width: 62px;
+  .app-shell__nav {
+    bottom: 20px;
+    left: 20px;
   }
 }
 

@@ -5,7 +5,6 @@ import { useAIStateStore, type AIState } from '@/stores/aiStateStore';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useMicStore } from '@/stores/micStore';
 import { useOfficeStore, type OfficeSnapshot } from '@/stores/officeStore';
-import { useTimelineStore } from '@/stores/timelineStore';
 import {
   useVisionStore,
   type Detection,
@@ -187,38 +186,6 @@ export function useAIStateConnection() {
               useVisionStore.getState().setDetections(parsed, source);
               break;
             }
-            // ── Alt zaman çizelgesi (2026-07-30) ──
-            case 'task_started':
-              if (typeof data.name === 'string') {
-                useTimelineStore
-                  .getState()
-                  .taskStarted(data.name, String(data.args ?? ''), data.at);
-              }
-              break;
-            case 'task_finished':
-              if (typeof data.name === 'string') {
-                useTimelineStore
-                  .getState()
-                  .taskFinished(
-                    data.name,
-                    Boolean(data.success),
-                    String(data.message ?? ''),
-                    data.at,
-                  );
-              }
-              break;
-            case 'debug':
-              if (typeof data.text === 'string') {
-                useTimelineStore
-                  .getState()
-                  .appendDebug(data.text, String(data.level ?? 'INFO'), data.at);
-              }
-              break;
-            case 'reasoning':
-              if (typeof data.text === 'string') {
-                useTimelineStore.getState().appendReasoning(data.text, data.at);
-              }
-              break;
             case 'mic_level':
               if (typeof data.level === 'number') useMicStore.getState().pushLevel(data.level);
               break;

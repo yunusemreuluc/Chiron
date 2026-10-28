@@ -12,11 +12,9 @@ import { OfficeView } from '@/components/office/OfficeView';
 import { Sidebar } from '@/components/Sidebar';
 import { SleepVeil } from '@/components/SleepVeil';
 import { TelemetryCard } from '@/components/TelemetryCard';
-import { Timeline } from '@/components/Timeline';
 import { TrayControl } from '@/components/TrayControl';
 import { VisionPanel } from '@/components/VisionPanel';
 import { useAIStateConnection } from '@/hooks/useAIStateConnection';
-import { useMouseParallax } from '@/hooks/useMouseParallax';
 import { useThinkingSound } from '@/hooks/useThinkingSound';
 import { fetchSettings } from '@/services/settingsApi';
 import { configureSfx, playSfx } from '@/services/sfxPlayer';
@@ -73,11 +71,6 @@ export function AppShell() {
     });
   }, []);
 
-  // Mouse Interaction: Depth, Parallax. Parallax ve
-  // boot-giriş animasyonu AYRI DOM düğümlerinde çalışıyor (ikisi de `transform`
-  // kullanıyor, aynı elemanda çakışırlardı) — bkz. aşağıdaki iç içe motion.div + ref yapısı.
-  const sidebarParallax = useMouseParallax<HTMLDivElement>(3);
-
   // Chiron uyurken HUD tamamen çekiliyor: geriye sadece karanlık ve çekirdeğin
   // sönük nefesi kalıyor (bkz. components/SleepVeil.tsx). Panelleri yalnızca
   // perdenin altında karartmak yetmezdi — cam yüzeyler blur'ları yüzünden
@@ -100,11 +93,10 @@ export function AppShell() {
         custom={PANEL_REVEAL_BASE_DELAY}
         initial="hidden"
         animate="visible"
-        className="app-shell__sidebar z-20"
+        className="app-shell__nav z-30"
       >
-        {/* Parallax yalnızca `transform` yazıyor (bkz. useMouseParallax), bu
-            yüzden uyku sönmesi aynı elemanda güvenle durabiliyor. */}
-        <div ref={sidebarParallax} className={`h-full w-full ${hudClass}`}>
+        {/* Sol alt: Ajanlar + Ayarlar (2026-10-29, tam boy ray kaldırıldı — bkz. Sidebar.tsx). */}
+        <div className={hudClass}>
           <Sidebar />
         </div>
       </motion.div>
@@ -151,19 +143,8 @@ export function AppShell() {
             konumlu kartlar hâlâ .app-shell__scene'e göre yerleşiyor. */}
         <div className={hudClass}>
           <LeftPanel />
-          {/* Zaman çizelgesi ve sohbet dock'u SÜREKLİ görünür olduğu için
-              açılış sahnelemesine dahil — önceden ilk kareden itibaren tam
-              görünürlerdi ve logo daha çıkmadan ekranda duruyorlardı.
-              (LeftPanel/NodeFocusCard yalnızca kullanıcı açınca geldiği için
-              sahnelemeye girmiyor.) */}
-          <motion.div
-            variants={fadeOnlyVariants}
-            custom={PANEL_REVEAL_BASE_DELAY + PANEL_REVEAL_STEP * 3}
-            initial="hidden"
-            animate="visible"
-          >
-            <Timeline />
-          </motion.div>
+          {/* Sohbet dock'u SÜREKLİ görünür olduğu için açılış sahnelemesine dahil.
+              Zaman çizelgesi 2026-10-29'da kullanıcı isteğiyle kaldırıldı. */}
           <motion.div
             variants={fadeOnlyVariants}
             custom={PANEL_REVEAL_BASE_DELAY + PANEL_REVEAL_STEP * 4}

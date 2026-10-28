@@ -14,10 +14,9 @@ yapıldığını** özetliyor.
 
 | Konum | Ne var |
 |---|---|
-| Sol kenar | Modül rayı (`Sidebar.tsx`) — Hafıza/Otomasyon/Ajanlar/Tarayıcı + ayarlar |
 | Sol üst | CHIRON imzası + canlı durum (`BrandBadge.tsx`) |
-| Sol, rayın yanı | Açılan modül paneli (`LeftPanel.tsx`) |
-| Sol alt | Zaman çizelgesi şeridi (`Timeline.tsx`) |
+| Sol, imzanın altı | Ayarlar paneli (`LeftPanel.tsx`) |
+| Sol alt | Ajanlar + Ayarlar düğmeleri (`Sidebar.tsx`) — sohbet dock'unun aynası |
 | Sağ üst | Telemetri şeridi + tepsi düğmesi (aynı satır) |
 | Sağ | Vision paneli, altında düğüm odak kartı |
 | Sağ alt | Sohbet dock'u (`AssistantDock.tsx`) |
@@ -147,6 +146,10 @@ dondurmak kamerayı bozuk gösterirdi; çözüm çerçevelerin 6 saniyede solmas
 
 ## Alt zaman çizelgesi
 
+> **Kaldırıldı (2026-10-29, kullanıcı isteği).** `Timeline.tsx` ve `timelineStore.ts` silindi;
+> backend `task_started`/`task_finished`/`debug`/`reasoning` olaylarını yayınlamaya devam ediyor,
+> arayüz artık dinlemiyor. Aşağısı tarihçe.
+
 Araç çağrıları + `debug` logları tek kronolojik akışta. `task_started` /
 `task_finished` olayları `events.py`'de tanımlıydı ama **hiçbir yerden
 yayınlanmıyordu**; 2026-07-30'da `main.py._execute_tool` içine bağlandı.
@@ -197,6 +200,10 @@ Perde düz siyah değil, **merkezi açık** radyal gradyan; tam opak olsa uygula
 çökmüş gibi görünürdü.
 
 ## Sol panel modülleri
+
+> **2026-10-29:** Hafıza, Otomasyon, Tarayıcı modülleri ve bildirim/profil düğmeleri kaldırıldı
+> ("boş olan şeyleri kaldır, ayarlar ve ajanlar kalsın"). Sol panelde yalnız Ayarlar var;
+> Ajanlar tam ekran ofis. Hafıza verisi hâlâ `backend/api/memory.py`'de. Aşağısı tarihçe.
 
 - **Hafıza** — `memory.json`'ı doğrudan okuyor (`backend/api/memory.py`), yani
   ses döngüsü kapalıyken de çalışıyor. Salt okunur: silme Chiron'a söylenerek
@@ -305,6 +312,9 @@ düşüyordu — fresnel kenarı parlak piksellere hâkim olduğu için mor duru
 sahnenin en soluk hâli oluyordu. Kenar mora boyanınca %22'ye çıktı.
 
 ## Sol ray
+
+> **Kaldırıldı (2026-10-29).** Yerine sol altta iki düğmelik cam çubuk; aktiflik hattı düğmenin
+> altında. `railHoverStore` ve imzanın geri çekilmesi gereksizleşti, silindi. Aşağısı tarihçe.
 
 Sadece ikon, hover olmadıkça etiket yok. Aktiflik göstergesi rayın **sol
 kenarında** kayan ince bir hat (`layoutId` ile modüller arasında akıyor).

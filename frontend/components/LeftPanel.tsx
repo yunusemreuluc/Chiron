@@ -1,19 +1,10 @@
 'use client';
 
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-  LuBrain,
-  LuGlobe,
-  LuSettings,
-  LuUsers,
-  LuWorkflow,
-  LuX,
-} from 'react-icons/lu';
+import { LuSettings, LuUsers, LuX } from 'react-icons/lu';
 import type { IconType } from 'react-icons';
 import { useNavigationStore, type ModuleId } from '@/stores/navigationStore';
-import { AutomationPanelContent } from './AutomationPanelContent';
 import { GlassPanel } from './GlassPanel';
-import { MemoryPanelContent } from './MemoryPanelContent';
 import { SettingsPanelContent } from './SettingsPanelContent';
 
 interface ModuleContent {
@@ -36,28 +27,10 @@ interface ModuleContent {
 // 2026-10-02: Ajanlar artık burada değil — tam ekran Ajan Ofisi açılıyor
 // (components/office/OfficeView.tsx). Kayıt aşağıda yalnız tip bütünlüğü için.
 const MODULE_CONTENT: Record<ModuleId, ModuleContent> = {
-  memory: {
-    title: 'Hafıza',
-    icon: LuBrain,
-    description: '',
-    content: MemoryPanelContent,
-  },
-  automation: {
-    title: 'Otomasyon',
-    icon: LuWorkflow,
-    description: '',
-    content: AutomationPanelContent,
-  },
   agents: {
     title: 'Ajanlar',
     icon: LuUsers,
     description: '',
-  },
-  browser: {
-    title: 'Tarayıcı',
-    icon: LuGlobe,
-    description:
-      'Chiron tarayıcıda adres açıp arama yapabiliyor ama bir oturum durumu tutmuyor — burada gösterilecek bir şey yok. Sayfa içi etkileşim eklenince burası da dolacak.',
   },
   settings: {
     title: 'Ayarlar',
@@ -83,11 +56,11 @@ export function LeftPanel() {
           exit={{ opacity: 0, x: -20, filter: 'blur(6px)' }}
           // Hız + yumuşama: paneller "açılmıyor", odağa giriyor (ease-out-quint).
           transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-          className="absolute top-28 left-[104px] z-30 w-[286px]"
+          className="absolute top-28 left-7 z-30 w-[286px]"
         >
           {/* NodeFocusCard ile aynı kart dili: mikro üst etiket + başlık, ince
               ayraç, uzun içerikte panel taşmasın diye kaydırılabilir gövde. */}
-          <GlassPanel variant="card" className="flex max-h-[calc(100dvh-160px)] flex-col p-4">
+          <GlassPanel variant="card" className="flex max-h-[calc(100dvh-232px)] flex-col p-4">
             <div className="flex items-start justify-between gap-2">
               <div className="flex items-center gap-2.5">
                 <span className="border-border-subtle flex h-7 w-7 items-center justify-center rounded-[9px] border bg-white/[0.04]">
