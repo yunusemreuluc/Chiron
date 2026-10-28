@@ -21,8 +21,8 @@ Obsidian kasa kaydı, `%LOCALAPPDATA%\Chiron` (ofis geçmişi birleştirildi), `
 bulundu ve düzeltildi (307b58a): Çıkış'tan sonra süreç executor iş parçacığında asılı kalıyordu → `os._exit(0)`.
 Chiron yeni yoldan açıldı, Gemini'ye bağlandı, `logs/chiron.log`.
 
-**Nerede kalındı:** Yeni mobil APK (`com.chiron.mobile`) telefona kurulmadı — eskisi kaldırılıp izinler yeniden
-verilecek. Uyandırma modeli hâlâ "Aıron" (Yunus Chiron/Daphne kayıtlarını uyandırmaya geçince alacak). CV PDF'i hâlâ
+**Nerede kalındı:** Yeni mobil APK (`com.chiron.mobile`) adb ile kuruldu, açıldı, çökme yok. Yunus izinleri
+verecek, PC'ye yeniden PIN'le bağlanacak; eski `com.airon.mobile` hâlâ telefonda, Yunus kaldıracak. Uyandırma modeli hâlâ "Aıron" (Yunus Chiron/Daphne kayıtlarını uyandırmaya geçince alacak). CV PDF'i hâlâ
 "Airon/33 araç". Marka tescili satışa çıkarken. Kapanış düzeltmesi bir sonraki Çıkış'ta canlı denenmeli.
 
 ## Oturum: 2026-10-27 — Komuta ekranı + süren sohbet + terminali devral
