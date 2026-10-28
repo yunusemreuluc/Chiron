@@ -19,6 +19,7 @@ from pydantic import BaseModel, Field
 from backend.api import system as system_api
 from backend.core import claude_jobs, commands, desktop_control, feature_requests, remote_auth
 from backend.core.ofis import WAITING, WORKING, office as office_state
+from backend.core.sohbet import SohbetError, sohbet
 from backend.websocket.manager import manager
 
 router = APIRouter(prefix="/api/remote", tags=["remote"])
@@ -517,6 +518,47 @@ async def acknowledge_feature_requests(body: FeatureRequestAck) -> dict:
     """Telefonun kullanıcıya haber verdiği istekleri işaretler."""
     updated = await asyncio.to_thread(feature_requests.mark_notified, body.numbers)
     return {"success": True, "message": "bildirimler güncellendi", "data": {"updated": updated}}
+
+
+# ── Telefondan sesli iş → Komuta sohbeti (2026-10-29) ─────────────────────────
+# Yunus: "Claude'a iş verdim gibi olmasın, hemen hallediyorum desin; Komuta'dan kopuk kalmasın."
+# Sesli Chiron'un işi ayrı bir tek seferlik iş değil, PC'deki son Komuta sohbetine yazılır
+# (aynı Claude oturumu sürer); telefondaki Komuta ekranı da aynı sohbeti gösterir.
+
+
+class KomutaTask(BaseModel):
+    text: str = Field(max_length=claude_jobs.MAX_TASK_CHARS)
+    new_topic: bool = False  # öncekiyle ilgisiz iş: yeni sohbet aç
+
+
+class KomutaAnswer(BaseModel):
+    job_id: str = Field(max_length=32)
+    approved: bool
+
+
+def _komuta_result(chat: dict) -> dict:
+    last = chat["messages"][-1] if chat.get("messages") else {}
+    return {"chat_id": chat["id"], "title": chat["title"], "job_id": last.get("job_id"), "status": last.get("status")}
+
+
+@router.post("/komuta")
+async def komuta_task(body: KomutaTask, response: Response) -> dict:
+    try:
+        chat = await asyncio.to_thread(sohbet.phone_task, body.text, body.new_topic)
+    except SohbetError as error:
+        response.status_code = 409
+        return {"success": False, "message": str(error), "data": {}}
+    return {"success": True, "message": "İş başladı.", "data": _komuta_result(chat)}
+
+
+@router.post("/komuta/onay")
+async def komuta_answer(body: KomutaAnswer, response: Response) -> dict:
+    try:
+        chat = await asyncio.to_thread(sohbet.answer_job, body.job_id, body.approved)
+    except SohbetError as error:
+        response.status_code = 409
+        return {"success": False, "message": str(error), "data": {}}
+    return {"success": True, "message": "Cevap iletildi.", "data": _komuta_result(chat)}
 
 
 # ── Telefondan Claude Code'a iş (Faz 1, 2026-10-03) ──────────────────────────

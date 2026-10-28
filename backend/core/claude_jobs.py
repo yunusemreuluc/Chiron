@@ -90,8 +90,17 @@ force push, Drive/Etsy yüklemesi, git push) O ADIMI YAPMA. Oraya kadar hazırla
 - Cevapların Türkçe, kısa ve doğrudan olsun.
 """
 
-ORIGINS = ("telefon", "pano", "sohbet")
-NOTES = {"telefon": SYSTEM_NOTE, "pano": PANO_NOTE, "sohbet": CHAT_NOTE}
+# Aynı sohbet, mesaj telefondan (Komuta ekranı ya da sesli Chiron, 2026-10-29). Oturum PC'deki
+# Komuta sohbetiyle ortak; fark: sonuç telefona bildirilir ve sesli okunabilir.
+CHAT_PHONE_NOTE = CHAT_NOTE + """\
+- Bu mesaj Yunus'un TELEFONUNDAN geldi; PC başında değil. Son mesajın telefonda sesli okunabilir: \
+düz cümleler, tablo/kod bloğu/uzun yol listesi yok; ne yaptın, sonuç ne, Yunus'un yapması gereken bir şey var mı.
+"""
+
+ORIGINS = ("telefon", "pano", "sohbet", "sohbet_tel")
+NOTES = {"telefon": SYSTEM_NOTE, "pano": PANO_NOTE, "sohbet": CHAT_NOTE, "sohbet_tel": CHAT_PHONE_NOTE}
+# Sonucu telefona haber verilen kaynaklar (diğerleri PC'de, kartta / Komuta'da okunuyor).
+PHONE_ORIGINS = ("telefon", "sohbet_tel")
 MAX_TRAIL = 30  # iş başına saklanan araç adımı satırı (sohbette "ne yaptı" listesi)
 
 # Motorlar (Ajan İstasyonu adım 4, 2026-10-26): pano kartı Claude'a, Codex'e ya da
@@ -137,7 +146,7 @@ class Job:
     error: str = ""
     cost_usd: float | None = None
     notified: bool = False  # sonucu telefona söylendi mi (bkz. updates/acknowledge)
-    origin: str = "telefon"  # telefon | pano — sistem notunu ve telefona bildirimi belirler
+    origin: str = "telefon"  # telefon | pano | sohbet | sohbet_tel — sistem notunu ve telefona bildirimi belirler
     cwd: str | None = None  # Claude'un açıldığı klasör; boşsa WORK_DIR (pano kartının worktree'si)
     engine: str = "claude"  # claude | codex | gemini
     mode: str = "auto"  # Claude izin modu: auto | plan (salt okunur, lider ajan)
@@ -441,10 +450,10 @@ class ClaudeJobs:
                     raise ValueError("O iş hâlâ sürüyor; bitince devam ettirilebilir.")
             if len(self._queue) >= MAX_QUEUE:
                 raise ValueError("Kuyruk dolu; önceki işler bitsin.")
-            # Panonun işi telefona haber verilmez: sonuç kartta okunuyor.
+            # Pano ve PC'deki Komuta işi telefona haber verilmez: sonuç kartta / sohbette okunuyor.
             job = Job(
                 id=secrets.token_hex(4), task=task, resume_of=resume_of, origin=origin,
-                notified=origin != "telefon", cwd=cwd, engine=engine, mode=mode,
+                notified=origin not in PHONE_ORIGINS, cwd=cwd, engine=engine, mode=mode,
             )
             if parent:
                 job.session_id = parent.session_id

@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 from typing import Callable
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Request, Response
 from pydantic import BaseModel, Field
 
 from backend.core.sohbet import MAX_TEXT, MAX_TITLE, SohbetError, sohbet
@@ -75,14 +75,21 @@ async def get_chat(chat_id: str, response: Response) -> dict:
     return await _run(response, lambda: sohbet.get(chat_id))
 
 
+def _via(request: Request) -> str:
+    # Uzak istemci = telefon (PIN oturumu). Sonucu telefona bildirilecek mi, buna bakılıyor.
+    return "telefon" if getattr(request.state, "remote", False) else "pc"
+
+
 @router.post("/{chat_id}/mesaj")
-async def send_message(chat_id: str, body: ChatMessage, response: Response) -> dict:
-    return await _run(response, lambda: sohbet.send(chat_id, body.text))
+async def send_message(chat_id: str, body: ChatMessage, request: Request, response: Response) -> dict:
+    via = _via(request)
+    return await _run(response, lambda: sohbet.send(chat_id, body.text, via))
 
 
 @router.post("/{chat_id}/onay")
-async def answer(chat_id: str, body: ChatAnswer, response: Response) -> dict:
-    return await _run(response, lambda: sohbet.answer(chat_id, body.approved))
+async def answer(chat_id: str, body: ChatAnswer, request: Request, response: Response) -> dict:
+    via = _via(request)
+    return await _run(response, lambda: sohbet.answer(chat_id, body.approved, via))
 
 
 @router.post("/{chat_id}/durdur")

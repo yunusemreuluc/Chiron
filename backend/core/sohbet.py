@@ -217,7 +217,9 @@ class Sohbet:
             self._save()
         return self.get(chat["id"])
 
-    def send(self, chat_id: str, text: str) -> dict[str, Any]:
+    def send(self, chat_id: str, text: str, via: str = "pc") -> dict[str, Any]:
+        """`via="telefon"`: mesaj telefondan (Komuta ekranı ya da sesli Chiron) — sonuç telefona
+        bildirilir, ajan cevabını sesli okunacak gibi yazar."""
         text = (text or "").strip()
         if not text:
             raise SohbetError("Mesaj boş.")
@@ -232,7 +234,7 @@ class Sohbet:
             try:
                 job = self.jobs.submit(
                     task,
-                    origin="sohbet",
+                    origin="sohbet_tel" if via == "telefon" else "sohbet",
                     cwd=chat.get("cwd"),
                     engine=chat["agent"],
                     session_id=chat.get("session_id") if chat["agent"] == "claude" else None,
@@ -242,7 +244,7 @@ class Sohbet:
             now = self.clock()
             if chat["title"] == "Yeni sohbet":
                 chat["title"] = " ".join(text.split())[:MAX_TITLE]
-            chat["messages"].append({"role": "ben", "text": text, "at": now})
+            chat["messages"].append({"role": "ben", "text": text, "at": now, "via": via})
             chat["messages"].append(
                 {"role": "ajan", "text": "", "at": now, "job_id": job.id, "status": "sirada", "steps": [], "last_step": ""}
             )
@@ -251,7 +253,7 @@ class Sohbet:
             self._save()
         return self.get(chat_id)
 
-    def answer(self, chat_id: str, approved: bool) -> dict[str, Any]:
+    def answer(self, chat_id: str, approved: bool, via: str = "pc") -> dict[str, Any]:
         """Onay bekleyen son mesaja cevap: aynı oturuma "onaylıyorum / onaylamıyorum" yazar."""
         with self._lock:
             chat = self._find(chat_id)
@@ -259,7 +261,37 @@ class Sohbet:
             last = chat["messages"][-1] if chat["messages"] else None
             if not last or last.get("status") != "onay":
                 raise SohbetError("Onay bekleyen bir adım yok.")
-        return self.send(chat_id, APPROVE_TEXT if approved else REJECT_TEXT)
+        return self.send(chat_id, APPROVE_TEXT if approved else REJECT_TEXT, via)
+
+    # ── Telefondan sesli iş (2026-10-29) ────────────────────────────────
+    def phone_task(self, text: str, new_topic: bool = False) -> dict[str, Any]:
+        """Sesli Chiron'un verdiği iş: Komuta'daki son Claude sohbetine yazılır, yani PC'de
+        konuşulan işin devamı olur. `new_topic` ya da hiç sohbet yoksa yeni sohbet açılır.
+        Son sohbet meşgulse hata — telefon "önceki iş sürüyor" der, yeni konu diye açtırabilir."""
+        with self._lock:
+            target = None
+            if not new_topic:
+                claude_chats = [c for c in self._chats.values() if c["agent"] == "claude"]
+                target = max(claude_chats, key=lambda c: c["updated"], default=None)
+            if target is not None:
+                self._sync(target)
+                live = next((m for m in reversed(target["messages"]) if m.get("status") in LIVE), None)
+                if live is not None:
+                    step = live.get("last_step") or "başlıyor"
+                    raise SohbetError(f"'{target['title']}' sohbetinde önceki iş hâlâ sürüyor ({step}).")
+            chat_id = target["id"] if target else self.create("claude")["id"]
+        return self.send(chat_id, text, via="telefon")
+
+    def answer_job(self, job_id: str, approved: bool) -> dict[str, Any]:
+        """Telefondaki onay cevabı iş kimliğiyle gelir: o işin sohbetini bulup aynı oturumu sürdürür."""
+        with self._lock:
+            chat = next(
+                (c for c in self._chats.values() if any(m.get("job_id") == job_id for m in c["messages"])),
+                None,
+            )
+            if chat is None:
+                raise SohbetError("Bu iş bir sohbete ait değil.")
+        return self.answer(chat["id"], approved, via="telefon")
 
     def stop(self, chat_id: str) -> dict[str, Any]:
         with self._lock:

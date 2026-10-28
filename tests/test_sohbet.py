@@ -112,6 +112,55 @@ def test_approval_answer_continues_session(tmp_path):
         store.answer(chat["id"], approved=False)  # artık bekleyen onay yok
 
 
+def test_phone_task_continues_last_claude_chat(tmp_path):
+    """Sesli Chiron'un işi PC'deki son Komuta sohbetine düşer; sonuç telefona bildirilir."""
+    store, jobs = _setup(tmp_path)
+    old = store.create("claude", title="Eski")
+    store.send(old["id"], "bir")
+    jobs.finish("j1", session_id="aaaa-1111")
+    last = store.create("claude", title="Dilcep")
+    store.send(last["id"], "alt barı yap")
+    jobs.finish("j2", session_id="bbbb-2222")
+    store.create("gemini", title="Gemini")  # Claude sohbeti değil, hedef olmaz
+
+    chat = store.phone_task("butonu kırmızı yap")
+    assert chat["id"] == last["id"]
+    assert jobs.calls[-1]["origin"] == "sohbet_tel" and jobs.calls[-1]["session_id"] == "bbbb-2222"
+    assert chat["messages"][-2]["via"] == "telefon"
+
+    with pytest.raises(SohbetError, match="sürüyor"):
+        store.phone_task("bir de şunu")  # son sohbet meşgul
+    fresh = store.phone_task("Etsy listesini çıkar", new_topic=True)
+    assert fresh["id"] not in (old["id"], last["id"]) and jobs.calls[-1]["session_id"] is None
+
+
+def test_phone_task_without_chats_opens_one_and_answer_job(tmp_path):
+    store, jobs = _setup(tmp_path)
+    chat = store.phone_task("dalı gönder")
+    assert chat["title"] == "dalı gönder" and jobs.calls[0]["origin"] == "sohbet_tel"
+    jobs.finish("j1", status="needs_approval", approval="git push", session_id="cafe-0002")
+
+    store.answer_job("j1", approved=True)
+    assert jobs.calls[1] == {"task": APPROVE_TEXT, "origin": "sohbet_tel", "cwd": None,
+                             "engine": "claude", "session_id": "cafe-0002"}
+    with pytest.raises(SohbetError):
+        store.answer_job("yok", approved=True)
+
+
+def test_phone_chat_jobs_notify_phone(tmp_path):
+    """sohbet_tel işi telefona bildirilir; PC'deki Komuta işi bildirilmez."""
+    jobs = claude_jobs.ClaudeJobs(jobs_dir=tmp_path / "jobs", launcher=lambda job, log: None)
+    jobs._closed = False
+    with jobs._lock:
+        for origin in ("sohbet", "sohbet_tel"):
+            job = claude_jobs.Job(id=origin, task="x", origin=origin,
+                                  notified=origin not in claude_jobs.PHONE_ORIGINS)
+            job.status = "done"
+            jobs._jobs[job.id] = job
+    assert [j["id"] for j in jobs.updates()] == ["sohbet_tel"]
+    assert "TELEFONUNDAN" in claude_jobs.NOTES["sohbet_tel"]
+
+
 def test_gemini_chat_carries_context_not_session(tmp_path):
     store, jobs = _setup(tmp_path)
     chat = store.create("gemini")
