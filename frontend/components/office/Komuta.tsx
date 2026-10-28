@@ -52,16 +52,16 @@ interface Member {
 }
 
 const CREW: Member[] = [
-  { id: 'jarvis', name: 'Jarvis', model: 'Claude · lider', color: '#7aa2ff', desks: ['claude'], chat: 'claude' },
+  { id: 'jarvis', name: 'Chiron', model: 'Claude · lider', color: '#7aa2ff', desks: ['claude'], chat: 'claude' },
   { id: 'gemini', name: 'Gemini', model: 'gemini-3.8-flash · yalnız okur', color: '#b794f6', desks: ['gemini'], chat: 'gemini' },
   {
     id: 'alt',
     name: 'Alt ajan',
-    model: 'Claude · Jarvis’in ekibi',
+    model: 'Claude · Chiron’un ekibi',
     color: '#f0a6e8',
     desks: ['subagents'],
     chat: null,
-    lock: 'Alt ajana doğrudan yazılmaz — işini Jarvis böler ve verir.',
+    lock: 'Alt ajana doğrudan yazılmaz — işini Chiron böler ve verir.',
   },
   {
     id: 'terra',
@@ -182,7 +182,7 @@ export function Komuta() {
     [loadChats],
   );
 
-  /** Terminalden devralınan sohbet: Jarvis'in sohbeti olarak aç. */
+  /** Terminalden devralınan sohbet: Chiron'un sohbeti olarak aç. */
   const adopt = (c: Chat) => {
     picked.current = true;
     setMemberId('jarvis');
@@ -780,7 +780,7 @@ function Pending({
           {queue.map((c) => (
             <li key={c.id}>
               <span>{c.title}</span>
-              <span className="komuta-queue__who">{c.agent === 'gemini' ? 'Gemini' : c.agent === 'codex' ? 'Terra' : 'Jarvis'}</span>
+              <span className="komuta-queue__who">{c.agent === 'gemini' ? 'Gemini' : c.agent === 'codex' ? 'Terra' : 'Chiron'}</span>
             </li>
           ))}
         </ul>

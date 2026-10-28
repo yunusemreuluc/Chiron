@@ -30,7 +30,7 @@ import {
 
 // Ajan İstasyonu sahnesi (adım 5, 2026-10-26) — 3D hologram ofisin yerine.
 // Karakterler ofisin GERÇEK verisinden yürür (backend/core/ofis.py masaları):
-//   Jarvis ← claude · Terra ← sol/astra (Codex) · Gemini ← gemini · Alt ajan ← subagents
+//   Chiron ← claude · Terra ← sol/astra (Codex) · Gemini ← gemini · Alt ajan ← subagents
 // Masa çalışıyorsa konsoluna gider ve yazar, onay bekliyorsa onay terminaline gider,
 // boşta ise dinlenme kapsülüne döner. Terra'nın kotası doluyken kapsülde uyur.
 //
@@ -55,7 +55,7 @@ interface Member {
 // Ev konumları dinlenme kapsülünün önünde, dikeyde ≥1,5 birim aralıklı: isim etiketleri
 // (22 px yukarıda) üst üste binmesin (ilk ekran görüntüsünde biniyordu).
 const CREW: Member[] = [
-  { id: 'jarvis', name: 'Jarvis', look: 'captain', color: '#7aa2ff', desks: ['claude'], home: seat('jarvis') },
+  { id: 'jarvis', name: 'Chiron', look: 'captain', color: '#7aa2ff', desks: ['claude'], home: seat('jarvis') },
   { id: 'terra', name: 'Terra', look: 'robot', color: '#4fd1c5', desks: ['sol', 'astra'], home: { x: -5.4, z: -1.9 } },
   { id: 'gemini', name: 'Gemini', look: 'alien', color: '#b794f6', desks: ['gemini'], home: { x: -6.1, z: -0.4 } },
   { id: 'alt', name: 'Alt ajan', look: 'astro', color: '#f0a6e8', desks: ['subagents'], home: { x: -6.0, z: 1.2 } },

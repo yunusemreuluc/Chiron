@@ -8,13 +8,13 @@ Ne yapar (her TICK_SECONDS'ta bir, yalnız açıkken):
 - `pano.snapshot()` — kartları iş kuyruğuyla eşitler, bekleyen doğrulamayı (commit + test) tetikler.
   Arayüz kapalıyken de proje kartları ilerlesin diye; önceden doğrulama yalnız arayüz yoklayınca koşuyordu.
 - Hiçbir kart çalışmıyorsa "Bekliyor" sütununun EN ESKİ başlatılabilir kartını başlatır. Tek seferde tek iş
-  (claude_jobs kuralıyla aynı: iki tam yetkili ajan aynı anda yazmasın). Jarvis'in alt kartları `after`
+  (claude_jobs kuralıyla aynı: iki tam yetkili ajan aynı anda yazmasın). Chiron'un alt kartları `after`
   sırasıyla kendiliğinden yürür.
 - Claude kotası `stop` basamağındaysa Claude kartlarını atlar; pencere sıfırlanınca kota şeridi düşer ve
   döngü kendiliğinden devam eder. Codex kotası doluysa Codex kartları atlanır.
 - Her sabah RAPOR_SAATI'nde son rapordan beri olanları yazar (`logs/dongu/rapor-YYYY-MM-DD.md` + Pano).
 
-Ne YAPMAZ (bilinçli): kart bölmez (Jarvis'e böldürmek Yunus'un kararı), hata veren kartı yeniden denemez
+Ne YAPMAZ (bilinçli): kart bölmez (Chiron'a böldürmek Yunus'un kararı), hata veren kartı yeniden denemez
 (kotayı aynı hatada yakmasın), onay/birleştirme vermez — o kartlar Yunus'u bekler, döngü diğerleriyle sürer.
 
 Maliyet: tik yereldir (dosya + bellek), API çağrısı yok — ekran bekçisi dersi (Bilinen-Tuzaklar § Kotayı

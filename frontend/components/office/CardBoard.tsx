@@ -54,7 +54,7 @@ const STATUS_TEXT: Record<CardStatus, string> = {
   hata: 'Hata',
   dogrulaniyor: 'Test ediliyor',
   birlestir: 'Birleştirme onayı',
-  planlaniyor: 'Jarvis planlıyor',
+  planlaniyor: 'Chiron planlıyor',
   bolundu: 'Bölündü',
 };
 
@@ -536,7 +536,7 @@ function Composer({ run, codexUntil }: { run: Run; codexUntil: number | null }) 
         aria-label="Kart ayrıntısı"
       />
       <label className="pano-field" htmlFor="pano-agent">
-        <span className="label-micro">Kim yapsın · büyük işi Jarvis&apos;e böldürebilirsin</span>
+        <span className="label-micro">Kim yapsın · büyük işi Chiron&apos;a böldürebilirsin</span>
         <select id="pano-agent" value={agent} onChange={(e) => setAgent(e.target.value as CardAgent)}>
           <AgentOptions codexUntil={codexUntil} />
         </select>
@@ -623,7 +623,7 @@ function CardItem({
     : testing
       ? `${duration(now - card.updated)} · commit + test`
       : ago(card.updated, now);
-  // Bölünmüş/planlanan kartta özet Jarvis'in ham JSON'u — gösterilmez, plan listesi var.
+  // Bölünmüş/planlanan kartta özet Chiron'un ham JSON'u — gösterilmez, plan listesi var.
   const body = s === 'bolundu' || planning ? '' : plain(s === 'hata' ? card.error : card.summary);
   const repoName = card.repo ? card.repo.split(/[\\/]/).pop() : null;
 
@@ -647,7 +647,7 @@ function CardItem({
       <span className="office-task__meta">{meta}</span>
 
       <span className="office-task__chips pano-crew">
-        <span className={`pano-agent is-${agent}`}>{planning || s === 'bolundu' ? 'Jarvis' : AGENT_TEXT[agent]}</span>
+        <span className={`pano-agent is-${agent}`}>{planning || s === 'bolundu' ? 'Chiron' : AGENT_TEXT[agent]}</span>
         {card.parent && <span title="Bu kart bir planın parçası">↳ {card.parent}</span>}
         {blockedBy.length > 0 && <span className="is-wait">{blockedBy.join(', ')} bitince</span>}
       </span>
@@ -762,7 +762,7 @@ function CardItem({
           )}
           {s === 'bekliyor' && !card.parent && (
             <button type="button" className="pano-btn is-jarvis" disabled={busy} onClick={() => void act(() => planCard(card.id))}>
-              Jarvis&apos;e böldür
+              Chiron&apos;a böldür
             </button>
           )}
           {s === 'duraklatildi' && (

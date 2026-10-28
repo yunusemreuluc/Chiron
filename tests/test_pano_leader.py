@@ -123,7 +123,7 @@ def test_plan_submits_jarvis_and_applies_children_with_dependencies(tmp_path):
     assert jobs.engines == [("claude", "plan")]
     assert jobs.submissions[0]["origin"] == "pano"
     assert jobs.submissions[0]["cwd"] == str(repo)
-    assert "Jarvis" in jobs.submissions[0]["task"]
+    assert "Chiron" in jobs.submissions[0]["task"]
     assert top["title"] in jobs.submissions[0]["task"]
 
     jobs.set(planning["job_id"], status="done", summary=_plan_text())
@@ -208,7 +208,7 @@ def test_invalid_plan_marks_top_failed_without_children_and_retries(tmp_path, su
     failed = board.get(top["id"])
 
     assert failed["status"] == "hata"
-    assert failed["error"].startswith("Jarvis'in planı okunamadı")
+    assert failed["error"].startswith("Chiron'un planı okunamadı")
     assert failed["children"] == []
     retried = board.start(top["id"])
     assert retried["status"] == "planlaniyor"

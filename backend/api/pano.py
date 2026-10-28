@@ -144,8 +144,8 @@ async def start_card(card_id: str, response: Response) -> dict:
 
 @router.post("/{card_id}/plan")
 async def plan_card(card_id: str, response: Response) -> dict:
-    """Kartı lider ajan Jarvis'e böldürür (salt okunur Claude oturumu, JSON plan → alt kartlar)."""
-    return await _run(response, lambda: pano.plan(card_id), "Jarvis planlıyor.")
+    """Kartı lider ajan Chiron'a böldürür (salt okunur Claude oturumu, JSON plan → alt kartlar)."""
+    return await _run(response, lambda: pano.plan(card_id), "Chiron planlıyor.")
 
 
 @router.post("/{card_id}/pause")

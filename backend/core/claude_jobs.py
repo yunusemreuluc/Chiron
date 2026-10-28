@@ -56,6 +56,17 @@ KEEP_JOBS = 30
 MAX_LOG_BYTES = 20 * 1024 * 1024  # iş başına; aşan kısım loga yazılmaz, ayrıştırma sürer
 APPROVAL_MARKER = "ONAY_GEREKLI:"
 
+# Ekip (2026-10-29, Yunus: "ona iş verince alt ajanlarına başvuruyor mu"): iş kayıtlarında Agent aracı
+# hiç çağrılmamıştı — Dilcep tasarımı gibi büyük işleri tek başına sırayla yapıyordu. Lider gibi davranması
+# için böl-dağıt-birleştir kuralı. Codex 24.11.2026'ya kadar kotasız, bu yüzden ekip Claude alt ajanları.
+TEAM_NOTE = """\
+- Sen Chiron'sun, ekibin lideri. Birden çok bağımsız parçası olan büyük işte (birkaç ekran/modül, geniş \
+araştırma + uygulama) işi parçala ve Agent aracıyla alt ajanlara PARALEL ver: kod tabanında geniş arama için \
+Explore, birbirine dokunmayan uygulama parçaları için general-purpose. Aynı dosyaya iki alt ajan yazmasın. \
+Sonuçları kendin birleştir, testi kendin çalıştır, "bitti" demeden doğrula. Tek dosyalık ya da birkaç adımlık \
+küçük işte alt ajan açma, kendin yap.
+"""
+
 SYSTEM_NOTE = f"""\
 Bu iş Yunus'un telefonundan, Chiron üzerinden geldi. Yunus PC başında değil; \
 soru sorarsan cevabı ancak sonra, telefondan gelir.
@@ -65,7 +76,7 @@ force push, Drive/Etsy yüklemesi) O ADIMI YAPMA. Oraya kadar hazırla, sonra so
 "{APPROVAL_MARKER} <tek cümlede ne yapacağın>" satırıyla bitir ve dur.
 - Son mesajın telefonda sesli okunacak: Türkçe, kısa, düz cümleler; ne yaptın, sonuç ne, \
 Yunus'un yapması gereken bir şey var mı. Tablo, kod bloğu, uzun yol listesi yok.
-"""
+""" + TEAM_NOTE
 
 # Panodan (Chiron'un Ajan Ofisi, PC başında) başlatılan iş. Yunus ekranın başında
 # olabilir ya da olmayabilir; özet sesli okunmuyor, karta yazılıyor.
@@ -88,7 +99,7 @@ Bu mesaj Chiron'un sohbet ekranından geldi; Yunus seninle yazışıyor ve aynı
 force push, Drive/Etsy yüklemesi, git push) O ADIMI YAPMA. Oraya kadar hazırla, sonra son mesajını \
 "{APPROVAL_MARKER} <tek cümlede ne yapacağın>" satırıyla bitir ve dur; onayı Yunus bir sonraki mesajda verir.
 - Cevapların Türkçe, kısa ve doğrudan olsun.
-"""
+""" + TEAM_NOTE
 
 # Aynı sohbet, mesaj telefondan (Komuta ekranı ya da sesli Chiron, 2026-10-29). Oturum PC'deki
 # Komuta sohbetiyle ortak; fark: sonuç telefona bildirilir ve sesli okunabilir.
@@ -108,7 +119,7 @@ MAX_TRAIL = 30  # iş başına saklanan araç adımı satırı (sohbette "ne yap
 # Codex ve Gemini npm'in .cmd başlatıcısıyla DEĞİL, `node <betik>` ile çalışır ve görev
 # stdin'den gider — .cmd'ye argüman geçmek cmd.exe ayrıştırmasından geçiyor (BatBadBut).
 ENGINES = ("claude", "codex", "gemini")
-# Claude izin modu: "auto" iş yapar; "plan" salt okunur — lider ajan (Jarvis) yalnızca planlar.
+# Claude izin modu: "auto" iş yapar; "plan" salt okunur — lider ajan (Chiron) yalnızca planlar.
 MODES = ("auto", "plan")
 CODEX_MODEL = "gpt-5.6-terra"  # ChatGPT planı free (2026-10-11'den beri): Sol/Astra yok
 GEMINI_MODEL = "gemini-3.8-flash"

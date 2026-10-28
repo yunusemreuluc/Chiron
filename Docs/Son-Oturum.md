@@ -14,6 +14,7 @@ indir. Üç madde yeter; roman değil, köprü.
 (`/api/remote/komuta`, origin `sohbet_tel`, 3b619a3); Chiron "hallediyorum" diyor, Claude'dan söz etmiyor; telefonda
 Komuta ekranı (chiron-mobile 6bdbb90). Hızlı yol kapısı `UntrustedInput`: son 3 dk dışarıdan metin girdiyse eski sesli onay.
 **Arayüz (aynı oturum):** yan ray, zaman çizelgesi, bildirim/profil, Hafıza/Otomasyon/Tarayıcı kaldırıldı; sol altta yalnız Ajanlar + Ayarlar. `out` derlendi, açık pencere yenilenince görünür.
+**Ekip:** lider ajan adı Jarvis → Chiron; Komuta/telefon işlerine alt ajan kuralı (`TEAM_NOTE`) — kayıtlarda Agent hiç kullanılmamıştı. Ruflo kurulu değil (10-26 kararı: yalnız fikirleri alındı).
 **Nerede kalındı:** APK kuruldu, PC yeni kodla açık. Telefonda Komuta ekranı ve sesli hızlı yol Yunus'la denenmedi
 (Xiaomi adb dokunmaya izin vermiyor). Chiron 00:59'da log bırakmadan kapanmıştı (RAM %93, gradle derlemesi sırasında).
 `test_bekci::test_write_rules` basetemp `Temp\claude` altındayken düşüyor (bekçi orayı serbest sayıyor) — kod hatası değil.

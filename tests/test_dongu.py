@@ -98,7 +98,7 @@ def test_runs_oldest_ready_card_one_at_a_time(tmp_path):
 def test_dependencies_order_and_waiting_cards_do_not_block(tmp_path):
     board, jobs, loop, _ = _setup(tmp_path)
     loop.set_open(True)
-    a = board._new_card("A", "", None, None, "claude")  # Jarvis'in alt kartları gibi
+    a = board._new_card("A", "", None, None, "claude")  # Chiron'un alt kartları gibi
     b = board._new_card("B", "", None, None, "claude", after=[a["id"]])
     lone = board._new_card("Bağımsız", "", None, None, "claude")
     loop.tick()

@@ -27,8 +27,8 @@ commit'ler, test komutunu KENDİSİ koşar. Test geçerse `birlestir` (Yunus ona
     calisiyor ──bitti──> dogrulaniyor ──test geçti──> birlestir ──Birleştir──> bitti
                                      └──test kaldı──> hata          └──Reddet──> iptal
 
-Lider ajan Jarvis (adım 4, 2026-10-26): "Jarvis'e böldür" kartı salt okunur bir Claude
-oturumuna (`--permission-mode plan`) verir. Jarvis kartı ve projeyi okur, JSON plan yazar:
+Lider ajan Chiron (adım 4, 2026-10-26): "Chiron'a böldür" kartı salt okunur bir Claude
+oturumuna (`--permission-mode plan`) verir. Chiron kartı ve projeyi okur, JSON plan yazar:
 2-6 alt görev, her birinin ajanı (claude | codex | gemini) ve hangi görevden sonra geldiği.
 Pano planı alt kartlara çevirir; ana kart `bolundu` olur, alt kartların hepsi kapanınca kapanır.
 
@@ -80,7 +80,7 @@ WORKTREE_NOTE = """\
 - git commit, push ya da merge YAPMA: değişikliği Chiron commit'leyip test edecek, birleştirmeyi Yunus onaylayacak.
 - Test komutu: {test}. Bitirmeden önce kendin de çalıştır."""
 LEADER_NOTE = """\
-Sen Jarvis'sin: Yunus'un ajan ekibinin lideri. Bu oturum SALT OKUNUR; hiçbir dosyayı değiştirme,
+Sen Chiron'sun: Yunus'un ajan ekibinin lideri. Bu oturum SALT OKUNUR; hiçbir dosyayı değiştirme,
 komutla bir şey kurma ya da silme. Görevin aşağıdaki kartı okumak, gerekiyorsa projeyi incelemek ve
 işi ekibe bölen bir plan yazmak.
 
@@ -173,7 +173,7 @@ class Pano:
         self._cards: list[dict[str, Any]] = []
         self._next = 1
         # Codex (Terra) kotası dolduysa ne zamana kadar (epoch). Kota hatasından öğrenilir;
-        # o zamana kadar Jarvis ona görev vermez, codex kartı başlamaz.
+        # o zamana kadar Chiron ona görev vermez, codex kartı başlamaz.
         self._codex_blocked_until: float = 0.0
         self._load()
 
@@ -411,7 +411,7 @@ class Pano:
                     "kartın ajanını Claude'a çevir."
                 )
             if card.get("planning"):
-                # Jarvis'in planı yarıda kaldı ya da okunamadı: yeniden planlat.
+                # Chiron'un planı yarıda kaldı ya da okunamadı: yeniden planlat.
                 self._submit_plan(card)
                 self._commit()
                 return self._public(card)
@@ -432,7 +432,7 @@ class Pano:
             return self._public(card)
 
     def plan(self, card_id: str) -> dict[str, Any]:
-        """Kartı lider ajana (Jarvis) böldürür."""
+        """Kartı lider ajana (Chiron) böldürür."""
         with self._lock:
             card = self._require(card_id)
             self._reconcile(card)
@@ -680,17 +680,17 @@ class Pano:
         card["history"] = (card["history"] + [{"job_id": job.id, "kind": "planla", "at": card["updated"]}])[-MAX_HISTORY:]
 
     def _apply_plan(self, card: dict[str, Any], text: str) -> None:
-        """Jarvis'in JSON planını alt kartlara çevirir (kilit ALTINDA)."""
+        """Chiron'un JSON planını alt kartlara çevirir (kilit ALTINDA)."""
         try:
             plan = parse_plan(text)
         except ValueError as error:
-            card.update(status="hata", error=f"Jarvis'in planı okunamadı: {error}")
+            card.update(status="hata", error=f"Chiron'un planı okunamadı: {error}")
             return
         ids: list[str] = []
         context = f"(Bu, {card['id']} \"{card['title']}\" kartının parçası. Planın özeti: {plan['ozet']})"
         for task in plan["gorevler"]:
             if task["ajan"] == "codex" and not self._codex_ok():
-                task["ajan"] = "claude"  # Jarvis yine de verdiyse: kota dolu, Claude yapsın
+                task["ajan"] = "claude"  # Chiron yine de verdiyse: kota dolu, Claude yapsın
             child = self._new_card(
                 _clean(task["baslik"], MAX_TITLE),
                 _clean(f"{task['ayrinti']}\n\n{context}", MAX_DETAIL),
@@ -818,7 +818,7 @@ class Pano:
 
 
 def parse_plan(text: str) -> dict[str, Any]:
-    """Jarvis'in son mesajından planı çıkarır ve doğrular. Bozuksa ValueError (kart `hata`ya düşer).
+    """Chiron'un son mesajından planı çıkarır ve doğrular. Bozuksa ValueError (kart `hata`ya düşer).
 
     Son ```json bloğu, yoksa ilk `{` ile son `}` arası. Ajan bilinmiyorsa claude; "sonra" yalnız
     kendinden ÖNCEKİ görevleri gösterebilir (döngü olmasın).
