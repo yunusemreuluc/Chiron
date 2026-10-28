@@ -467,9 +467,63 @@ class TrayController:
         self._window.show()
 
     def _quit(self, *_args) -> None:
+        # Onay ikon kaldırılmadan ÖNCE: "Hayır" denince Chiron tepside kalmalı.
+        if not QuitGuard.confirm():
+            return
         self._clear_icon()
         speaking_overlay.shutdown()
         self._window.destroy()
+
+
+class QuitGuard:
+    """Çalışan iş varken kapatmadan önce sorar.
+
+    NEDEN (2026-10-29): Komuta'da Dilcep işi sürerken Chiron kapatılmış, iş "Chiron kapandığı
+    için iş yarıda kaldı" diye kesilmişti. İşler backend sürecinin çocukları; pencere kapanınca
+    onlar da ölüyor. Hem pencerenin X'i hem tepsideki Çıkış buradan geçer; tepsi zaten sorduysa
+    ardından gelen `closing` olayı ikinci kez sormaz.
+    """
+
+    _confirmed = False
+
+    @classmethod
+    def _active_jobs(cls) -> int:
+        # Yalnızca backend BU süreçte çalışıyorsa: modül hiç yüklenmediyse backend dışarıda
+        # (WEB-BASLAT.bat) ve pencere kapanınca işler sürmeye devam eder. Burada import etmek
+        # ClaudeJobs'u ikinci kez kurar, o da diskteki süren işleri "interrupted" yapardı.
+        module = sys.modules.get("backend.core.claude_jobs")
+        if module is None:
+            return 0
+        try:
+            return module.jobs.active_count()
+        except Exception:
+            logging.getLogger("chiron").debug("İş sayısı okunamadı", exc_info=True)
+            return 0
+
+    @classmethod
+    def confirm(cls) -> bool:
+        if cls._confirmed:
+            return True
+        count = cls._active_jobs()
+        if count == 0:
+            return True
+        import ctypes
+
+        MB_OKCANCEL, MB_ICONWARNING, MB_DEFBUTTON2, MB_TOPMOST, IDOK = 0x1, 0x30, 0x100, 0x40000, 1
+        answer = ctypes.windll.user32.MessageBoxW(
+            None,
+            f"{count} iş hâlâ çalışıyor (Komuta / Pano).\n\n"
+            "Chiron kapanırsa iş yarıda kalır. Yine de kapatılsın mı?",
+            "Chiron",
+            MB_OKCANCEL | MB_ICONWARNING | MB_DEFBUTTON2 | MB_TOPMOST,
+        )
+        cls._confirmed = answer == IDOK
+        return cls._confirmed
+
+    @classmethod
+    def on_closing(cls) -> bool:
+        # pywebview: closing işleyicisi False dönerse kapanma iptal edilir.
+        return cls.confirm()
 
 
 def _start_voice_assistant() -> None:
@@ -607,6 +661,8 @@ def main() -> int:
         background_color=WINDOW_BACKGROUND,
         text_select=False,  # HUD'da metin seçimi imleci arayüzü "belge" gibi gösteriyor
     )
+    # Onay geometri kaydından ÖNCE: sırayla çağrılıyorlar, iptal edilse de kayıt zararsız.
+    window.events.closing += QuitGuard.on_closing
     WindowGeometry(window).bind()
     # İkon pencere GÖRÜNDÜKTEN sonra ayarlanıyor: HWND ancak o zaman var.
     window.events.shown += _apply_window_icon

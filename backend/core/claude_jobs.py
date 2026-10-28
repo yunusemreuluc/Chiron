@@ -477,6 +477,11 @@ class ClaudeJobs:
             jobs = sorted(self._jobs.values(), key=lambda j: j.created_at, reverse=True)
             return [j.public() for j in jobs[:limit]]
 
+    def active_count(self) -> int:
+        """Kuyrukta bekleyen + çalışan iş sayısı (Çıkış onayı bununla soruluyor)."""
+        with self._lock:
+            return sum(1 for j in self._jobs.values() if j.status in ACTIVE)
+
     def updates(self) -> list[dict[str, Any]]:
         """Telefona henüz söylenmemiş sonuçlar, eskiden yeniye."""
         with self._lock:
