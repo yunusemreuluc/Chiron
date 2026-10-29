@@ -83,8 +83,12 @@ APP_USER_MODEL_ID = "Chiron.Desktop"
 # 1366 en dar hedef). Minimum boyut bunun altına inmeyi engelliyor ki yerleşim
 # hiç bozulmasın.
 WINDOW_TITLE = "Chiron"
-WINDOW_SIZE = (1600, 950)
-WINDOW_MIN_SIZE = (1280, 800)
+# Ekrandan büyük başlangıç boyutu WinForms penceresini "büyütülmüş" işaretliyordu (ölçüldü: küçük ama IsZoomed)
+# — F11 dönüşünde ve büyüt düğmesinde pencere sıçrıyordu. Gerçek boyutu apply_saved verir.
+WINDOW_SIZE = (960, 620)
+# pywebview birimi ölçeklemeyle büyür: %125'te 1280x800 → 1600x1000 fiziksel, 1920x1080 ekranın %83'ü. Kullanıcı
+# "açılışta küçük olsun" dedi (2026-10-29); pencere bundan küçülemiyordu.
+WINDOW_MIN_SIZE = (880, 560)
 # app/globals.css'teki --background ile aynı: pencere açılırken WebGL sahnesi
 # hazır olana kadar beyaz bir kare parlamasın.
 WINDOW_BACKGROUND = "#05070C"
@@ -140,8 +144,8 @@ def _visible_bounds() -> tuple[int, int]:
 # İlk açılış boyutu — ekranın oranı olarak. Sabit piksel yazmak farklı
 # çözünürlükte ya bir kenara sıkışır ya taşardı; bu oran 1920x1080'de kullanıcının
 # istediği görünümü (ekran görüntüsündeki pencere) veriyor.
-DEFAULT_WIDTH_RATIO = 0.82
-DEFAULT_HEIGHT_RATIO = 0.89
+DEFAULT_WIDTH_RATIO = 0.6
+DEFAULT_HEIGHT_RATIO = 0.7
 
 
 class WindowGeometry:
@@ -158,7 +162,6 @@ class WindowGeometry:
 
     _SWP_NOZORDER = 0x0004
     _SWP_NOACTIVATE = 0x0010
-    _SW_MAXIMIZE = 3
 
     def __init__(self, window) -> None:
         self._window = window
@@ -173,6 +176,29 @@ class WindowGeometry:
             return self._hwnd
         self._hwnd = ctypes.windll.user32.FindWindowW(None, WINDOW_TITLE) or None
         return self._hwnd
+
+    @staticmethod
+    def _normal_rect(hwnd) -> tuple[int, int, int, int] | None:
+        """Pencerenin NORMAL (büyütülmemiş) dikdörtgeni: büyütülmüşken GetWindowRect ekranı verirdi."""
+        import ctypes
+        from ctypes import wintypes
+
+        class WINDOWPLACEMENT(ctypes.Structure):
+            _fields_ = [("length", wintypes.UINT), ("flags", wintypes.UINT), ("showCmd", wintypes.UINT),
+                        ("ptMinPosition", wintypes.POINT), ("ptMaxPosition", wintypes.POINT),
+                        ("rcNormalPosition", wintypes.RECT)]
+
+        if not ctypes.windll.user32.IsZoomed(hwnd):
+            return WindowGeometry._rect(hwnd)
+        placement = WINDOWPLACEMENT()
+        placement.length = ctypes.sizeof(WINDOWPLACEMENT)
+        if not ctypes.windll.user32.GetWindowPlacement(hwnd, ctypes.byref(placement)):
+            return None
+        rc = placement.rcNormalPosition
+        # Büyütülmüş açılmış bir pencerenin normal dikdörtgeni anlamsız küçük olabilir (ölçüldü: 133x38).
+        if rc.right - rc.left < 400 or rc.bottom - rc.top < 300:
+            return None
+        return rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top
 
     @staticmethod
     def _rect(hwnd) -> tuple[int, int, int, int] | None:
@@ -203,10 +229,8 @@ class WindowGeometry:
         state = _load_window_state()
         screen_width, screen_height = _visible_bounds()
 
-        # Kayıt yoksa büyütülmüş (2026-10-29, kullanıcı: "şu an ekrandaki boyutuyla açılsın").
-        if state.get("maximized", True):
-            ctypes.windll.user32.ShowWindow(hwnd, self._SW_MAXIMIZE)
-            return
+        # Her zaman normal pencere (2026-10-29, kullanıcı: "açılışta küçük olsun, büyük değil"); büyütülmüş
+        # kapatılsa da son NORMAL boyutla açılır (save → yerleşimin normal dikdörtgeni). Büyük istenirse F11.
 
         width = int(state.get("width") or screen_width * DEFAULT_WIDTH_RATIO)
         height = int(state.get("height") or screen_height * DEFAULT_HEIGHT_RATIO)
@@ -236,13 +260,11 @@ class WindowGeometry:
         if not hwnd:
             return
         try:
-            state: dict = {"maximized": bool(ctypes.windll.user32.IsZoomed(hwnd))}
-            if not state["maximized"]:
-                measured = self._rect(hwnd)
-                if measured is None:
-                    return
-                x, y, width, height = measured
-                state.update({"x": x, "y": y, "width": width, "height": height})
+            measured = self._normal_rect(hwnd)
+            if measured is None:
+                return
+            x, y, width, height = measured
+            state: dict = {"x": x, "y": y, "width": width, "height": height}
             WINDOW_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
             WINDOW_STATE_PATH.write_text(json.dumps(state, indent=2), encoding="utf-8")
         except Exception:
@@ -329,6 +351,38 @@ class FullscreenToggle:
                 user32.SetWindowPos(hwnd, None, 0, 0, 0, 0,
                                     self._SWP_NOMOVE | self._SWP_NOSIZE | self._SWP_NOZORDER
                                     | self._SWP_NOOWNERZORDER | self._SWP_FRAMECHANGED)
+
+
+def _watch_fullscreen_keys(geometry: "WindowGeometry", fullscreen: FullscreenToggle) -> None:
+    """F11 (ve tam ekrandayken Esc) — Chiron penceresi öndeyken Windows'tan okunur.
+
+    NEDEN sayfada değil (2026-10-29, ölçüldü): sayfadaki keydown dinleyicisi Playwright'ta F11 ile API'yi
+    çağırıp pencereyi tam ekrana aldı, ama Chiron'un kendi WebView2 penceresinde F11 sayfaya hiç ulaşmadı.
+    Burada tuş durumu 50 ms'de bir yoklanıyor (GetAsyncKeyState, yalnız basılma anı); başka uygulama öndeyken
+    hiçbir şey yapmaz, yani F11'i kimseden çalmaz.
+    """
+    import ctypes
+
+    user32 = ctypes.windll.user32
+    VK_F11, VK_ESCAPE = 0x7A, 0x1B
+
+    def loop() -> None:
+        was_down = {VK_F11: False, VK_ESCAPE: False}
+        while True:
+            time.sleep(0.05)
+            try:
+                hwnd = geometry._handle()
+                focused = bool(hwnd) and user32.GetForegroundWindow() == hwnd
+                for key in (VK_F11, VK_ESCAPE):
+                    down = bool(user32.GetAsyncKeyState(key) & 0x8000)
+                    pressed = down and not was_down[key]
+                    was_down[key] = down
+                    if pressed and focused and (key == VK_F11 or fullscreen.active):
+                        fullscreen.toggle()
+            except Exception:
+                logging.getLogger("chiron").debug("Tam ekran tuşu okunamadı", exc_info=True)
+
+    threading.Thread(target=loop, name="chiron-f11", daemon=True).start()
 
 
 # ── Pencere kimliği ve ikonu ────────────────────────────────────────────────
@@ -739,9 +793,6 @@ def main() -> int:
         width=WINDOW_SIZE[0],
         height=WINDOW_SIZE[1],
         min_size=WINDOW_MIN_SIZE,
-        # Büyütülmüş kayıtta pencere ilk karede büyük açılır: önceden 1600x950 açılıp gösterildikten
-        # sonra büyüyordu, açılışta görünür bir sıçrama oluyordu (apply_saved yine de garantiler).
-        maximized=bool(_load_window_state().get("maximized", True)),
         background_color=WINDOW_BACKGROUND,
         text_select=False,  # HUD'da metin seçimi imleci arayüzü "belge" gibi gösteriyor
     )
@@ -762,6 +813,7 @@ def main() -> int:
     # F11 (arayüzde dinleniyor → /api/settings/fullscreen): görev çubuğunu da kapatan tam ekran, tekrar
     # basınca eski hâli. Esc de çıkarır (arayüz yalnız tam ekrandayken gönderir).
     commands.register("fullscreen", lambda _payload: fullscreen.toggle())
+    _watch_fullscreen_keys(geometry, fullscreen)
 
     # gui="edgechromium": Windows'ta WebView2 (Chromium) motorunu ZORUNLU kılar.
     # Açıkça belirtilmezse pywebview eski MSHTML/EdgeHTML'e düşebilir — orada

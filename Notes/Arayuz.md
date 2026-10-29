@@ -14,10 +14,13 @@ yapıldığını** özetliyor.
 
 > **2026-10-29:** Dönen yörünge düğümleri (`OrbitNodes`), aralarındaki çizgiler (`NodeConnections`), şimşek
 > (`ElectricArcs`) ve düğüm odak kartı (`NodeFocusCard`) kullanıcı isteğiyle silindi; sahnede çekirdek, tendriller
-> ve toz kaldı. Vision paneli kamera açıkken gelir. Pencere büyütülmüş açılır (`create_window(maximized=…)`, ilk
-> karede; kayıt yoksa büyütülmüş). **F11** tam ekran (görev çubuğu dahil), tekrar F11 ya da Esc ile geri —
-> `desktop.py FullscreenToggle` (Win32 stil + yerleşim; pywebview `toggle_fullscreen` büyütülmüş pencerede hiçbir
-> şey yapmıyordu, ölçüldü). Tam ekrandayken kapanırsa boyut kaydı ezilmez.
+> ve toz kaldı. Vision paneli kamera açıkken gelir. Pencere **küçük, normal** açılır (kullanıcı: "açılışta küçük
+> olsun"): kayıt yoksa ekranın %60x%70'i ortada, büyütülmüş kapatılsa da son normal boyut. Kök neden: `min_size`
+> 1280x800 %125 ölçekte 1600x1000 fiziksel (ekranın %83'ü) ve 1600x950 başlangıç boyutu ekrandan büyük olduğu için
+> WinForms pencereyi "büyütülmüş" işaretliyordu → ikisi küçültüldü. **F11** tam ekran (görev çubuğu dahil), tekrar
+> F11 ya da Esc ile geri — `desktop.py FullscreenToggle` (Win32; pywebview `toggle_fullscreen` hiçbir şey
+> yapmıyordu) + `_watch_fullscreen_keys`: tuş Windows'tan okunuyor, çünkü WebView2 F11'i sayfaya ulaştırmadı
+> (Playwright'ta sayfa dinleyicisi çalıştı, gerçek pencerede çalışmadı). Yalnız Chiron öndeyken.
 
 | Konum | Ne var |
 |---|---|
