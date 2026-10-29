@@ -568,9 +568,11 @@ def _komuta_result(chat: dict) -> dict:
 
 
 @router.post("/komuta")
-async def komuta_task(body: KomutaTask, response: Response) -> dict:
+async def komuta_task(body: KomutaTask, request: Request, response: Response) -> dict:
+    # Uzak = telefon (sonucu telefona bildirilir); yerel = PC'deki sesli Chiron (actions/pc_isi.py).
+    via = "telefon" if is_remote(request) else "pc"
     try:
-        chat = await asyncio.to_thread(sohbet.phone_task, body.text, body.new_topic)
+        chat = await asyncio.to_thread(sohbet.phone_task, body.text, body.new_topic, via)
     except SohbetError as error:
         response.status_code = 409
         return {"success": False, "message": str(error), "data": {}}

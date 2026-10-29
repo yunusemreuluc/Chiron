@@ -264,10 +264,10 @@ class Sohbet:
         return self.send(chat_id, APPROVE_TEXT if approved else REJECT_TEXT, via)
 
     # ── Telefondan sesli iş (2026-10-29) ────────────────────────────────
-    def phone_task(self, text: str, new_topic: bool = False) -> dict[str, Any]:
-        """Sesli Chiron'un verdiği iş: Komuta'daki son Claude sohbetine yazılır, yani PC'de
-        konuşulan işin devamı olur. `new_topic` ya da hiç sohbet yoksa yeni sohbet açılır.
-        Son sohbet meşgulse hata — telefon "önceki iş sürüyor" der, yeni konu diye açtırabilir."""
+    def phone_task(self, text: str, new_topic: bool = False, via: str = "telefon") -> dict[str, Any]:
+        """Sesli Chiron'un verdiği iş (telefondaki ya da PC'deki): Komuta'daki son Claude sohbetine yazılır,
+        yani konuşulan işin devamı olur. `new_topic` ya da hiç sohbet yoksa yeni sohbet açılır.
+        Son sohbet meşgulse hata — Chiron "önceki iş sürüyor" der, yeni konu diye açtırabilir."""
         with self._lock:
             target = None
             if not new_topic:
@@ -280,7 +280,7 @@ class Sohbet:
                     step = live.get("last_step") or "başlıyor"
                     raise SohbetError(f"'{target['title']}' sohbetinde önceki iş hâlâ sürüyor ({step}).")
             chat_id = target["id"] if target else self.create("claude")["id"]
-        return self.send(chat_id, text, via="telefon")
+        return self.send(chat_id, text, via=via)
 
     def answer_job(self, job_id: str, approved: bool) -> dict[str, Any]:
         """Telefondaki onay cevabı iş kimliğiyle gelir: o işin sohbetini bulup aynı oturumu sürdürür."""

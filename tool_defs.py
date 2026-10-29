@@ -33,6 +33,30 @@ TOOL_DECLARATIONS = [
         }
     },
     {
+        "name": "delegate_to_pc",
+        "description": (
+            "PC'de is yapar: kod yazar, projelerde/dosyalarda calisir (Dilcep, Chiron, Etsy...). Kullanici PC'de "
+            "bir sey yapilmasini isterse ('Dilcep'te alt bari degistir', 'su projeye sunu ekle', 'hesap kismini "
+            "gelistir') ILK IS bunu cagir; once soru sorma, onay isteme, belirsiz olsa da oldugu gibi gonder. "
+            "Is Komuta ekranindaki konusmanin devami olarak arka planda surer. Ekrana bakip cevaplanacak soru "
+            "icin DEGIL (onun icin analyze_screen)."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "task": {
+                    "type": "STRING",
+                    "description": "Kullanicinin istedigi is, kendi sozuyle ve ayrintisiyla; yorum ekleme."
+                },
+                "new_topic": {
+                    "type": "BOOLEAN",
+                    "description": "Onceki PC isiyle ilgisiz yeni bir konu (baska proje/is) ise true; devam isteginde verme."
+                }
+            },
+            "required": ["task"]
+        }
+    },
+    {
         "name": "get_weather",
         "description": (
             "Anlik hava durumunu ozetler. Kullanici hava durumunu, sicakligi veya yagmur "

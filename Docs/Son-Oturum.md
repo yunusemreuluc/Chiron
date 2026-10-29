@@ -17,6 +17,7 @@ Komuta ekranı (chiron-mobile 6bdbb90). Hızlı yol kapısı `UntrustedInput`: s
 **Ekip:** lider ajan adı Jarvis → Chiron; Komuta/telefon işlerine alt ajan kuralı (`TEAM_NOTE`) — kayıtlarda Agent hiç kullanılmamıştı. Ruflo kurulu değil (10-26 kararı: yalnız fikirleri alındı).
 **Ruflo fikirleri:** paralel pano (şeritli kuyruk, 3 iş), alt ajanda model seçimi, ayrı inceleyici; 251/251. Chiron yeniden başlatılınca devrede.
 **APK teslimi:** adb'siz kurulum (PC kutusu + telefon indir/doğrula/Yükle). Deneme APK'sı (Chiron) kutuda; telefonda Yükle denenmedi.
+**Sesli iş:** telefonda model 'hallediyorum' deyip aracı çağırmadan soru soruyordu → prompt: önce araç, soru yok (f0b7652). PC sesli Chiron'un iş aracı hiç yoktu → `delegate_to_pc` eklendi, canlı denendi (854de602 bitti).
 **Nerede kalındı:** APK kuruldu, PC yeni kodla açık. Telefonda Komuta ekranı ve sesli hızlı yol Yunus'la denenmedi
 (Xiaomi adb dokunmaya izin vermiyor). Chiron 00:59'da log bırakmadan kapanmıştı (RAM %93, gradle derlemesi sırasında).
 `test_bekci::test_write_rules` basetemp `Temp\claude` altındayken düşüyor (bekçi orayı serbest sayıyor) — kod hatası değil.
