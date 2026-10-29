@@ -161,6 +161,13 @@ Codex Terra 16 + Claude 5 gerileme). Terra read-only: 6 bulgu, 5'i düzeltildi, 
 > (backend/core/claude_jobs.py) telefon, sohbet ve sohbet_tel notlarına eklendi: büyük ve bölünebilir işte
 > Explore / general-purpose alt ajanlara paralel dağıt, birleştir, kendin doğrula; küçük işte açma.
 > Pano lider akışı (plan modu) ayrı, ona eklenmedi. Gerçek bir işte henüz gözlenmedi.
+>
+> **Ruflo'dan üç fikir (2026-10-29):** Ruflo (ruvnet/ruflo, MIT) incelendi: `agent_spawn` yalnız JSON kaydı, işi
+> Claude Code'un Task/Agent alt ajanları yapıyor; ~340 MCP aracı (44 dosya) çoğu kayıt/hafıza/federasyon/tarayıcı.
+> Kurulmadı. Alınanlar: (1) **paralel pano** — `claude_jobs` şeritli: iş klasörü = şerit, aynı şerit sırayla,
+> farklı şeritler `MAX_PARALLEL=3`'e kadar aynı anda (Komuta/telefon işleri `__ana__` şeridinde); döngü kart
+> sürerken yalnız proje kartı ekler. (2) **model seçimi** — `TEAM_NOTE`: arama/basit → haiku, normal → sonnet,
+> zor → lider modeli. (3) **ayrı inceleyici** — büyük işte birleştirmeden sonra yalnız-okuyan inceleme alt ajanı.
 
 **Motorlar:** `claude_jobs` artık üç motoru aynı kuyrukta, aynı Job Object ve süre sınırıyla koşar
 (`Job.engine`): `claude` (stream-json), `codex` (`node codex.js exec --json -m gpt-5.6-terra --sandbox

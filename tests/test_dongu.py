@@ -95,6 +95,35 @@ def test_runs_oldest_ready_card_one_at_a_time(tmp_path):
     assert loop.public()["baslatilan"] == 2
 
 
+def test_project_cards_run_in_parallel_up_to_limit(tmp_path, monkeypatch):
+    """Paralel pano: proje kartları kendi kopyalarında aynı anda; projesiz kart sürerken yalnız proje kartı eklenir."""
+    import subprocess
+
+    from backend.core import claude_jobs, pano_git
+
+    monkeypatch.setattr(pano_git, "WORKTREE_ROOT", tmp_path / "wt")
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    for args in (["init", "-b", "main"], ["config", "user.email", "t@t"], ["config", "user.name", "t"]):
+        subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True)
+    (repo / "a.txt").write_text("x\n", encoding="utf-8")
+    subprocess.run(["git", "add", "a.txt"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-m", "ilk"], cwd=repo, check=True, capture_output=True)
+
+    board, jobs, loop, _ = _setup(tmp_path)
+    plain = board.create("Projesiz")["id"]
+    other_plain = board.create("Projesiz 2")["id"]
+    projects = [board.create(f"Proje {i}", repo=str(repo))["id"] for i in range(claude_jobs.MAX_PARALLEL)]
+    loop.set_open(True)
+    for _ in range(claude_jobs.MAX_PARALLEL + 2):
+        loop.tick()
+
+    running = [c for c in [plain, other_plain, *projects] if _status(board, c) == "calisiyor"]
+    assert len(running) == claude_jobs.MAX_PARALLEL
+    assert _status(board, plain) == "calisiyor" and _status(board, other_plain) == "bekliyor"
+    assert loop.public()["durum"] == "calisiyor"
+
+
 def test_dependencies_order_and_waiting_cards_do_not_block(tmp_path):
     board, jobs, loop, _ = _setup(tmp_path)
     loop.set_open(True)

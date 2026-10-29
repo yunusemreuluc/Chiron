@@ -50,6 +50,11 @@ WORK_DIR = Path.home()
 
 MAX_TASK_CHARS = 4000
 MAX_QUEUE = 3
+# Paralel pano (2026-10-29, Ruflo'dan: "her ajan kendi worktree'sinde, aynı anda"). Aynı klasörde çalışan işler
+# yine sırayla (iki tam yetkili ajan aynı dosyalara yazmasın); FARKLI klasördekiler — her proje kartının kendi
+# worktree'si — en fazla bu kadar aynı anda koşar. Kota freni (%90) aynen geçerli; paralel iş kotayı hızlı yer.
+MAX_PARALLEL = 3
+MAIN_LANE = "__ana__"
 TIME_LIMIT_SECONDS = 45 * 60
 PERMISSION_MODE = "auto"
 KEEP_JOBS = 30
@@ -65,6 +70,12 @@ araştırma + uygulama) işi parçala ve Agent aracıyla alt ajanlara PARALEL ve
 Explore, birbirine dokunmayan uygulama parçaları için general-purpose. Aynı dosyaya iki alt ajan yazmasın. \
 Sonuçları kendin birleştir, testi kendin çalıştır, "bitti" demeden doğrula. Tek dosyalık ya da birkaç adımlık \
 küçük işte alt ajan açma, kendin yap.
+- Model seç (Agent aracının model alanı): arama, dosya okuma, özet, basit/mekanik parça → "haiku"; normal \
+uygulama parçası → "sonnet"; mimari karar, zor hata, güvenlik → modeli verme (seninle aynı). Kota pahalı modelde \
+daha hızlı biter.
+- Ayrı inceleyici: alt ajanlarla yapılan büyük işte, birleştirdikten sonra bir alt ajanı YALNIZ inceleme için aç \
+(dosya değiştirmesin): değişen dosyaları okusun, hata, eksik ve uyumsuzluk bulsun. Yazan ajan kendi işinin tek \
+yargıcı olmasın. Bulguları kodu okuyarak doğrula, gerçek olanları düzelt.
 """
 
 SYSTEM_NOTE = f"""\
@@ -368,11 +379,12 @@ class ClaudeJobs:
         self._lock = threading.Lock()
         self._jobs: dict[str, Job] = {}
         self._queue: deque[str] = deque()
-        self._proc: subprocess.Popen | None = None
-        self._tree: ProcessTree | None = None
+        # Çalışan işler: iş kimliği → süreç / süreç ağacı / şerit (klasör). Hepsi _lock altında.
+        self._procs: dict[str, subprocess.Popen] = {}
+        self._trees: dict[str, ProcessTree] = {}
+        self._lanes: dict[str, str] = {}
         self._cancel: set[str] = set()
         self._closed = False
-        self._worker: threading.Thread | None = None
         self._codex_text: dict[str, str] = {}  # iş başına Codex'in son mesajı (sonuç metni)
         self._limits: dict[str, Any] = self._load_limits()
         self._load()
@@ -476,9 +488,7 @@ class ClaudeJobs:
             self._queue.append(job.id)
             self._save(job)
             self._trim()
-            if not self._worker or not self._worker.is_alive():
-                self._worker = threading.Thread(target=self._run_queue, name="claude-jobs", daemon=True)
-                self._worker.start()
+            self._dispatch_locked()
         logger.info("Claude işi kuyruğa alındı: %s", job.id)
         return job
 
@@ -543,7 +553,7 @@ class ClaudeJobs:
                 return True
             # Çalışıyor: süreç henüz kaydedilmediyse _run kayıt anında bu işareti görür.
             self._cancel.add(job_id)
-            tree = self._tree
+            tree = self._trees.get(job_id)
         if tree:
             tree.kill()
         return True
@@ -554,8 +564,8 @@ class ClaudeJobs:
             for job_id in list(self._queue):
                 self._finish(self._jobs[job_id], "cancelled", error="Chiron kapandı.")
             self._queue.clear()
-            tree = self._tree
-        if tree:
+            trees = list(self._trees.values())
+        for tree in trees:
             tree.kill()
 
     # ── Çalıştırma ───────────────────────────────────────────────────────
@@ -579,23 +589,43 @@ class ClaudeJobs:
         self._save(job)
         logger.info("Claude işi bitti: %s → %s", job.id, status)
 
-    def _run_queue(self) -> None:
-        while True:
+    @staticmethod
+    def _lane(job: Job) -> str:
+        """İşin şeridi = çalıştığı klasör. Klasörsüz işler (Komuta, telefon) ana şeritte, birbirini bekler."""
+        return os.path.normcase(os.path.abspath(job.cwd)) if job.cwd else MAIN_LANE
+
+    def _dispatch_locked(self) -> None:
+        """Sıradaki işleri başlatır: boş şeridi olan en eski iş önce, toplam MAX_PARALLEL. Kilit ALTINDA çağrılır."""
+        if self._closed:
+            return
+        busy = set(self._lanes.values())
+        for job_id in list(self._queue):
+            if len(self._lanes) >= MAX_PARALLEL:
+                return
+            job = self._jobs[job_id]
+            lane = self._lane(job)
+            if lane in busy:
+                continue  # aynı klasörde iş sürüyor: sırasını bekler, arkasındaki başka klasör geçebilir
+            self._queue.remove(job_id)
+            job.status = "running"
+            job.started_at = time.time()
+            self._save(job)
+            self._lanes[job.id] = lane
+            busy.add(lane)
+            threading.Thread(target=self._work, args=(job,), name=f"claude-job-{job.id}", daemon=True).start()
+
+    def _work(self, job: Job) -> None:
+        try:
+            self._run(job)
+        except Exception as error:  # iş thread'i hiçbir hatada ölmemeli
+            logger.exception("Claude işi çöktü: %s", job.id)
             with self._lock:
-                if not self._queue or self._closed:
-                    self._worker = None
-                    return
-                job = self._jobs[self._queue.popleft()]
-                job.status = "running"
-                job.started_at = time.time()
-                self._save(job)
-            try:
-                self._run(job)
-            except Exception as error:  # iş thread'i hiçbir hatada ölmemeli
-                logger.exception("Claude işi çöktü: %s", job.id)
-                with self._lock:
-                    if job.status in ACTIVE:
-                        self._finish(job, "failed", error=f"Beklenmeyen hata: {error}")
+                if job.status in ACTIVE:
+                    self._finish(job, "failed", error=f"Beklenmeyen hata: {error}")
+        finally:
+            with self._lock:
+                self._lanes.pop(job.id, None)
+                self._dispatch_locked()
 
     def _launch_engine(self, job: Job, log_path: Path) -> subprocess.Popen:
         if job.engine == "claude":
@@ -678,7 +708,7 @@ class ClaudeJobs:
                 self._finish(job, "failed", error=str(error))
             return
         with self._lock:
-            self._proc, self._tree = proc, tree
+            self._procs[job.id], self._trees[job.id] = proc, tree
             # Kayıttan ÖNCE gelen iptal/kapanış burada uygulanır (Astra/Sol: yarış).
             stop_now = job.id in self._cancel or self._closed
         if stop_now:
@@ -722,7 +752,8 @@ class ClaudeJobs:
                 except Exception:
                     pass
             with self._lock:
-                self._proc, self._tree = None, None
+                self._procs.pop(job.id, None)
+                self._trees.pop(job.id, None)
 
         for event in events:
             result = self._on_event(job, event) or result

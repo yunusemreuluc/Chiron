@@ -153,7 +153,7 @@ def _wait_for_process(
 ) -> subprocess.Popen:
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        if processes and manager._proc is processes[-1]:
+        if processes and any(proc is processes[-1] for proc in manager._procs.values()):
             return processes[-1]
         time.sleep(0.02)
     pytest.fail("Alt süreç ClaudeJobs yöneticisine bağlanmadı.")
@@ -275,6 +275,27 @@ def test_only_one_job_runs_and_second_has_queue_position_one(tmp_path, processes
     manager.cancel(second.id)
     manager.cancel(first.id)
     _wait_for(manager, first.id, "cancelled")
+
+
+def test_jobs_in_different_folders_run_in_parallel(tmp_path, processes, job_managers):
+    """Paralel pano: farklı klasördeki iki iş aynı anda koşar; aynı klasördeki üçüncüsü sırasını bekler."""
+    manager = _manager(tmp_path, _stream_script(sleep=30), processes, job_managers)
+    a, b = tmp_path / "wt-a", tmp_path / "wt-b"
+    a.mkdir()
+    b.mkdir()
+    first = manager.submit("A kartı", origin="pano", cwd=str(a))
+    second = manager.submit("B kartı", origin="pano", cwd=str(b))
+    third = manager.submit("A'nın ikincisi", origin="pano", cwd=str(a))
+    _wait_for(manager, first.id, "running")
+    _wait_for(manager, second.id, "running")
+    assert manager.get(third.id)["status"] == "queued"  # aynı worktree: ilki bitmeden başlamaz
+
+    manager.cancel(first.id)
+    _wait_for(manager, first.id, "cancelled")
+    _wait_for(manager, third.id, "running")  # şerit boşalınca sıradaki kendiliğinden başlar
+    for job in (second, third):
+        manager.cancel(job.id)
+        _wait_for(manager, job.id, "cancelled")
 
 
 def test_queue_and_task_limits_are_enforced(tmp_path, processes, job_managers):

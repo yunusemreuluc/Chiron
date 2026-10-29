@@ -7,8 +7,9 @@ Ne yapar (her TICK_SECONDS'ta bir, yalnız açıkken):
 - Kart çalışırken BUSY_TICK_SECONDS'ta bir.
 - `pano.snapshot()` — kartları iş kuyruğuyla eşitler, bekleyen doğrulamayı (commit + test) tetikler.
   Arayüz kapalıyken de proje kartları ilerlesin diye; önceden doğrulama yalnız arayüz yoklayınca koşuyordu.
-- Hiçbir kart çalışmıyorsa "Bekliyor" sütununun EN ESKİ başlatılabilir kartını başlatır. Tek seferde tek iş
-  (claude_jobs kuralıyla aynı: iki tam yetkili ajan aynı anda yazmasın). Chiron'un alt kartları `after`
+- "Bekliyor" sütununun EN ESKİ başlatılabilir kartını başlatır, tik başına bir kart. Kart çalışırken yalnız
+  PROJE kartı (kendi worktree'si olan) eklenebilir, toplam MAX_PARALLEL (2026-10-29, paralel pano): ayrı
+  kopyalarda iki ajan birbirinin dosyasına yazamaz. Projesiz kart yine tek başına (ana klasörde çakışırlar). Chiron'un alt kartları `after`
   sırasıyla kendiliğinden yürür.
 - Claude kotası `stop` basamağındaysa Claude kartlarını atlar; pencere sıfırlanınca kota şeridi düşer ve
   döngü kendiliğinden devam eder. Codex kotası doluysa Codex kartları atlanır.
@@ -32,6 +33,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Callable
 
+from backend.core.claude_jobs import MAX_PARALLEL
 from backend.core.pano import Pano, PanoError, pano
 
 logger = logging.getLogger("chiron.dongu")
@@ -193,11 +195,14 @@ class Dongu:
 
     def _step(self, cards: list[dict[str, Any]], agents: dict[str, Any], now: float) -> None:
         busy = [c for c in cards if c["status"] in BUSY]
-        if busy:
+        if len(busy) >= MAX_PARALLEL:
             self.state.update(durum="calisiyor", neden=f"{busy[0]['id']} {busy[0]['title']}")
             return
         if self.state["baslatilan"] >= DAILY_LIMIT:
-            self.state.update(durum="sinir", neden=f"Bugün {DAILY_LIMIT} kart başlatıldı; yarın devam.")
+            if busy:
+                self.state.update(durum="calisiyor", neden=f"{busy[0]['id']} {busy[0]['title']}")
+            else:
+                self.state.update(durum="sinir", neden=f"Bugün {DAILY_LIMIT} kart başlatıldı; yarın devam.")
             return
         by_id = {c["id"]: c for c in cards}
         ready = [
@@ -207,6 +212,8 @@ class Dongu:
             and not c.get("planning")
             and all(by_id.get(d, {}).get("status") == "bitti" for d in c.get("after") or [])
             and self._skip.get(c["id"], 0) <= now
+            # Kart sürerken yanına yalnız kendi kopyasında çalışacak proje kartı.
+            and (not busy or bool(c.get("repo")))
         ]
         ready.sort(key=lambda c: c["created"])
         claude = agents.get("claude") or {}
@@ -234,7 +241,9 @@ class Dongu:
             self._event(f"{card['id']} başlatıldı: {card['title']}")
             self.state.update(durum="calisiyor", neden=f"{card['id']} {card['title']}")
             return
-        if sleeping:
+        if busy:
+            self.state.update(durum="calisiyor", neden=f"{busy[0]['id']} {busy[0]['title']}")
+        elif sleeping:
             self.state.update(durum="uyuyor", neden=sleeping[0])
         else:
             self.state.update(durum="bekliyor", neden="Başlatılacak kart yok.")
