@@ -328,6 +328,24 @@ class FullscreenToggle:
         return self._saved is not None
 
     @staticmethod
+    def _dwm_frame(form, full: bool) -> None:
+        """Windows 11 çerçevesiz pencereye de 1 px kenarlık çizip köşeleri yuvarlıyor; tam ekranda ekranın
+        kenarında açık bir çizgi ve köşelerde arka plan görünüyordu (kullanıcı ekran görüntüsü, 2026-10-29).
+        Tam ekranda köşe yuvarlama ve kenarlık kapalı; çıkışta Windows varsayılanı."""
+        import ctypes
+
+        DWMWA_WINDOW_CORNER_PREFERENCE, DWMWA_BORDER_COLOR = 33, 34
+        corner = ctypes.c_int(1 if full else 0)  # DWMWCP_DONOTROUND / DWMWCP_DEFAULT
+        border = ctypes.c_uint(0xFFFFFFFE if full else 0xFFFFFFFF)  # DWMWA_COLOR_NONE / DWMWA_COLOR_DEFAULT
+        try:
+            hwnd = ctypes.c_void_p(int(form.Handle.ToInt64()))
+            dwm = ctypes.windll.dwmapi
+            dwm.DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, ctypes.byref(corner), ctypes.sizeof(corner))
+            dwm.DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, ctypes.byref(border), ctypes.sizeof(border))
+        except Exception:
+            logging.getLogger("chiron").debug("DWM çerçevesi ayarlanamadı", exc_info=True)
+
+    @staticmethod
     def _sync_webview(form) -> None:
         """WebView2'ye yeni boyutu zorla ilet. Ölçüldü: form ve WebView2'nin dış kabı 1920x1080 oluyor ama
         sayfayı çizen iç tarayıcı penceresi (Chrome_WidgetWin_1) eski boyutta kalıyordu. Denetleyiciye
@@ -370,6 +388,7 @@ class FullscreenToggle:
                 form.FormBorderStyle = style
                 form.Bounds = bounds
                 form.WindowState = state
+            self._dwm_frame(form, full=self._saved is not None)
             self._sync_webview(form)
 
         try:
