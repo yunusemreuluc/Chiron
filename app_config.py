@@ -12,7 +12,7 @@ CONFIG_PATH = CONFIG_DIR / "api_keys.json"
 
 DEFAULT_CONFIG = {
     "gemini_api_key": "",
-    "voice": "Charon",
+    "voice": "Algieba",
     "youtube_api_key": "",
     "youtube_channel_handle": "",
     # Ses cihazı tercihleri — cihaz ADININ bir parçası (ör. "Microphone Array").
@@ -60,11 +60,29 @@ def get_app_config_value(key: str, default=None):
 # Asistanın adı seçili sese göre (kullanıcı kararı, 2026-10-28): erkek sesler
 # Chiron, kadın sesler Daphne. Uygulamanın adı her durumda Chiron; değişen yalnız
 # asistanın kendini tanıttığı ad, sohbet satırının öneki ve uyandırma sözü.
-FEMALE_VOICES = {"Aoede", "Kore", "Leda", "Zephyr"}
+# Sesler (2026-10-30, dinleyerek seçildi): Chiron = Algieba, Daphne = Achernar;
+# Iapetus ve Despina yedek. Gemini Live yalnız hazır sesleri kabul ediyor.
+VOICES = ["Algieba", "Achernar", "Iapetus", "Despina"]
+DEFAULT_VOICE = "Algieba"
+FEMALE_VOICES = {"Achernar", "Despina"}
+
+
+# Hazır sesin tınısını değiştirmiyor, konuşma tarzını belirliyor (Live modeli
+# sistem komutunda tarif edilen tona uyuyor).
+SPEAKING_STYLE = {
+    "Chiron": "Sakin, ağırbaşlı ve kendinden emin konuş; kibar ama yaltaklanmadan, yerinde kuru bir espriyle. Acele etme, cümleleri net bitir.",
+    "Daphne": "Yumuşak, sıcak ve yavaş konuş; samimi, hafif oyuncu ve içten bir tonla. Cümleleri acele etmeden, yumuşak bitir.",
+}
+
+
+def current_voice() -> str:
+    """Kayıtlı ses; listeden çıkarılmış eski bir ses (ör. Charon) varsayılana düşer."""
+    voice = str(get_app_config_value("voice", DEFAULT_VOICE) or DEFAULT_VOICE)
+    return voice if voice in VOICES else DEFAULT_VOICE
 
 
 def assistant_name(voice: str | None = None) -> str:
     """Seçili sesin (ya da verilen sesin) asistan adı: "Chiron" veya "Daphne"."""
     if voice is None:
-        voice = str(get_app_config_value("voice", "Charon") or "Charon")
+        voice = current_voice()
     return "Daphne" if voice in FEMALE_VOICES else "Chiron"

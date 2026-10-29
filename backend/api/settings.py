@@ -16,16 +16,12 @@ import logging
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from app_config import load_app_config, save_app_config
+from app_config import VOICES, current_voice, load_app_config, save_app_config
 from backend.core import commands
 
 logger = logging.getLogger("chiron.backend")
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
-
-# Gemini Live'ın hazır sesleri.
-VOICES = ["Charon", "Puck", "Aoede", "Kore", "Fenrir", "Leda", "Orus", "Zephyr", "Sadaltager"]
-
 
 def _mask(value: str) -> str:
     """API anahtarını arayüze göstermek için maskeler — panelde anahtarın
@@ -46,7 +42,7 @@ async def read_settings() -> dict:
         "success": True,
         "message": "ayarlar",
         "data": {
-            "voice": str(config.get("voice") or "Charon"),
+            "voice": current_voice(),
             "voices": VOICES,
             "hasApiKey": bool(str(config.get("gemini_api_key") or "").strip()),
             "apiKeyMasked": _mask(config.get("gemini_api_key", "")),

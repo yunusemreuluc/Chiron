@@ -20,7 +20,7 @@ derleme klasörleri senkronla çakışır). Kendi git deposu.
 
 ```
 Telefon (Chiron APK)
- ├─ Gemini Live — ham WebSocket, PC'dekiyle AYNI model ve ses (Charon)
+ ├─ Gemini Live — ham WebSocket, PC'dekiyle AYNI model ve ses (Algieba)
  ├─ Telefon araçları — arama, WhatsApp/SMS, uygulama/alarm/fener, ses/medya/DND,
  │                      bildirimler, pil/bağlantı
  └─ Masaüstü köprüsü — Tailscale → tailscale serve → PC /api/remote/{ask,desktop,note}

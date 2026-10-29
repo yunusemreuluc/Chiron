@@ -38,7 +38,7 @@ from core.audio_devices import (
 from core.logging_setup import setup_logging
 from core.tool_registry import register_tool, dispatch_tool
 from actions.tool_result import fail, ok
-from app_config import assistant_name, get_app_config_value
+from app_config import SPEAKING_STYLE, assistant_name, current_voice, get_app_config_value
 from memory.memory_manager import load_memory, update_memory, format_memory_for_prompt
 # NOT: Aşağıdaki actions/* import'ları main.py içinde İSİMLE hiç çağrılmıyor —
 # hepsi kendi modüllerinde @register_tool(...) ile işaretli (bkz. core/tool_registry.py).
@@ -805,12 +805,13 @@ class ChironLive:
         memory  = load_memory()
         mem_str = format_memory_for_prompt(memory)
         sys_p   = load_system_prompt()
-        voice   = str(get_app_config_value("voice", "Charon") or "Charon")
+        voice   = current_voice()
         # Kadın seste asistan Daphne (bkz. app_config.assistant_name). Sohbet satırının
         # öneki de bu addan; ses değişince oturum yeniden kurulduğu için burada tazelenir.
         self._assistant_name = assistant_name(voice)
         if self._assistant_name == "Daphne":
             sys_p = sys_p.replace("Sen Chiron'sun", "Sen Daphne'sin", 1)
+        sys_p += f"\n\nKONUŞMA TARZI:\n- {SPEAKING_STYLE[self._assistant_name]}\n"
         now     = datetime.datetime.now()
         time_ctx = f"[ŞU ANKİ ZAMAN]\n{now.strftime('%A, %d %B %Y — %H:%M')}\n\n"
 
