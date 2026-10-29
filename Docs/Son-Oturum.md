@@ -7,6 +7,20 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-10-30 — Sesler: Chiron Algieba, Daphne Achernar
+
+**Ne yapıldı (commit'li, push'lu — Chiron c6676b1, chiron-mobile 227fc03):**
+- Yunus Jarvis'e yakın erkek ve "seksi" kadın ses istedi. Gemini Live yalnız hazır ses alıyor (klon/yükleme yok);
+  14 aday TTS ile Türkçe seslendirildi (Masaüstü/Chiron-ses-ornekleri, 11'i üretildi, 3'ü kotaya takıldı).
+  Seçim: Chiron = Algieba, Daphne = Achernar; Iapetus + Despina yedek. Eski 9 ses kaldırıldı.
+- Liste tek yerde: `app_config.VOICES / FEMALE_VOICES / current_voice()` — kayıtlı eski ses varsayılana düşer.
+  Sistem komutuna ada göre `SPEAKING_STYLE` (Chiron sakin/kuru espri, Daphne yumuşak/sıcak). Telefon da aynı liste;
+  kadın seste telefon asistanı artık Daphne adını kullanıyor.
+
+**Nerede kalındı / yarın:** PC Chiron yeniden başlatılmalı (çalışan süreç eski kodla). Yeni APK
+(app/build/outputs/apk/debug) telefona kurulmadı — adb bağlı değildi. Sesleri gerçek konuşmada dinleyip tonu ayarla.
+Önceki günün sesli deneme maddeleri hâlâ açık. `tests/test_bekci.py::test_write_rules` değişiklikten önce de kırık.
+
 ## Oturum: 2026-10-29 — "Jarvis gibi": telefondan/sesle iş, ekip, APK teslimi, arayüz sadeleşti
 
 **Ne yapıldı (hepsi commit'li, push'lu):**
