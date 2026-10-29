@@ -75,6 +75,23 @@ async def switch_loop(body: LoopSwitch) -> dict:
     return _ok({"dongu": state}, "7/24 döngü açık." if body.acik else "7/24 döngü kapandı.")
 
 
+class GelisimSwitch(BaseModel):
+    acik: bool
+
+
+@router.post("/gelisim")
+async def switch_gelisim(body: GelisimSwitch) -> dict:
+    """Kendini geliştirmeyi aç/kapat (açmak 7/24 döngüyü de açar). Birleştirme yine Yunus'un onayıyla."""
+    state = await asyncio.to_thread(dongu.set_gelisim, body.acik)
+    return _ok({"dongu": state}, "Kendini geliştirme açık." if body.acik else "Kendini geliştirme kapandı.")
+
+
+@router.get("/gelisim/haber")
+async def gelisim_news() -> dict:
+    """Söylenmemiş geliştirme sonuçları (sesli Chiron okur); okunanlar düşer."""
+    return _ok({"haber": await asyncio.to_thread(dongu.take_news)})
+
+
 @router.post("/bekci")
 async def set_guard_mode(body: GuardMode, request: Request, response: Response) -> dict:
     """Bekçi modu: uyar (yalnız kaydeder) | engelle (yüksek seviyeli adımı reddeder).

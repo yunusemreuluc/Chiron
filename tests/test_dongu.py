@@ -235,3 +235,79 @@ def test_loop_api(tmp_path, monkeypatch):
     assert opened.json()["data"]["dongu"]["acik"] is True
     assert listed.json()["data"]["dongu"]["durum"] in ("bekliyor", "calisiyor")
     assert closed.json()["data"]["dongu"]["durum"] == "kapali"
+
+
+# ── Kendini geliştirme (2026-10-30) ─────────────────────────────────────────
+def _gelisim_setup(tmp_path, monkeypatch):
+    """Geliştirme kartı gerçek depoda worktree açmasın: kart projesiz açılır."""
+    board, jobs, loop, clock = _setup(tmp_path)
+    create = board.create
+    monkeypatch.setattr(board, "create", lambda title, detail="", repo=None, test_cmd=None, agent="claude": create(title, detail))
+    return board, jobs, loop, clock
+
+
+def _gelisim_cards(board):
+    return [c for c in board.snapshot()["cards"] if c["title"].startswith(dongu_mod.GELISIM_PREFIX)]
+
+
+def test_gelisim_off_opens_nothing(tmp_path, monkeypatch):
+    board, jobs, loop, _ = _gelisim_setup(tmp_path, monkeypatch)
+    loop.set_open(True)
+    loop.tick()
+    assert _gelisim_cards(board) == [] and jobs.jobs == {}
+
+
+def test_gelisim_opens_card_when_idle_and_respects_interval(tmp_path, monkeypatch):
+    board, jobs, loop, clock = _gelisim_setup(tmp_path, monkeypatch)
+    assert loop.set_gelisim(True)["acik"] is True  # geliştirmeyi açmak döngüyü de açar
+    loop.tick()  # kuyruk boş → kart açılır
+    loop.tick()  # kart başlar; sürerken ikincisi açılmaz
+    cards = _gelisim_cards(board)
+    assert len(cards) == 1 and cards[0]["status"] == "calisiyor"
+    assert "Gelisim-Gunlugu" in cards[0]["detail"] and "Ne öğrendim" in cards[0]["detail"]
+
+    jobs.finish("j1", summary="Komuta'ya arama ekledim.")
+    loop.tick()
+    assert len(_gelisim_cards(board)) == 1 and "Sıradaki geliştirme" in loop.public()["neden"]
+    assert [n["metin"] for n in loop.take_news()] == ["Komuta'ya arama ekledim."]
+    assert loop.take_news() == []  # söylenen bir daha gelmez
+
+    clock.ts += dongu_mod.GELISIM_ARALIK + 1
+    loop.tick()
+    cards = _gelisim_cards(board)
+    newest = max(cards, key=lambda c: c["created"])
+    assert len(cards) == 2 and "Komuta'ya arama ekledim." in newest["detail"]  # önceki tekrar edilmesin
+
+
+def test_gelisim_waits_for_yunus_and_quota(tmp_path, monkeypatch):
+    monkeypatch.setattr(dongu_mod, "GELISIM_ARALIK", 0)
+    board, jobs, loop, clock = _gelisim_setup(tmp_path, monkeypatch)
+    loop.set_gelisim(True)
+    for job in ("j1", "j2"):
+        loop.tick()
+        loop.tick()
+        jobs.jobs[job].update(status="failed", error="test kaldı")
+        clock.ts += 1
+    loop.tick()
+    assert len(_gelisim_cards(board)) == 2 and "Onayını bekleyen 2" in loop.public()["neden"]
+    assert [n["durum"] for n in loop.take_news()] == ["hata", "hata"]
+
+    for card in _gelisim_cards(board):
+        board.delete(card["id"])
+    jobs.quota = {"ts": time.time(), "five_hour": {"used": 0.8, "resets_at": time.time() + 3600}}
+    loop.tick()
+    assert _gelisim_cards(board) == [] and "kota" in loop.public()["neden"]
+
+
+def test_gelisim_api(tmp_path, monkeypatch):
+    board, _, loop, _ = _gelisim_setup(tmp_path, monkeypatch)
+    monkeypatch.setattr(pano_api, "pano", board)
+    monkeypatch.setattr(pano_api, "dongu", loop)
+    app = FastAPI()
+    app.include_router(pano_api.router)
+    with TestClient(app) as client:
+        on = client.post("/api/pano/gelisim", json={"acik": True}).json()["data"]["dongu"]
+        news = client.get("/api/pano/gelisim/haber").json()["data"]["haber"]
+        off = client.post("/api/pano/gelisim", json={"acik": False}).json()["data"]["dongu"]
+    assert on["gelisim"] is True and on["acik"] is True and news == []
+    assert off["gelisim"] is False and off["acik"] is True  # döngü kendi anahtarıyla kapanır

@@ -12,7 +12,6 @@ arayüzüne yalnızca 15 noktadan dokunuyor ve WebUI o yüzeyin birebir karşıl
 
 import array
 import asyncio
-import collections
 import datetime
 import logging
 import math
@@ -24,6 +23,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pyaudio  # type: ignore[reportMissingModuleSource]
+import requests
 from google import genai  # type: ignore[reportMissingImports]
 from google.genai import types  # type: ignore[reportMissingImports]
 
@@ -330,7 +330,7 @@ class ChironLive:
         self._thinking_supported = True
         self._assistant_name = assistant_name()
         # Ses değişimi (switch_assistant, 2026-10-30): son konuşma yeni oturuma devredilir.
-        self._recent_turns: collections.deque[tuple[str, str]] = collections.deque(maxlen=HANDOFF_TURNS)
+        self._recent_turns: deque[tuple[str, str]] = deque(maxlen=HANDOFF_TURNS)
         self._switch_from: str | None = None
         self._switch_turn_done = asyncio.Event()
         self._handoff_note: str | None = None
@@ -653,6 +653,29 @@ class ChironLive:
         update_memory({"scheduled_briefing": {"config": {"value": time_str, "last_briefed_date": ""}}})
         logger.info(f"[CHIRON] 🌅 Günlük brifing ayarlandı: {time_str}")
         return ok(f"Tamam, her gün saat {time_str}'te sana günlük brifing vereceğim.")
+
+    @register_tool("self_improvement")
+    def _tool_self_improvement(self, action: str = "status") -> dict:
+        """Kendini geliştirme döngüsü: aç / kapat / durum (yerel API, bkz. backend/core/dongu.py)."""
+        from backend.core.config import PORT
+
+        base = f"http://127.0.0.1:{PORT}/api/pano"
+        try:
+            if action in ("start", "stop"):
+                data = requests.post(f"{base}/gelisim", json={"acik": action == "start"}, timeout=10).json()
+            else:
+                data = requests.get(base, timeout=10).json()
+        except Exception as error:
+            return fail(f"Döngüye ulaşılamadı: {error}")
+        state = (data.get("data") or {}).get("dongu") or {}
+        if action == "start":
+            return ok("Kendini geliştirme açık. Kuyruk boşken iki saatte bir kendime bir iyileştirme seçip "
+                      "araştırıp uyguluyorum; her birini sana söyleyip birleştirmek için onayını bekleyeceğim.")
+        if action == "stop":
+            return ok("Kendini geliştirmeyi kapattım. Çalışan iş varsa bitirilir.")
+        on = "açık" if state.get("gelisim") else "kapalı"
+        return ok(f"Kendini geliştirme {on}. Durum: {state.get('neden') or state.get('durum') or 'bilinmiyor'}. "
+                  f"Bugün {state.get('gelisim_sayi', 0)} geliştirme açıldı.")
 
     @register_tool("switch_assistant")
     def _tool_switch_assistant(self, name: str = "") -> dict:
@@ -1043,6 +1066,37 @@ class ChironLive:
                 continue
             for text in messages:
                 await self._send_proactive_system_message(text)
+
+    async def _watch_gelisim(self):
+        """Kendini geliştirme sonuçlarını söyler (2026-10-30, Yunus: "yaptıklarını bana söylesin").
+        Döngü haberi yerel API'de biriktirir; Chiron konuşmuyorken dakikada bir alınır."""
+        from backend.core.config import PORT
+
+        url = f"http://127.0.0.1:{PORT}/api/pano/gelisim/haber"
+        while True:
+            await asyncio.sleep(60)
+            if not self._proactive_checks_allowed():
+                continue
+            try:
+                response = await asyncio.to_thread(requests.get, url, timeout=5)
+                news = ((response.json() or {}).get("data") or {}).get("haber") or []
+            except Exception:
+                continue  # backend geçici yok: sonraki turda
+            for item in news:
+                text = " ".join(str(item.get("metin") or "").split())
+                if item.get("durum") == "hata":
+                    hint = ("Kendini geliştirme denemen tamamlanamadı. Ne denediğini ve neden olmadığını tek cümlede "
+                            "söyle; Komuta'dan yeniden denenebileceğini ekle.")
+                elif item.get("durum") == "birlestir":
+                    hint = ("Kendini geliştirdin, testler geçti. Ne yaptığını, neden daha iyi olduğunu ve ne öğrendiğini "
+                            "2-3 kısa cümlede birinci ağızdan söyle; sonunda birleştirmek için onayını Komuta'dan "
+                            "vermesini iste.")
+                else:
+                    hint = "Kendini geliştirme işin bitti. Sonucunu tek kısa cümlede söyle."
+                await self._send_proactive_system_message(
+                    f"[SİSTEM] Kendini geliştirme sonucu (kullanıcının sözü değil). {hint} Claude'dan söz etme. "
+                    f"Özet: {text[:600]}"
+                )
 
     async def _watch_screen_for_issues(self):
         """Proaktif ekran izleme (YAPILACAKLAR.md #4). Periyodik olarak aktif pencereyi
@@ -1711,6 +1765,7 @@ class ChironLive:
                     tg.create_task(self._watch_system_health())
                     tg.create_task(self._watch_custom_conditions())
                     tg.create_task(self._watch_pc_jobs())
+                    tg.create_task(self._watch_gelisim())
                     tg.create_task(self._watch_daily_briefing())
                     if self._handoff_note:
                         # Ses değişimi: yeni ses ilk sözü kendisi söylesin.

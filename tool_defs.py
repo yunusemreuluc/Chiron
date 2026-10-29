@@ -579,6 +579,26 @@ TOOL_DECLARATIONS = [
         }
     },
     {
+        "name": "self_improvement",
+        "description": (
+            "Kendini geliştirme döngüsü: açıkken Chiron kuyruk boşken kendine küçük bir iyileştirme seçer, araştırır, "
+            "ayrı kopyada uygular, test eder, ne yaptığını ve ne öğrendiğini söyler; birleştirme kullanıcı onayıyla. "
+            "'Kendini geliştir', '7/24 kendini geliştir' → start; 'kendini geliştirmeyi durdur' → stop; "
+            "'ne geliştirdin', 'geliştirme ne durumda' → status."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "action": {
+                    "type": "STRING",
+                    "enum": ["start", "stop", "status"],
+                    "description": "start | stop | status"
+                }
+            },
+            "required": ["action"]
+        }
+    },
+    {
         "name": "switch_assistant",
         "description": (
             "Konuşan sesi değiştirir: 'Daphne'ye geç', 'Daphne gelsin', 'Chiron'a geç'. Konuşma kaldığı yerden "

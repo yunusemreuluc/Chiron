@@ -296,6 +296,23 @@ Telefondan da açılıp kapanır (açmak korumayı gevşetmez; bekçi ve kota fr
 
 Testler: `tests/test_dongu.py` (9). Paket 235/235. Canlı: 2 Claude + 4 Gemini kartı döngüyle sırayla yürüdü.
 
+### Kendini geliştirme (2026-10-30)
+
+Yunus: "kendi kendini geliştirsin, öğrensin, arayüzü daha kullanışlı olsun, 7/24 çalışsın, yaptıklarını ve
+öğrendiklerini bana söylesin". `dongu.state.gelisim` açıkken (Komuta API `POST /api/pano/gelisim`, sesle
+`self_improvement` aracı) kuyruk boş kalınca döngü Chiron'un kendi deposuna `Gelişim:` başlıklı proje kartı açar.
+
+- **Kart ne yapar** (`GELISIM_TASK`): [[Gelisim-Gunlugu]], [[Istek-Listesi]], yol haritası ve tasarım kurallarını
+  okur; TEK küçük iyileştirme seçer (öncelik Yunus'un istekleri ve kullanışlılık), web'de araştırır, ayrı kopyada
+  uygular, test eder, günlüğe "ne yaptım / neden daha iyi / ne öğrendim / kaynak" yazar. Son mesajı Yunus'a okunur.
+- **Yasak alan:** ödeme, anahtar, güvenlik ayarı, bekçi kuralları, kota frenleri, döngünün kendisi.
+- **Frenler:** iki kart arası 2 saat, günde 6, onay/hata bekleyen 2 geliştirme varken yenisi yok (birikip
+  çakışmasın), Claude kotası yalnız `ok`/`info` iken (Yunus'un işine pay). Birleştirme her zaman Yunus'un onayıyla.
+- **Haber:** kart `birlestir`/`hata`/`bitti` olunca `gelisim_haber`e girer; sesli Chiron dakikada bir
+  `GET /api/pano/gelisim/haber` ile alır ve söyler (`_watch_gelisim`). Sabah raporunda da görünür.
+- **Sınır:** kopyada node_modules yok — arayüz değişikliğinin tip denetimi birleştirmeden sonraki derlemede
+  (desktop.py açılışta derliyor). Testler: `tests/test_dongu.py` § gelişim.
+
 ## Komuta ekranı ve sohbet (2026-10-27)
 
 Yunus: "sana terminalde nasıl iş veriyorsam Chiron'da da öyle olsun" + mevcut ofis/pano "kullanışsız" (boş

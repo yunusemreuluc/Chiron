@@ -27,6 +27,7 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
   üyelik yok, kapalı test (12 kişi/14 gün)
 - [[Plan-Ajan-Istasyonu]] — ofisten iş verme ve 7/24 döngü: 2D uzay istasyonu, Jarvis lider, 8 adım
 - [[Ajan-Ofisi]] — Claude, alt ajanlar ve Codex/Bunny/Gemini masalarda: kim ne yapıyor, görev panosu, kota
+- [[Gelisim-Gunlugu]] — Chiron'un kendini geliştirme kaydı: ne yaptı, neden daha iyi, ne öğrendi
 - [[Plan-Claude-Entegrasyonu]] — telefondan sesle verilen işi PC'de Claude Code yapar;
   önce Faz 0 (performans ölçümü, test, temizlik)
 - [[Uzaktan-Erisim]] — telefondan Chiron: Tailscale + PIN kapısı (`backend/core/remote_auth.py`),
