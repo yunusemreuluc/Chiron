@@ -21,6 +21,10 @@ yapıldığını** özetliyor.
 > F11 ya da Esc ile geri — `desktop.py FullscreenToggle` (Win32; pywebview `toggle_fullscreen` hiçbir şey
 > yapmıyordu) + `_watch_fullscreen_keys`: tuş Windows'tan okunuyor, çünkü WebView2 F11'i sayfaya ulaştırmadı
 > (Playwright'ta sayfa dinleyicisi çalıştı, gerçek pencerede çalışmadı). Yalnız Chiron öndeyken.
+> **Asıl F11 hatası:** `FindWindowW("Chiron")` Chiron'u değil Windows 11 görev çubuğunun aynı başlıklı
+> `TabProxyWindow`'unu buluyordu — "Chiron önde mi" hep hayır, boyut kaydı da vekilin dikdörtgeni. `_handle()`
+> artık pywebview formunun tanıtıcısını (yoksa bu sürecin penceresini) kullanıyor. Açılış boyutu kullanıcının
+> elle ayarladığı 1575x945 @ 284,33 (fiziksel); varsayılan oran 0.82x0.875. Ölçüldü: F11 → 1920x1080, F11/Esc → geri.
 
 | Konum | Ne var |
 |---|---|

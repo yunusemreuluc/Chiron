@@ -144,8 +144,9 @@ def _visible_bounds() -> tuple[int, int]:
 # İlk açılış boyutu — ekranın oranı olarak. Sabit piksel yazmak farklı
 # çözünürlükte ya bir kenara sıkışır ya taşardı; bu oran 1920x1080'de kullanıcının
 # istediği görünümü (ekran görüntüsündeki pencere) veriyor.
-DEFAULT_WIDTH_RATIO = 0.6
-DEFAULT_HEIGHT_RATIO = 0.7
+# Kullanıcının elle ayarlayıp "bu kalsın" dediği boyut (2026-10-29, ölçüldü: 1920x1080'de 1575x945 fiziksel).
+DEFAULT_WIDTH_RATIO = 0.82
+DEFAULT_HEIGHT_RATIO = 0.875
 
 
 class WindowGeometry:
@@ -170,11 +171,43 @@ class WindowGeometry:
 
     # ── Win32 yardımcıları ──────────────────────────────────────────────────
     def _handle(self):
+        """Chiron'un KENDİ penceresi.
+
+        NEDEN FindWindow değil (2026-10-29, ölçüldü): Windows 11 görev çubuğu aynı başlıkla bir
+        "Windows.Internal.Shell.TabProxyWindow" açıyor ve FindWindowW("Chiron") onu buluyordu. F11 kontrolü
+        "Chiron önde mi" diye o vekile bakıp hep hayır diyordu, boyut kaydı da vekilin dikdörtgenini yazıyordu.
+        Önce pywebview'in WinForms formunun tanıtıcısı; olmazsa bu sürecin aynı başlıklı görünür penceresi.
+        """
         import ctypes
+        from ctypes import wintypes
 
         if self._hwnd:
             return self._hwnd
-        self._hwnd = ctypes.windll.user32.FindWindowW(None, WINDOW_TITLE) or None
+        try:
+            self._hwnd = int(self._window.native.Handle.ToInt64()) or None
+        except Exception:
+            self._hwnd = None
+        if self._hwnd:
+            return self._hwnd
+
+        user32 = ctypes.windll.user32
+        own_pid = os.getpid()
+        found: list[int] = []
+
+        @ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+        def visit(hwnd, _lparam):
+            pid = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+            if pid.value == own_pid and user32.IsWindowVisible(hwnd):
+                title = ctypes.create_unicode_buffer(64)
+                user32.GetWindowTextW(hwnd, title, 64)
+                if title.value == WINDOW_TITLE:
+                    found.append(hwnd)
+                    return False
+            return True
+
+        user32.EnumWindows(visit, 0)
+        self._hwnd = found[0] if found else None
         return self._hwnd
 
     @staticmethod
