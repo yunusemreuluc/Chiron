@@ -83,6 +83,17 @@ daha hızlı biter.
 yargıcı olmasın. Bulguları kodu okuyarak doğrula, gerçek olanları düzelt.
 """
 
+# APK teslimi (2026-10-29): Yunus işteyken telefon adb'de değil (kablosuz hata ayıklama yalnız Wi-Fi'da).
+_APK_PY = BASE_DIR / "venv" / "Scripts" / "python.exe"
+_APK_SCRIPT = BASE_DIR / "backend" / "core" / "apk_teslim.py"
+APK_NOTE = f"""\
+- Android uygulamasını (Dilcep, Chiron mobil…) derleyip telefona kurman gerekirse: önce `adb devices` ile telefon \
+bağlı mı bak; bağlıysa `adb install -r` ile kur. Bağlı DEĞİLSE APK'yı telefona gönder: \
+`"{_APK_PY}" "{_APK_SCRIPT}" <apk-yolu> --ad <uygulama adı> --not "<ne değişti, tek cümle>"`. Telefondaki Chiron \
+indirir, Yunus "Yükle"ye dokunur. Bu yolda ekranı sen göremezsin: son mesajında Yunus'tan neye bakmasını \
+istediğini kısaca yaz.
+"""
+
 SYSTEM_NOTE = f"""\
 Bu iş Yunus'un telefonundan, Chiron üzerinden geldi. Yunus PC başında değil; \
 soru sorarsan cevabı ancak sonra, telefondan gelir.
@@ -92,7 +103,7 @@ force push, Drive/Etsy yüklemesi) O ADIMI YAPMA. Oraya kadar hazırla, sonra so
 "{APPROVAL_MARKER} <tek cümlede ne yapacağın>" satırıyla bitir ve dur.
 - Son mesajın telefonda sesli okunacak: Türkçe, kısa, düz cümleler; ne yaptın, sonuç ne, \
 Yunus'un yapması gereken bir şey var mı. Tablo, kod bloğu, uzun yol listesi yok.
-""" + TEAM_NOTE
+""" + TEAM_NOTE + APK_NOTE
 
 # Panodan (Chiron'un Ajan Ofisi, PC başında) başlatılan iş. Yunus ekranın başında
 # olabilir ya da olmayabilir; özet sesli okunmuyor, karta yazılıyor.
@@ -115,7 +126,7 @@ Bu mesaj Chiron'un sohbet ekranından geldi; Yunus seninle yazışıyor ve aynı
 force push, Drive/Etsy yüklemesi, git push) O ADIMI YAPMA. Oraya kadar hazırla, sonra son mesajını \
 "{APPROVAL_MARKER} <tek cümlede ne yapacağın>" satırıyla bitir ve dur; onayı Yunus bir sonraki mesajda verir.
 - Cevapların Türkçe, kısa ve doğrudan olsun.
-""" + TEAM_NOTE
+""" + TEAM_NOTE + APK_NOTE
 
 # Aynı sohbet, mesaj telefondan (Komuta ekranı ya da sesli Chiron, 2026-10-29). Oturum PC'deki
 # Komuta sohbetiyle ortak; fark: sonuç telefona bildirilir ve sesli okunabilir.

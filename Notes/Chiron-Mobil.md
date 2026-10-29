@@ -251,6 +251,20 @@ oluyor" + Komuta'dan kopukluk + ne yaptığını görememe + fazla onay.
   canlı adımlar (son 6), Onayla/Reddet, Durdur, yazma kutusu; yoklama meşgulken 2 sn, değilken 8 sn.
 - Gerçek cihazda Yunus'la denenmedi (Xiaomi `input tap` yetkisi yok).
 
+## 2026-10-29 (2) — APK teslimi: adb'siz kurulum
+
+Soru: "işteyken Chiron Dilcep'i yapar ama kuramaz, sunucu alsam çözülür mü?" — Hayır: kablosuz hata ayıklama
+yalnız Wi-Fi'da açık (Xiaomi her Wi-Fi değişiminde kapatıp yeni port veriyor); sunucu da aynı engele takılır.
+- **PC:** `backend/core/apk_teslim.py` — kutu `%LOCALAPPDATA%\chironpk` (son 5, zip+manifest kontrolü, sha256).
+  Claude işi `venv\Scripts\python.exe backend\corepk_teslim.py <apk> --ad X --not "..."` ile yayınlar
+  (`APK_NOTE`: önce `adb devices`, bağlıysa adb). Uçlar `GET /api/remote/apk`, `GET /api/remote/apk/{id}/indir`.
+- **Telefon:** `tools/ApkInbox.kt` — `ClaudeWatchWorker` her turda yeni APK'ya bakar, indirir, sha256 doğrular,
+  "<ad> hazır · Yükle" bildirimi; dokununca `MainActivity` → izin yoksa "bilinmeyen uygulamalar" ayarı, varsa
+  FileProvider (`${applicationId}.apk`, yalnız `cache/apk/`) + `ACTION_VIEW`. Komuta listesinin başında son
+  3 günün APK kartı. Komuta'dan gönderilen mesaj da worker'ı kurar. İzin listesinde "Uygulama yükleme".
+- Bilinen sınır: worker yalnız iş sürerken yoklar (APK işten gelir); iş yokken elle yayınlanan APK Komuta'da görünür.
+- PC tarafı uçtan uca denendi (CLI → liste → 23 MB indirme). Telefonda yükleme Yunus'la denenmedi.
+
 ## Sıradaki
 
 - Gerçek kullanımda uyandırma geri bildirimi; arabada 2 ortam kaydı → yeniden eğitim;

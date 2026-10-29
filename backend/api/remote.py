@@ -14,10 +14,11 @@ from ctypes import wintypes
 from typing import Any
 
 from fastapi import APIRouter, Request, Response
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from backend.api import system as system_api
-from backend.core import claude_jobs, commands, desktop_control, feature_requests, remote_auth
+from backend.core import apk_teslim, claude_jobs, commands, desktop_control, feature_requests, remote_auth
 from backend.core.ofis import WAITING, WORKING, office as office_state
 from backend.core.sohbet import SohbetError, sohbet
 from backend.websocket.manager import manager
@@ -518,6 +519,31 @@ async def acknowledge_feature_requests(body: FeatureRequestAck) -> dict:
     """Telefonun kullanıcıya haber verdiği istekleri işaretler."""
     updated = await asyncio.to_thread(feature_requests.mark_notified, body.numbers)
     return {"success": True, "message": "bildirimler güncellendi", "data": {"updated": updated}}
+
+
+# ── APK teslimi (2026-10-29) — bkz. backend/core/apk_teslim.py ─────────────────
+# adb yalnız Wi-Fi'da çalışıyor; telefon APK'yı buradan indirip kendisi "Yükle" bildirimi gösterir.
+
+
+@router.get("/apk")
+async def list_apks() -> dict:
+    items = await asyncio.to_thread(apk_teslim.listing)
+    return {"success": True, "message": "apk", "data": {"apks": items}}
+
+
+@router.get("/apk/{apk_id}/indir")
+async def download_apk(apk_id: str, response: Response):
+    try:
+        item, path = await asyncio.to_thread(apk_teslim.file_for, apk_id)
+    except apk_teslim.ApkError as error:
+        response.status_code = 404
+        return {"success": False, "message": str(error), "data": {}}
+    return FileResponse(
+        path,
+        media_type="application/vnd.android.package-archive",
+        filename=f"{item['name']}.apk",
+        headers={"X-Chiron-Sha256": item["sha256"]},
+    )
 
 
 # ── Telefondan sesli iş → Komuta sohbeti (2026-10-29) ─────────────────────────
