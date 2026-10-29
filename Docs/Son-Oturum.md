@@ -17,6 +17,10 @@ indir. Üç madde yeter; roman değil, köprü.
   Sistem komutuna ada göre `SPEAKING_STYLE` (Chiron sakin/kuru espri, Daphne yumuşak/sıcak). Telefon da aynı liste;
   kadın seste telefon asistanı artık Daphne adını kullanıyor.
 
+- Telefon ekranındaki "senin söylediğin" satırı Live'ın zayıf tanıyıcısından geliyordu (model doğru anlarken yanlış
+  yazı). Tur bitince ses `live/Transcriber.kt` ile gemini-3.5-flash-lite'a (yedek 3.1-flash-lite) yazdırılıp satır
+  yerinde değişiyor (~2 sn). gemini-3.8-flash o an 503/20 sn+ idi, kullanılmadı. Gerçek konuşmada denenmedi.
+
 **Nerede kalındı / yarın:** PC Chiron yeniden başlatılmalı (çalışan süreç eski kodla). Yeni APK
 kablosuz adb ile kuruldu (192.168.137.184:40233, açılıyor, çökme yok). Sesleri gerçek konuşmada dinleyip tonu ayarla.
 Önceki günün sesli deneme maddeleri hâlâ açık. `tests/test_bekci.py::test_write_rules` değişiklikten önce de kırık.
