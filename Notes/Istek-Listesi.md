@@ -57,8 +57,9 @@ Durum değerleri: `yeni` → `bakıldı` → `yapıldı` / `yapılmayacak`. Duru
 <!-- ids: aa8d8c13-c58f-476c-b1ad-733e6094662c -->
 
 ### İ-010 · Terminalde yeni sekme açma ve Claude'a bağlanma
-**Durum:** yeni · **Sayı:** 1 · **Bildirildi:** hayır
+**Durum:** bakıldı · **Sayı:** 1 · **Bildirildi:** hayır
 - 2026-10-20 03:48 · "terminalde yeni secme aç ve clauda bağlan" · denenen: uygun araç yok · Xiaomi 22101316G, 0.1.0
   - Ayrıntı: Kullanıcı Windows Terminal uygulamasında yeni bir sekme açmak ve bu sekme üzerinden Claude'a bağlanmak istiyor. Mevcut araç setinde Terminal içinde sekme açma veya Claude entegrasyonu sağlama işlevi bulunmamaktadır. İdeal olarak, komut doğrudan PC'de yürütülmelidir.
+  - 2026-10-30 · PC'deki sesli Chiron'a `open_terminal` eklendi ([[Terminal]]). Telefondan doğrudan açmak için mobil uygulamaya ve `desktop_control` beyaz listesine eylem eklenmesi gerekiyor — o yüzden `yapıldı` değil.
 <!-- ids: 6870dc01-f4eb-47da-b34c-2bf12e6cb247 -->
 

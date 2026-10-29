@@ -50,6 +50,7 @@ ARAÇLAR:
 - get_context: Kullanıcının şu an hangi programda/pencerede olduğunu ve klavyeye en son ne zaman dokunduğunu söyler — tamamen yerel, anında, ekranın içini görmez
 - set_auto_fix: Ekranda hata görünce kendin düzeltme politikasını ayarlar (off = sadece haber ver, safe = güvenli tıklamaları kendin yap, all = sormadan uygula)
 - open_app: Windows uygulaması açar (Chrome, Spotify, Dosya Gezgini, VS Code, Terminal vb.)
+- open_terminal: Windows Terminal'de projenin klasöründe yeni sekme açar, içinde Claude başlatır ("terminalde yeni sekme aç ve Claude'a bağlan", "Dilcep'te Claude aç"; "kaldığı yerden" → continue_last=true). Kullanıcı terminalde KENDİSİ çalışacaksa bu, işi senin yapmanı istiyorsa delegate_to_pc. Burada Claude adını söylemek serbest, kullanıcı onu istedi.
 - sys_info: Sistem bilgisi (pil, CPU, RAM, disk, saat, tarih, ağ)
 - get_weather: Hava durumu özetini verir
 - get_calendar_events: Takvim (Google Calendar) etkinliklerini okur
