@@ -65,3 +65,22 @@ def test_pc_voice_task_is_not_notified_to_phone(tmp_path):
     store.phone_task("PC'den iş", via="pc")
     store.phone_task("telefondan iş", new_topic=True)
     assert calls == ["sohbet", "sohbet_tel"]
+
+
+def test_finished_jobs_are_announced_once(monkeypatch):
+    jobs = {
+        "a1": {"status": "running"},
+        "b2": {"status": "done", "summary": "Alt bar kırmızı oldu."},
+        "c3": {"status": "needs_approval", "approval": "git push", "summary": "Hazır."},
+        "d4": {"status": "cancelled"},
+    }
+    monkeypatch.setattr(pc_isi.requests, "get", lambda url, timeout: _Response({"data": jobs.get(url.rsplit("/", 1)[-1], {})}))
+    pc_isi._pending.clear()
+    pc_isi._pending.update({"a1", "b2", "c3", "d4", "yok"})
+
+    messages = pc_isi.finished_announcements()
+    joined = " ".join(messages)
+    assert len(messages) == 2 and "Alt bar kırmızı oldu." in joined and "git push" in joined
+    assert pc_isi._pending == {"a1"}  # süren iş bekliyor; biten, iptal ve kaydı olmayan düştü
+    assert pc_isi.finished_announcements() == []  # aynı sonuç ikinci kez söylenmez
+    pc_isi._pending.clear()

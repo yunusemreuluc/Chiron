@@ -142,6 +142,14 @@ async def set_startup(update: ToggleUpdate) -> dict:
     }
 
 
+@router.post("/fullscreen")
+async def toggle_fullscreen() -> dict:
+    """Masaüstü penceresini tam ekrana alır / çıkarır (F11, bkz. desktop.py)."""
+    if not commands.dispatch("fullscreen", {}):
+        return {"success": False, "message": "Tam ekran bu pencerede kullanılamıyor.", "data": {}}
+    return {"success": True, "message": "Tam ekran değişti", "data": {}}
+
+
 @router.post("/tray")
 async def minimize_to_tray() -> dict:
     """Pencereyi gizleyip sistem tepsisine indirir (bkz. desktop.py)."""

@@ -163,6 +163,7 @@ class WindowGeometry:
     def __init__(self, window) -> None:
         self._window = window
         self._hwnd = None
+        self.skip_save = False  # FullscreenToggle tam ekrandayken True
 
     # ── Win32 yardımcıları ──────────────────────────────────────────────────
     def _handle(self):
@@ -202,7 +203,8 @@ class WindowGeometry:
         state = _load_window_state()
         screen_width, screen_height = _visible_bounds()
 
-        if state.get("maximized"):
+        # Kayıt yoksa büyütülmüş (2026-10-29, kullanıcı: "şu an ekrandaki boyutuyla açılsın").
+        if state.get("maximized", True):
             ctypes.windll.user32.ShowWindow(hwnd, self._SW_MAXIMIZE)
             return
 
@@ -228,6 +230,8 @@ class WindowGeometry:
     def save(self) -> None:
         import ctypes
 
+        if self.skip_save:
+            return  # tam ekranda kapandı: önceki kayıt kalsın
         hwnd = self._handle()
         if not hwnd:
             return
@@ -248,6 +252,83 @@ class WindowGeometry:
     def bind(self) -> None:
         self._window.events.shown += self.apply_saved
         self._window.events.closing += self.save
+
+
+class FullscreenToggle:
+    """F11 tam ekran (2026-10-29): çerçeve kalkar, pencere monitörün tamamını (görev çubuğu dahil) kaplar;
+    ikinci basışta eski yerleşim (büyütülmüş ya da normal) geri gelir.
+
+    pywebview'in `toggle_fullscreen`'i burada işe yaramadı: büyütülmüş pencerede hata vermeden hiçbir şey
+    yapmadı (ölçüldü: önce/sonra aynı dikdörtgen; ayrıca tanıtıcıyı `ToInt32` ile kırpıyor). Win32'nin bilinen
+    yolu: stil + yerleşimi sakla, WS_OVERLAPPEDWINDOW'u kaldır, monitör dikdörtgenine SetWindowPos.
+    """
+
+    _GWL_STYLE = -16
+    _WS_OVERLAPPEDWINDOW = 0x00CF0000
+    _MONITOR_DEFAULTTONEAREST = 2
+    _SWP_NOOWNERZORDER, _SWP_FRAMECHANGED, _SWP_NOMOVE, _SWP_NOSIZE, _SWP_NOZORDER = 0x200, 0x20, 0x2, 0x1, 0x4
+
+    def __init__(self, geometry: "WindowGeometry") -> None:
+        self._geometry = geometry
+        self._saved: tuple | None = None  # (stil, WINDOWPLACEMENT) — tam ekrandayken dolu
+        self._lock = threading.Lock()
+
+    @property
+    def active(self) -> bool:
+        return self._saved is not None
+
+    def toggle(self) -> None:
+        import ctypes
+        from ctypes import wintypes
+
+        class MONITORINFO(ctypes.Structure):
+            _fields_ = [("cbSize", wintypes.DWORD), ("rcMonitor", wintypes.RECT),
+                        ("rcWork", wintypes.RECT), ("dwFlags", wintypes.DWORD)]
+
+        class WINDOWPLACEMENT(ctypes.Structure):
+            _fields_ = [("length", wintypes.UINT), ("flags", wintypes.UINT), ("showCmd", wintypes.UINT),
+                        ("ptMinPosition", wintypes.POINT), ("ptMaxPosition", wintypes.POINT),
+                        ("rcNormalPosition", wintypes.RECT)]
+
+        user32 = ctypes.windll.user32
+        user32.GetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int]
+        user32.GetWindowLongPtrW.restype = ctypes.c_ssize_t
+        user32.SetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_ssize_t]
+        user32.SetWindowLongPtrW.restype = ctypes.c_ssize_t
+        user32.MonitorFromWindow.argtypes = [wintypes.HWND, wintypes.DWORD]
+        user32.MonitorFromWindow.restype = wintypes.HMONITOR
+        user32.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int,
+                                        ctypes.c_int, ctypes.c_int, wintypes.UINT]
+
+        hwnd = self._geometry._handle()
+        if not hwnd:
+            return
+        with self._lock:
+            if self._saved is None:
+                placement = WINDOWPLACEMENT()
+                placement.length = ctypes.sizeof(WINDOWPLACEMENT)
+                info = MONITORINFO()
+                info.cbSize = ctypes.sizeof(MONITORINFO)
+                monitor = user32.MonitorFromWindow(hwnd, self._MONITOR_DEFAULTTONEAREST)
+                if not (user32.GetWindowPlacement(hwnd, ctypes.byref(placement))
+                        and user32.GetMonitorInfoW(monitor, ctypes.byref(info))):
+                    return
+                style = user32.GetWindowLongPtrW(hwnd, self._GWL_STYLE)
+                self._saved = (style, placement)
+                self._geometry.skip_save = True
+                user32.SetWindowLongPtrW(hwnd, self._GWL_STYLE, style & ~self._WS_OVERLAPPEDWINDOW)
+                rect = info.rcMonitor
+                user32.SetWindowPos(hwnd, None, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
+                                    self._SWP_NOOWNERZORDER | self._SWP_FRAMECHANGED)
+            else:
+                style, placement = self._saved
+                self._saved = None
+                self._geometry.skip_save = False
+                user32.SetWindowLongPtrW(hwnd, self._GWL_STYLE, style)
+                user32.SetWindowPlacement(hwnd, ctypes.byref(placement))
+                user32.SetWindowPos(hwnd, None, 0, 0, 0, 0,
+                                    self._SWP_NOMOVE | self._SWP_NOSIZE | self._SWP_NOZORDER
+                                    | self._SWP_NOOWNERZORDER | self._SWP_FRAMECHANGED)
 
 
 # ── Pencere kimliği ve ikonu ────────────────────────────────────────────────
@@ -658,12 +739,17 @@ def main() -> int:
         width=WINDOW_SIZE[0],
         height=WINDOW_SIZE[1],
         min_size=WINDOW_MIN_SIZE,
+        # Büyütülmüş kayıtta pencere ilk karede büyük açılır: önceden 1600x950 açılıp gösterildikten
+        # sonra büyüyordu, açılışta görünür bir sıçrama oluyordu (apply_saved yine de garantiler).
+        maximized=bool(_load_window_state().get("maximized", True)),
         background_color=WINDOW_BACKGROUND,
         text_select=False,  # HUD'da metin seçimi imleci arayüzü "belge" gibi gösteriyor
     )
     # Onay geometri kaydından ÖNCE: sırayla çağrılıyorlar, iptal edilse de kayıt zararsız.
     window.events.closing += QuitGuard.on_closing
-    WindowGeometry(window).bind()
+    geometry = WindowGeometry(window)
+    geometry.bind()
+    fullscreen = FullscreenToggle(geometry)
     # İkon pencere GÖRÜNDÜKTEN sonra ayarlanıyor: HWND ancak o zaman var.
     window.events.shown += _apply_window_icon
 
@@ -673,6 +759,9 @@ def main() -> int:
 
     tray = TrayController(window)
     commands.register("tray", lambda _payload: tray.minimize())
+    # F11 (arayüzde dinleniyor → /api/settings/fullscreen): görev çubuğunu da kapatan tam ekran, tekrar
+    # basınca eski hâli. Esc de çıkarır (arayüz yalnız tam ekrandayken gönderir).
+    commands.register("fullscreen", lambda _payload: fullscreen.toggle())
 
     # gui="edgechromium": Windows'ta WebView2 (Chromium) motorunu ZORUNLU kılar.
     # Açıkça belirtilmezse pywebview eski MSHTML/EdgeHTML'e düşebilir — orada

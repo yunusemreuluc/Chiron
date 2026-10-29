@@ -27,3 +27,4 @@ export const setStartupEnabled = (enabled: boolean) =>
   request('/api/settings/startup', { method: 'POST', body: JSON.stringify({ enabled }) });
 
 export const minimizeToTray = () => request('/api/settings/tray', { method: 'POST' });
+export const toggleFullscreen = () => request('/api/settings/fullscreen', { method: 'POST' });

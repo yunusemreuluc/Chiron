@@ -968,6 +968,24 @@ class ChironLive:
         except Exception:
             logger.exception("[CHIRON] Proaktif mesaj gönderilemedi")
 
+    async def _watch_pc_jobs(self):
+        """Sesle verilen PC işleri (delegate_to_pc) bitince sesli haber (2026-10-29).
+        Yerel HTTP, 10 sn'de bir; yalnız bekleyen iş varsa ağa çıkar. Chiron konuşurken ya da
+        duraklatılmışken söylemez, sonraki tura bırakır."""
+        from actions import pc_isi
+
+        while True:
+            await asyncio.sleep(10)
+            if not pc_isi._pending or not self._proactive_checks_allowed():
+                continue
+            try:
+                messages = await asyncio.to_thread(pc_isi.finished_announcements)
+            except Exception:
+                logger.exception("[CHIRON] PC işi kontrolü başarısız")
+                continue
+            for text in messages:
+                await self._send_proactive_system_message(text)
+
     async def _watch_screen_for_issues(self):
         """Proaktif ekran izleme (YAPILACAKLAR.md #4). Periyodik olarak aktif pencereyi
         tarar; kullanıcının dikkatini gerektiren açık bir durum (hata/uyarı penceresi vb.)
@@ -1627,6 +1645,7 @@ class ChironLive:
                     tg.create_task(self._watch_screen_for_issues())
                     tg.create_task(self._watch_system_health())
                     tg.create_task(self._watch_custom_conditions())
+                    tg.create_task(self._watch_pc_jobs())
                     tg.create_task(self._watch_daily_briefing())
 
             except Exception as e:

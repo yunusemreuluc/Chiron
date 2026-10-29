@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 
 // Notes/Tasarim-Kurallari.md § Enerji çekirdeği — tüm 3D sahne (EnergyCore,
-// ElectricArcs, OrbitNodes, NodeConnections) ve 2D HUD bu tek durumu okuyor.
+// EnergyTendrils) ve 2D HUD bu tek durumu okuyor.
 // ileride backend'in `energy_state` WebSocket olayı bu store'u besleyecek —
 // şimdilik frontend/hooks/useDemoAIStateCycle.ts geçici bir demo döngüsüyle besliyor.
 //

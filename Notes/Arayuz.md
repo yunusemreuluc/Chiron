@@ -12,6 +12,13 @@ yapıldığını** özetliyor.
 
 ## Yerleşim
 
+> **2026-10-29:** Dönen yörünge düğümleri (`OrbitNodes`), aralarındaki çizgiler (`NodeConnections`), şimşek
+> (`ElectricArcs`) ve düğüm odak kartı (`NodeFocusCard`) kullanıcı isteğiyle silindi; sahnede çekirdek, tendriller
+> ve toz kaldı. Vision paneli kamera açıkken gelir. Pencere büyütülmüş açılır (`create_window(maximized=…)`, ilk
+> karede; kayıt yoksa büyütülmüş). **F11** tam ekran (görev çubuğu dahil), tekrar F11 ya da Esc ile geri —
+> `desktop.py FullscreenToggle` (Win32 stil + yerleşim; pywebview `toggle_fullscreen` büyütülmüş pencerede hiçbir
+> şey yapmıyordu, ölçüldü). Tam ekrandayken kapanırsa boyut kaydı ezilmez.
+
 | Konum | Ne var |
 |---|---|
 | Sol üst | CHIRON imzası + canlı durum (`BrandBadge.tsx`) |

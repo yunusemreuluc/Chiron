@@ -5,14 +5,11 @@ import { Canvas } from '@react-three/fiber';
 import { Environment } from '@react-three/drei';
 import { Background } from './Background';
 import { CAMERA_DISTANCE, CameraRig } from './CameraRig';
-import { ElectricArcs } from './ElectricArcs';
 import { EnergyCore } from './EnergyCore';
 import { EnergyTendrils } from './EnergyTendrils';
 import { FrameGovernor } from './FrameGovernor';
 import { FrameProbe } from './FrameProbe';
 import { Lighting } from './Lighting';
-import { NodeConnections } from './NodeConnections';
-import { OrbitNodes } from './OrbitNodes';
 import { PostProcessing } from './PostProcessing';
 import { useNavigationStore } from '@/stores/navigationStore';
 
@@ -60,9 +57,8 @@ export function Scene() {
       <CameraRig />
       <EnergyCore />
       <EnergyTendrils />
-      <ElectricArcs />
-      <NodeConnections />
-      <OrbitNodes />
+      {/* 2026-10-29, kullanıcı isteği: dönen düğümler (dosya, hafıza…), aralarındaki çizgiler ve şimşek
+          (ElectricArcs) kaldırıldı — çekirdek, tendriller ve toz kaldı. */}
       <PostProcessing />
       {/* Kare süresi sondası — `window.__chironFps()` ile okunuyor. Kare başına
           tek bir dizi yazması; sahneyi görsel olarak etkilemiyor. */}

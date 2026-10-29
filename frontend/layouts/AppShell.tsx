@@ -7,7 +7,6 @@ import { AssistantDock } from '@/components/AssistantDock';
 import { BootOverlay } from '@/components/BootOverlay';
 import { BrandBadge } from '@/components/BrandBadge';
 import { LeftPanel } from '@/components/LeftPanel';
-import { NodeFocusCard } from '@/components/NodeFocusCard';
 import { OfficeView } from '@/components/office/OfficeView';
 import { Sidebar } from '@/components/Sidebar';
 import { SleepVeil } from '@/components/SleepVeil';
@@ -16,7 +15,7 @@ import { TrayControl } from '@/components/TrayControl';
 import { VisionPanel } from '@/components/VisionPanel';
 import { useAIStateConnection } from '@/hooks/useAIStateConnection';
 import { useThinkingSound } from '@/hooks/useThinkingSound';
-import { fetchSettings } from '@/services/settingsApi';
+import { fetchSettings, toggleFullscreen } from '@/services/settingsApi';
 import { configureSfx, playSfx } from '@/services/sfxPlayer';
 import { usePowerStore } from '@/stores/powerStore';
 
@@ -81,6 +80,21 @@ export function AppShell() {
   // `opacity-0` sınıfını her zaman ezer (ilk denemede HUD hiç sönmedi, yalnızca
   // perdenin altında karardı). Bu yüzden açılış animasyonu dış motion.div'de,
   // uyku sönmesi İÇ div'de: iki kütüphane aynı özellik için yarışmıyor.
+  // F11: tam ekran aç/kapat; tam ekrandayken Esc de çıkarır (2026-10-29). Pencereyi masaüstü süreci
+  // değiştiriyor (desktop.py → window.toggle_fullscreen); tarayıcıdaki Fullscreen API WebView2'de pencereyi
+  // değil yalnız sayfayı büyütürdü. Tam ekran olup olmadığı pencere boyutundan okunuyor.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      const isFull = window.innerWidth >= screen.width && window.innerHeight >= screen.height;
+      if (event.key === 'F11' || (event.key === 'Escape' && isFull)) {
+        event.preventDefault();
+        void toggleFullscreen();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   const isAsleep = usePowerStore((state) => state.powerState === 'asleep');
   const hudClass = `transition-opacity duration-[900ms] ${
     isAsleep ? 'pointer-events-none opacity-0' : 'opacity-100'
@@ -132,7 +146,6 @@ export function AppShell() {
             <TrayControl />
           </div>
           <VisionPanel />
-          <NodeFocusCard />
         </div>
       </motion.div>
 

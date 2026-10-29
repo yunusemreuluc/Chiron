@@ -22,4 +22,6 @@ olduğu için uç `via="pc"` yazar (origin `sohbet`, telefona bildirim gitmez); 
 ancak `success=true`'dan sonra; Claude'dan söz edilmez. Telefonda aynı hata yaşandı: model "Hemen hallediyorum"
 deyip aracı çağırmadan netleştirme sorusu sordu.
 
-**Sınır:** iş bitince PC'deki sesli Chiron kendiliğinden haber vermiyor — sonuç Komuta'da. Testler `tests/test_pc_isi.py`.
+**Bitince sesli haber (2026-10-29):** `delegate_to_pc` iş kimliğini `_pending`'e koyar; main.py `_watch_pc_jobs` 10 sn'de
+bir `finished_announcements()` ile bakar, biten işi `[SİSTEM] PC işi sonucu` olarak Gemini'ye verir (birinci ağızdan,
+Claude'suz). Chiron konuşurken/duraklıyken bekler. Yalnız sesle verilen işler; bellekte (yeniden başlatmada düşer). Testler `tests/test_pc_isi.py`.
