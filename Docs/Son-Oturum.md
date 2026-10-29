@@ -18,7 +18,7 @@ indir. Üç madde yeter; roman değil, köprü.
   kadın seste telefon asistanı artık Daphne adını kullanıyor.
 
 **Nerede kalındı / yarın:** PC Chiron yeniden başlatılmalı (çalışan süreç eski kodla). Yeni APK
-(app/build/outputs/apk/debug) telefona kurulmadı — adb bağlı değildi. Sesleri gerçek konuşmada dinleyip tonu ayarla.
+kablosuz adb ile kuruldu (192.168.137.184:40233, açılıyor, çökme yok). Sesleri gerçek konuşmada dinleyip tonu ayarla.
 Önceki günün sesli deneme maddeleri hâlâ açık. `tests/test_bekci.py::test_write_rules` değişiklikten önce de kırık.
 
 ## Oturum: 2026-10-29 — "Jarvis gibi": telefondan/sesle iş, ekip, APK teslimi, arayüz sadeleşti
