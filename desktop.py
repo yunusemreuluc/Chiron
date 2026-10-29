@@ -311,79 +311,74 @@ class WindowGeometry:
 
 class FullscreenToggle:
     """F11 tam ekran (2026-10-29): çerçeve kalkar, pencere monitörün tamamını (görev çubuğu dahil) kaplar;
-    ikinci basışta eski yerleşim (büyütülmüş ya da normal) geri gelir.
+    ikinci basışta eski boyut/konum/durum geri gelir.
 
-    pywebview'in `toggle_fullscreen`'i burada işe yaramadı: büyütülmüş pencerede hata vermeden hiçbir şey
-    yapmadı (ölçüldü: önce/sonra aynı dikdörtgen; ayrıca tanıtıcıyı `ToInt32` ile kırpıyor). Win32'nin bilinen
-    yolu: stil + yerleşimi sakla, WS_OVERLAPPEDWINDOW'u kaldır, monitör dikdörtgenine SetWindowPos.
+    WinForms formunun KENDİ özellikleriyle, arayüz iş parçacığında (Invoke). İki deneme ölçülerek bırakıldı:
+    - pywebview `toggle_fullscreen`: büyütülmüş pencerede hiçbir şey yapmadı (tanıtıcıyı ToInt32'ye de kırpıyor).
+    - Ham Win32 (stil + SetWindowPos): pencere 1920x1080 oldu ama WinForms düzeni haber almadı, WebView2 eski
+      boyutta kaldı — sağda ve altta pencerenin boş zemini göründü (kullanıcı: "kenarlarda arka plan görünüyor").
     """
-
-    _GWL_STYLE = -16
-    _WS_OVERLAPPEDWINDOW = 0x00CF0000
-    _MONITOR_DEFAULTTONEAREST = 2
-    _SWP_NOOWNERZORDER, _SWP_FRAMECHANGED, _SWP_NOMOVE, _SWP_NOSIZE, _SWP_NOZORDER = 0x200, 0x20, 0x2, 0x1, 0x4
 
     def __init__(self, geometry: "WindowGeometry") -> None:
         self._geometry = geometry
-        self._saved: tuple | None = None  # (stil, WINDOWPLACEMENT) — tam ekrandayken dolu
-        self._lock = threading.Lock()
+        self._saved: tuple | None = None  # (kenarlık stili, sınırlar, pencere durumu) — tam ekrandayken dolu
 
     @property
     def active(self) -> bool:
         return self._saved is not None
 
-    def toggle(self) -> None:
-        import ctypes
-        from ctypes import wintypes
-
-        class MONITORINFO(ctypes.Structure):
-            _fields_ = [("cbSize", wintypes.DWORD), ("rcMonitor", wintypes.RECT),
-                        ("rcWork", wintypes.RECT), ("dwFlags", wintypes.DWORD)]
-
-        class WINDOWPLACEMENT(ctypes.Structure):
-            _fields_ = [("length", wintypes.UINT), ("flags", wintypes.UINT), ("showCmd", wintypes.UINT),
-                        ("ptMinPosition", wintypes.POINT), ("ptMaxPosition", wintypes.POINT),
-                        ("rcNormalPosition", wintypes.RECT)]
-
-        user32 = ctypes.windll.user32
-        user32.GetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int]
-        user32.GetWindowLongPtrW.restype = ctypes.c_ssize_t
-        user32.SetWindowLongPtrW.argtypes = [wintypes.HWND, ctypes.c_int, ctypes.c_ssize_t]
-        user32.SetWindowLongPtrW.restype = ctypes.c_ssize_t
-        user32.MonitorFromWindow.argtypes = [wintypes.HWND, wintypes.DWORD]
-        user32.MonitorFromWindow.restype = wintypes.HMONITOR
-        user32.SetWindowPos.argtypes = [wintypes.HWND, wintypes.HWND, ctypes.c_int, ctypes.c_int,
-                                        ctypes.c_int, ctypes.c_int, wintypes.UINT]
-
-        hwnd = self._geometry._handle()
-        if not hwnd:
+    @staticmethod
+    def _sync_webview(form) -> None:
+        """WebView2'ye yeni boyutu zorla ilet. Ölçüldü: form ve WebView2'nin dış kabı 1920x1080 oluyor ama
+        sayfayı çizen iç tarayıcı penceresi (Chrome_WidgetWin_1) eski boyutta kalıyordu. Denetleyiciye
+        doğrudan sınır + "üst pencere konumu değişti" bildirimi (kontrol kapalı alanda, yansımayla)."""
+        webview = getattr(form, "webview", None)
+        if webview is None:
             return
-        with self._lock:
+        try:
+            from System.Drawing import Rectangle
+            from System.Reflection import BindingFlags
+
+            field = webview.GetType().GetField("_coreWebView2Controller", BindingFlags.NonPublic | BindingFlags.Instance)
+            controller = field.GetValue(webview) if field is not None else None
+            if controller is not None:
+                size = webview.ClientSize
+                controller.Bounds = Rectangle(0, 0, size.Width, size.Height)
+                controller.NotifyParentWindowPositionChanged()
+        except Exception:
+            logging.getLogger("chiron").debug("WebView2 boyutu iletilemedi", exc_info=True)
+
+    def toggle(self) -> None:
+        form = getattr(self._geometry._window, "native", None)
+        if form is None:
+            return
+        from System import Action  # pythonnet — pywebview'in WinForms arka ucu zaten yüklüyor
+        import System.Windows.Forms as WinForms
+
+        def run() -> None:
             if self._saved is None:
-                placement = WINDOWPLACEMENT()
-                placement.length = ctypes.sizeof(WINDOWPLACEMENT)
-                info = MONITORINFO()
-                info.cbSize = ctypes.sizeof(MONITORINFO)
-                monitor = user32.MonitorFromWindow(hwnd, self._MONITOR_DEFAULTTONEAREST)
-                if not (user32.GetWindowPlacement(hwnd, ctypes.byref(placement))
-                        and user32.GetMonitorInfoW(monitor, ctypes.byref(info))):
-                    return
-                style = user32.GetWindowLongPtrW(hwnd, self._GWL_STYLE)
-                self._saved = (style, placement)
+                self._saved = (form.FormBorderStyle, form.Bounds, form.WindowState)
                 self._geometry.skip_save = True
-                user32.SetWindowLongPtrW(hwnd, self._GWL_STYLE, style & ~self._WS_OVERLAPPEDWINDOW)
-                rect = info.rcMonitor
-                user32.SetWindowPos(hwnd, None, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
-                                    self._SWP_NOOWNERZORDER | self._SWP_FRAMECHANGED)
+                # Önce normale: büyütülmüş formda Bounds değişikliği yok sayılıyor.
+                form.WindowState = WinForms.FormWindowState.Normal
+                form.FormBorderStyle = getattr(WinForms.FormBorderStyle, "None")
+                form.Bounds = WinForms.Screen.FromControl(form).Bounds
             else:
-                style, placement = self._saved
+                style, bounds, state = self._saved
                 self._saved = None
                 self._geometry.skip_save = False
-                user32.SetWindowLongPtrW(hwnd, self._GWL_STYLE, style)
-                user32.SetWindowPlacement(hwnd, ctypes.byref(placement))
-                user32.SetWindowPos(hwnd, None, 0, 0, 0, 0,
-                                    self._SWP_NOMOVE | self._SWP_NOSIZE | self._SWP_NOZORDER
-                                    | self._SWP_NOOWNERZORDER | self._SWP_FRAMECHANGED)
+                form.FormBorderStyle = style
+                form.Bounds = bounds
+                form.WindowState = state
+            self._sync_webview(form)
+
+        try:
+            if form.InvokeRequired:
+                form.Invoke(Action(run))
+            else:
+                run()
+        except Exception:
+            logging.getLogger("chiron").exception("Tam ekran değiştirilemedi")
 
 
 def _watch_fullscreen_keys(geometry: "WindowGeometry", fullscreen: FullscreenToggle) -> None:

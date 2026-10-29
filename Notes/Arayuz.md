@@ -24,7 +24,10 @@ yapıldığını** özetliyor.
 > **Asıl F11 hatası:** `FindWindowW("Chiron")` Chiron'u değil Windows 11 görev çubuğunun aynı başlıklı
 > `TabProxyWindow`'unu buluyordu — "Chiron önde mi" hep hayır, boyut kaydı da vekilin dikdörtgeni. `_handle()`
 > artık pywebview formunun tanıtıcısını (yoksa bu sürecin penceresini) kullanıyor. Açılış boyutu kullanıcının
-> elle ayarladığı 1575x945 @ 284,33 (fiziksel); varsayılan oran 0.82x0.875. Ölçüldü: F11 → 1920x1080, F11/Esc → geri.
+> elle ayarladığı 1575x945 @ 284,33 (fiziksel); varsayılan oran 0.82x0.875. Ölçüldü: F11 → 1920x1080, F11/Esc → geri. **Kenar boşluğu (aynı gün):** ham Win32 tam ekranında pencere büyüyor ama WebView2'nin
+> iç tarayıcı penceresi (`Chrome_WidgetWin_1`) eski boyutta kalıyordu — sağ/altta boş zemin. Şimdi WinForms
+> özellikleriyle (UI iş parçacığı, Invoke) + `_sync_webview`: denetleyiciye (`_coreWebView2Controller`, yansıma)
+> `Bounds` + `NotifyParentWindowPositionChanged()`. Ölçüldü: tüm alt pencereler 1920x1080, dönüşte 1557x898.
 
 | Konum | Ne var |
 |---|---|
