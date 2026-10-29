@@ -13,6 +13,7 @@ memory/phone_book.json
 # Gerçek konuşma günlüğü — tarih/saat damgalı diyalogların tamamı burada.
 # `.example.json` kardeşleri gibi görünüyor ama ÖRNEK DEĞİL, canlı veri.
 memory/activity_log.json
+memory/son_konusma.json
 
 # Obsidian'ın makineye özel düzen durumu (açık paneller, sidebar genişliği).
 # Ayarlar (app/appearance/core-plugins/graph) paylaşılıyor, bu paylaşılmıyor:

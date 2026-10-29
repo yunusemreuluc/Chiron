@@ -41,6 +41,7 @@ from core.tool_registry import register_tool, dispatch_tool
 from actions.tool_result import fail, ok
 from app_config import SPEAKING_STYLE, assistant_name, current_voice, get_app_config_value, save_app_config, voice_for
 from memory.memory_manager import load_memory, update_memory, format_memory_for_prompt
+from memory import son_konusma
 # NOT: Aşağıdaki actions/* import'ları main.py içinde İSİMLE hiç çağrılmıyor —
 # hepsi kendi modüllerinde @register_tool(...) ile işaretli (bkz. core/tool_registry.py).
 # Import'un TEK amacı o modülü yükleyip dekoratörü çalıştırmak (registry'ye kaydetmek);
@@ -892,6 +893,14 @@ class ChironLive:
         sys_p += f"\n\nKONUŞMA TARZI:\n- {SPEAKING_STYLE[self._assistant_name]}\n"
         if self._handoff_note:
             sys_p += f"\n{self._handoff_note}\n"
+        else:
+            # Ses değişiminde son konuşma zaten devir notunda; yoksa diskteki son konuşma (memory/son_konusma.py).
+            previous = son_konusma.prompt_block()
+            if previous:
+                sys_p += f"\n{previous}\n"
+        work = self._work_context()
+        if work:
+            sys_p += f"\n{work}\n"
         now     = datetime.datetime.now()
         time_ctx = f"[ŞU ANKİ ZAMAN]\n{now.strftime('%A, %d %B %Y — %H:%M')}\n\n"
 
@@ -925,6 +934,18 @@ class ChironLive:
                 )
             ),
         )
+
+    @staticmethod
+    def _work_context() -> str:
+        """Komuta'daki süren iş (backend sohbet.work_context). HTTP ile: ses döngüsü sohbet'i import etmez
+        (bkz. actions/pc_isi.py). Backend yoksa boş — bağlantıyı geciktirmesin diye kısa süre."""
+        from backend.core.config import PORT
+
+        try:
+            response = requests.get(f"http://127.0.0.1:{PORT}/api/remote/komuta/baglam", timeout=2)
+            return str(((response.json() or {}).get("data") or {}).get("metin") or "")
+        except Exception:
+            return ""
 
     async def _execute_tool(self, fc) -> types.FunctionResponse:
         name = fc.name
@@ -1641,8 +1662,10 @@ class ChironLive:
 
                             if full_in:
                                 self._recent_turns.append(("Kullanıcı", full_in))
+                                son_konusma.add("Kullanıcı", full_in)
                             if full_out:
                                 self._recent_turns.append(("Asistan", full_out))
+                                son_konusma.add(self._assistant_name, full_out)
                             if self._switch_from is not None:
                                 self._switch_turn_done.set()
 

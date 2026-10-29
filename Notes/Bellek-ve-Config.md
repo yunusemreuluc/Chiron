@@ -33,6 +33,14 @@ olurdu. Yani ortada tekrar değil, **ölü bir kopya** vardı.
 `whatsapp_contacts` kategorisi özel formatlanır (`display_name`, `value`, `aliases`) —
 bkz. [[WhatsApp]].
 
+## memory/son_konusma.py — oturumlar arası kısa hafıza (2026-10-30)
+
+Gemini Live oturumu her bağlanışta boş başlar. Son 20 konuşma satırı `memory/son_konusma.json`'a (gitignore)
+yazılır; 12 saatten yeni olanlar yeni oturumun sistem komutuna `[ÖNCEKİ KONUŞMA]` olarak girer (ses değişiminde
+devir notu yerine geçmez, onun yanına girmez). Ayrıca `_work_context()` Komuta'nın son Claude sohbetini
+(`sohbet.work_context`, son 3 gün) `[SÜREN İŞ]` olarak ekler: "şunu da ekle" proje adı olmadan o işin devamı.
+Telefon karşılığı `ConversationMemory.kt` (aynı uç, PC'ye ulaşılamazsa son bilinen bağlam).
+
 ## Araçlarla bağlantı
 `save_memory` / `delete_memory` tool'ları ([[Arac-Tanimlari]]) doğrudan bu modülün
 `update_memory` / `delete_memory` fonksiyonlarını çağırır (main.py `_execute_tool` içinde).

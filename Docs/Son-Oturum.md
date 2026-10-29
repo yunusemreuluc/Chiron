@@ -30,7 +30,14 @@ indir. Üç madde yeter; roman değil, köprü.
   birleştirme Yunus onayıyla. Frenler: 2 sa aralık, günde 6, bekleyen 2, kota yalnız rahatken. Chiron açıldı,
   gelişim AÇIK; ilk kart K-009 çalışıyor (K-008 eski commit'ten açıldığı için iptal edildi). Ayrıntı [[Ajan-Ofisi]].
 
-**Nerede kalındı / yarın:** K-009'un sonucunu Yunus'la gör, birleştir/reddet; arayüz değiştiyse derle. Yeni APK
+- Sohbeti hatırlama (Yunus: "her seferinde Dilcep dememe gerek kalmasın"): Live oturumu her açılışta boş başlıyordu.
+  `memory/son_konusma.py` (PC) ve `service/ConversationMemory.kt` (telefon) son 20 satırı 12 saat saklayıp yeni
+  oturuma `[ÖNCEKİ KONUŞMA]` olarak verir; telefon sohbet ekranı yeniden açılışta geri gelir. İkisi de
+  `GET /api/remote/komuta/baglam` (`sohbet.work_context`) ile Komuta'nın son işini `[SÜREN İŞ]` olarak alır: proje
+  adı söylenmeyen iş onun devamı, new_topic verilmez. Komuta tarafı zaten aynı Claude oturumunu `--resume` ediyordu.
+  Canlı uç gerçek Dilcep işini döndürdü; gerçek sesle denenmedi.
+
+**Nerede kalındı / yarın:** K-009 birleştirme onayı bekliyor ("Dilcep'te Claude aç" türü komut); Yunus'la gör, birleştir/reddet; arayüz değiştiyse derle. Yeni APK
 kablosuz adb ile kuruldu (192.168.137.184:40233, açılıyor, çökme yok). Sesleri gerçek konuşmada dinleyip tonu ayarla.
 Önceki günün sesli deneme maddeleri hâlâ açık. `tests/test_bekci.py::test_write_rules` değişiklikten önce de kırık.
 

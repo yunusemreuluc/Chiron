@@ -323,3 +323,19 @@ def test_claude_args_resume_with_chat_note(tmp_path, monkeypatch):
     assert args[args.index("--resume") + 1] == "sess-0001"
     assert args[args.index("--append-system-prompt") + 1] == claude_jobs.CHAT_NOTE
     assert captured["cwd"] == str(tmp_path)
+
+
+def test_work_context_tells_voice_the_current_job(tmp_path):
+    """Sesli Chiron yeni oturumda süren işi bilir: "Dilcep" denmeden gelen iş onun devamı (2026-10-30)."""
+    store, jobs = _setup(tmp_path)
+    assert store.work_context() == ""
+    chat = store.create("claude", title="Dilcep alt bar")
+    store.send(chat["id"], "Dilcep'te alt barı yeşil yap")
+    assert "şu an sürüyor" in store.work_context()
+    jobs.finish("j1", summary="Alt bar yeşil oldu.", session_id="dddd-0001")
+
+    text = store.work_context()
+    assert '"Dilcep alt bar"' in text and "Alt bar yeşil oldu." in text and "new_topic VERMEDEN" in text
+
+    store.clock = lambda: time.time() + 4 * 86400  # eski iş artık "süren iş" değil
+    assert store.work_context() == ""

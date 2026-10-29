@@ -579,6 +579,12 @@ async def komuta_task(body: KomutaTask, request: Request, response: Response) ->
     return {"success": True, "message": "İş başladı.", "data": _komuta_result(chat)}
 
 
+@router.get("/komuta/baglam")
+async def komuta_context() -> dict:
+    """Sesli Chiron'un oturum açarken sistem komutuna koyduğu son iş (bkz. sohbet.work_context)."""
+    return {"success": True, "message": "bağlam", "data": {"metin": await asyncio.to_thread(sohbet.work_context)}}
+
+
 @router.post("/komuta/onay")
 async def komuta_answer(body: KomutaAnswer, response: Response) -> dict:
     try:

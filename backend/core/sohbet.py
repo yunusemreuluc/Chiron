@@ -42,6 +42,11 @@ MAX_TITLE = 80
 GEMINI_CONTEXT = 8  # Gemini'ye bağlam olarak giden son mesaj sayısı
 CONTEXT_CHARS = 600  # bağlamdaki mesaj başına kırpma
 
+# Sesli Chiron'a verilen "süren iş" bağlamı (work_context, 2026-10-30)
+WORK_CONTEXT_DAYS = 3  # bundan eski sohbet "süren iş" sayılmaz
+WORK_CONTEXT_MESSAGES = 4
+WORK_CONTEXT_CHARS = 300
+
 # Terminal oturumları
 TERMINAL_DAYS = 14
 TERMINAL_LIMIT = 12
@@ -281,6 +286,37 @@ class Sohbet:
                     raise SohbetError(f"'{target['title']}' sohbetinde önceki iş hâlâ sürüyor ({step}).")
             chat_id = target["id"] if target else self.create("claude")["id"]
         return self.send(chat_id, text, via=via)
+
+    def work_context(self) -> str:
+        """Sesli Chiron'un (PC ve telefon) sistem komutuna giren son iş: `phone_task`'ın yazacağı sohbet.
+        2026-10-30, Yunus: "bir şey yaptırıyorum, her seferinde Dilcep dememe gerek kalmasın" — ses
+        oturumu her açılışta sıfırdan başlıyor, hangi işte olunduğunu buradan bilir. Boş: süren iş yok."""
+        with self._lock:
+            claude_chats = [c for c in self._chats.values() if c["agent"] == "claude"]
+            chat = max(claude_chats, key=lambda c: c["updated"], default=None)
+            if chat is None or self.clock() - chat["updated"] > WORK_CONTEXT_DAYS * 86400:
+                return ""
+            if self._sync(chat):
+                self._save()
+            busy = any(m.get("status") in LIVE for m in chat["messages"])
+            past = [m for m in chat["messages"] if m.get("text")][-WORK_CONTEXT_MESSAGES:]
+            title, cwd, updated = chat["title"], chat.get("cwd"), chat["updated"]
+        minutes = int((self.clock() - updated) // 60)
+        ago = f"{minutes} dk önce" if minutes < 120 else f"{minutes // 60} saat önce"
+        where = f", klasör {Path(cwd).name}" if cwd else ""
+        lines = [
+            "[SÜREN İŞ]",
+            f"PC'deki son iş: \"{title}\"{where} — {'şu an sürüyor' if busy else 'son mesaj ' + ago}.",
+        ]
+        for m in past:
+            who = "Kullanıcı" if m["role"] == "ben" else "Sonuç"
+            lines.append(f"- {who}: {' '.join(m['text'].split())[:WORK_CONTEXT_CHARS]}")
+        lines.append(
+            "Kullanıcı proje adını söylemeden iş verirse (\"şunu da ekle\", \"alt barı değiştir\", \"devam et\") bu işin "
+            "devamıdır: proje sormadan, new_topic VERMEDEN gönder. new_topic yalnız kullanıcı açıkça başka bir proje "
+            "ya da ilgisiz bir iş söylerse. Bu bilgiyi kendiliğinden okuma."
+        )
+        return "\n".join(lines)
 
     def answer_job(self, job_id: str, approved: bool) -> dict[str, Any]:
         """Telefondaki onay cevabı iş kimliğiyle gelir: o işin sohbetini bulup aynı oturumu sürdürür."""
