@@ -7,21 +7,26 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
-## Oturum: 2026-10-29 — Çıkış uyarısı + telefondan Komuta ("Jarvis gibi")
+## Oturum: 2026-10-29 — "Jarvis gibi": telefondan/sesle iş, ekip, APK teslimi, arayüz sadeleşti
 
-**Ne yapıldı:** Çalışan iş varken Çıkış (pencere X'i ve tepsi) onay soruyor (`QuitGuard`, c1301f6). Yunus telefonda
-"Claude'a vereyim mi" sorusunu ve Komuta'dan kopukluğu istemedi → sesli iş artık son Komuta sohbetine yazılıyor
-(`/api/remote/komuta`, origin `sohbet_tel`, 3b619a3); Chiron "hallediyorum" diyor, Claude'dan söz etmiyor; telefonda
-Komuta ekranı (chiron-mobile 6bdbb90). Hızlı yol kapısı `UntrustedInput`: son 3 dk dışarıdan metin girdiyse eski sesli onay.
-**Arayüz (aynı oturum):** yan ray, zaman çizelgesi, bildirim/profil, Hafıza/Otomasyon/Tarayıcı kaldırıldı; sol altta yalnız Ajanlar + Ayarlar. `out` derlendi, açık pencere yenilenince görünür.
-**Ekip:** lider ajan adı Jarvis → Chiron; Komuta/telefon işlerine alt ajan kuralı (`TEAM_NOTE`) — kayıtlarda Agent hiç kullanılmamıştı. Ruflo kurulu değil (10-26 kararı: yalnız fikirleri alındı).
-**Ruflo fikirleri:** paralel pano (şeritli kuyruk, 3 iş), alt ajanda model seçimi, ayrı inceleyici; 251/251. Chiron yeniden başlatılınca devrede.
-**APK teslimi:** adb'siz kurulum (PC kutusu + telefon indir/doğrula/Yükle). Deneme APK'sı (Chiron) kutuda; telefonda Yükle denenmedi.
-**Sesli iş:** telefonda model 'hallediyorum' deyip aracı çağırmadan soru soruyordu → prompt: önce araç, soru yok (f0b7652). PC sesli Chiron'un iş aracı hiç yoktu → `delegate_to_pc` eklendi, canlı denendi (854de602 bitti).
-**Son istekler:** PC işi bitince sesli haber (`_watch_pc_jobs`), pencere büyütülmüş açılış + F11 tam ekran (Win32, ölçüldü), sahneden düğümler/çizgiler/şimşek silindi. 259/259.
-**Nerede kalındı:** APK kuruldu, PC yeni kodla açık. Telefonda Komuta ekranı ve sesli hızlı yol Yunus'la denenmedi
-(Xiaomi adb dokunmaya izin vermiyor). Chiron 00:59'da log bırakmadan kapanmıştı (RAM %93, gradle derlemesi sırasında).
-`test_bekci::test_write_rules` basetemp `Temp\claude` altındayken düşüyor (bekçi orayı serbest sayıyor) — kod hatası değil.
+**Ne yapıldı (hepsi commit'li, push'lu):**
+- İş verme: telefon ve PC sesli Chiron işi Komuta'nın son sohbetine yazar (`/api/remote/komuta`; telefon
+  `delegate_to_claude`, PC `delegate_to_pc`); "vereyim mi" yok, önce araç sonra "hallediyorum", Claude'dan söz yok.
+  Hızlı yol kapısı `UntrustedInput` (son 3 dk dışarıdan metin → sesli onay). PC'de iş bitince sesli haber
+  (`_watch_pc_jobs`). Telefonda Komuta ekranı. Çalışan iş varken Çıkış onay sorar.
+- Ekip: lider adı Chiron; `TEAM_NOTE` — kurulu uzman alt ajanlar (~/.claude/agents), paralel dağıt, model seç
+  (haiku/sonnet), ayrı inceleyici. Paralel pano: klasör şeritli kuyruk, 3 iş. Ruflo incelendi, kurulmadı.
+- APK teslimi: adb'siz — PC kutusu (`apk_teslim.py`) → telefon indirir/doğrular → "Yükle" bildirimi.
+- Arayüz: yan ray, zaman çizelgesi, bildirim/profil, boş modüller, yörünge düğümleri ve şimşek kaldırıldı; sol
+  altta Ajanlar + Ayarlar. Pencere 1575x945 açılır; F11/Esc tam ekran (WinForms + WebView2 boyutu + DWM köşe/kenarlık).
+  Yunus "şimdi oldu" dedi.
+
+**Nerede kalındı / yarın:** Gerçek sesli denemeler Yunus'la yapılmadı: telefonda ve PC'de "Dilcep'te şunu yap" →
+Komuta'ya düşüyor mu, bitince sesli haber geliyor mu. Telefonda "Uygulama yükleme" izni + Komuta'daki deneme APK'sının
+Yükle'si denenmedi. Alt ajan/inceleyici/paralel pano gerçek işte gözlenmedi. Önerildi, cevap bekliyor: Chiron'u
+Windows açılışında otomatik başlatma; iş kayıtlarına model/sonuç/maliyet (öğrenme verisi). Tuzaklar: Windows 11
+görev çubuğu aynı başlıkla `TabProxyWindow` açıyor (FindWindow onu bulur); scratchpad'de `enum.py` adı stdlib'i gölgeler;
+`test_bekci::test_write_rules` basetemp `Temp\claude` altındayken düşer (kod hatası değil).
 
 ## Oturum: 2026-10-28 — Ad değişikliği: Aıron → Chiron (kadın seste Daphne)
 
