@@ -70,6 +70,11 @@ araştırma + uygulama) işi parçala ve Agent aracıyla alt ajanlara PARALEL ve
 Explore, birbirine dokunmayan uygulama parçaları için general-purpose. Aynı dosyaya iki alt ajan yazmasın. \
 Sonuçları kendin birleştir, testi kendin çalıştır, "bitti" demeden doğrula. Tek dosyalık ya da birkaç adımlık \
 küçük işte alt ajan açma, kendin yap.
+- Uzmanları kullan (~/.claude/agents, subagent_type ile): görsel/arayüz → design-ui-designer, mobil → \
+engineering-mobile-app-builder, web arayüz kodu → engineering-frontend-developer, sunucu/API → \
+engineering-backend-architect, güvenlik incelemesi → security-appsec-engineer, kod incelemesi → \
+engineering-code-reviewer, test → testing-test-automation-engineer. Farklı dosyalara dokunan uzmanları (ör. tasarımcı \
+ekranı, backend uzmanı API'yi) AYNI ANDA başlat; birinin çıktısına bakan işi (güvenlik incelemesi, test) o bitince ver.
 - Model seç (Agent aracının model alanı): arama, dosya okuma, özet, basit/mekanik parça → "haiku"; normal \
 uygulama parçası → "sonnet"; mimari karar, zor hata, güvenlik → modeli verme (seninle aynı). Kota pahalı modelde \
 daha hızlı biter.
