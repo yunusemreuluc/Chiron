@@ -25,7 +25,12 @@ indir. Üç madde yeter; roman değil, köprü.
   bağlanır, son 16 satır `[SES DEĞİŞİMİ]` bloğuyla yeni oturuma, yeni ses ilk sözü kendisi söyler. PC'de sahte UI ile
   uçtan uca denendi; gerçek sesle denenmedi. Not: [[Ses-Gecisi]]. Telefonda uyandırma sözü hâlâ yalnız "Chiron".
 
-**Nerede kalındı / yarın:** PC Chiron yeniden başlatılmalı (çalışan süreç eski kodla). Yeni APK
+- Kendini geliştirme (c970811): döngü kuyruk boşken Chiron'un kendi deposuna `Gelişim:` proje kartı açar
+  (araştır, tek iyileştirme, test, [[Gelisim-Gunlugu]]'ye ne yaptım/neden/ne öğrendim), sonuç sesle söylenir,
+  birleştirme Yunus onayıyla. Frenler: 2 sa aralık, günde 6, bekleyen 2, kota yalnız rahatken. Chiron açıldı,
+  gelişim AÇIK; ilk kart K-009 çalışıyor (K-008 eski commit'ten açıldığı için iptal edildi). Ayrıntı [[Ajan-Ofisi]].
+
+**Nerede kalındı / yarın:** K-009'un sonucunu Yunus'la gör, birleştir/reddet; arayüz değiştiyse derle. Yeni APK
 kablosuz adb ile kuruldu (192.168.137.184:40233, açılıyor, çökme yok). Sesleri gerçek konuşmada dinleyip tonu ayarla.
 Önceki günün sesli deneme maddeleri hâlâ açık. `tests/test_bekci.py::test_write_rules` değişiklikten önce de kırık.
 
