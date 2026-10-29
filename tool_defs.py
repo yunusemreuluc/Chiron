@@ -579,6 +579,24 @@ TOOL_DECLARATIONS = [
         }
     },
     {
+        "name": "switch_assistant",
+        "description": (
+            "Konuşan sesi değiştirir: 'Daphne'ye geç', 'Daphne gelsin', 'Chiron'a geç'. Konuşma kaldığı yerden "
+            "yeni sesle sürer, bağlam kaybolmaz. Çağırdıktan sonra HİÇBİR ŞEY SÖYLEME, yeni ses kendisi konuşacak."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "name": {
+                    "type": "STRING",
+                    "enum": ["Chiron", "Daphne"],
+                    "description": "Geçilecek asistan."
+                }
+            },
+            "required": ["name"]
+        }
+    },
+    {
         "name": "stop_daily_briefing",
         "description": "Zamanlanmış günlük brifingi durdurur. Kullanıcı 'brifingi durdur', 'artık günlük özet verme' gibi bir şey derse kullan.",
         "parameters": {

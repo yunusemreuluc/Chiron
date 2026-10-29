@@ -40,6 +40,7 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 ## Araçlar (actions/*.py — Gemini'nin çağırdığı fonksiyonlar)
 - [[Open-App]] — uygulama açma
 - [[Sys-Info]] — pil/CPU/RAM/disk/saat/ağ
+- [[Ses-Gecisi]] — "Daphne'ye geç": ses değişir, konuşma kaldığı yerden sürer
 - [[Weather]] — hava durumu (wttr.in)
 - [[Calendar]] — Google Calendar (tarayıcı tabanlı)
 - [[Reminders]] — Microsoft To-Do (tarayıcı tabanlı)

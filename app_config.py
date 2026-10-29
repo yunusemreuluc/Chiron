@@ -75,6 +75,16 @@ SPEAKING_STYLE = {
 }
 
 
+# "Daphne'ye geç" (switch_assistant) ile geçilen ana sesler.
+PERSONA_VOICE = {"Chiron": "Algieba", "Daphne": "Achernar"}
+
+
+def voice_for(name: str) -> str:
+    """Asistana geçilince kullanılacak ses: şu anki ses zaten onunsa (yedek dahil) aynen kalır."""
+    voice = current_voice()
+    return voice if assistant_name(voice) == name else PERSONA_VOICE[name]
+
+
 def current_voice() -> str:
     """Kayıtlı ses; listeden çıkarılmış eski bir ses (ör. Charon) varsayılana düşer."""
     voice = str(get_app_config_value("voice", DEFAULT_VOICE) or DEFAULT_VOICE)

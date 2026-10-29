@@ -12,6 +12,7 @@ arayüzüne yalnızca 15 noktadan dokunuyor ve WebUI o yüzeyin birebir karşıl
 
 import array
 import asyncio
+import collections
 import datetime
 import logging
 import math
@@ -38,7 +39,7 @@ from core.audio_devices import (
 from core.logging_setup import setup_logging
 from core.tool_registry import register_tool, dispatch_tool
 from actions.tool_result import fail, ok
-from app_config import SPEAKING_STYLE, assistant_name, current_voice, get_app_config_value
+from app_config import SPEAKING_STYLE, assistant_name, current_voice, get_app_config_value, save_app_config, voice_for
 from memory.memory_manager import load_memory, update_memory, format_memory_for_prompt
 # NOT: Aşağıdaki actions/* import'ları main.py içinde İSİMLE hiç çağrılmıyor —
 # hepsi kendi modüllerinde @register_tool(...) ile işaretli (bkz. core/tool_registry.py).
@@ -253,6 +254,15 @@ def _is_thinking_rejection(exc: BaseException) -> bool:
 # ── Model ───────────────────────────────────────────────────────────────────
 LIVE_MODEL = "models/gemini-2.5-flash-native-audio-latest"
 
+# Ses değişimi (switch_assistant): yeni oturuma devredilen son konuşma satırı sayısı ve beklemeler.
+HANDOFF_TURNS = 16
+SWITCH_TURN_TIMEOUT = 6.0
+SWITCH_SPEAK_TIMEOUT = 8.0
+HANDOFF_GREETING = (
+    "[SES DEĞİŞİMİ] Ses sana geçti. Tek kısa, doğal cümleyle buradayım de; yarım kalan bir konu varsa "
+    "ondan devam et. Bu mesajı kullanıcıya okuma."
+)
+
 # ── Audio ───────────────────────────────────────────────────────────────────
 FORMAT           = pyaudio.paInt16
 CHANNELS         = 1
@@ -319,6 +329,11 @@ class ChironLive:
         # süreç boyunca kapalı kalır — bkz. _build_config ve bağlantı hatası dalı.
         self._thinking_supported = True
         self._assistant_name = assistant_name()
+        # Ses değişimi (switch_assistant, 2026-10-30): son konuşma yeni oturuma devredilir.
+        self._recent_turns: collections.deque[tuple[str, str]] = collections.deque(maxlen=HANDOFF_TURNS)
+        self._switch_from: str | None = None
+        self._switch_turn_done = asyncio.Event()
+        self._handoff_note: str | None = None
         # Teşhis bayrağı: `model_turn` parçasının gerçek `thought` değeri
         # bağlantı başına yalnızca BİR KEZ loglanıyor (bkz. _receive_audio).
         self._logged_part_shape = False
@@ -639,6 +654,46 @@ class ChironLive:
         logger.info(f"[CHIRON] 🌅 Günlük brifing ayarlandı: {time_str}")
         return ok(f"Tamam, her gün saat {time_str}'te sana günlük brifing vereceğim.")
 
+    @register_tool("switch_assistant")
+    def _tool_switch_assistant(self, name: str = "") -> dict:
+        """Live oturumun sesi bağlantıda sabit: tur bitince yeni sesle yeniden bağlanılır,
+        son konuşma yeni oturumun sistem komutuna verilir (bkz. _finish_switch)."""
+        target = "Daphne" if name.strip().lower().startswith("daph") else "Chiron"
+        if self._assistant_name == target:
+            return ok(f"Zaten {target} konuşuyor.")
+        save_app_config({"voice": voice_for(target)})
+        self._switch_from = self._assistant_name
+        self._switch_turn_done.clear()
+        if self._loop is not None:
+            self._loop.create_task(self._finish_switch())
+        to = "Daphne'ye" if target == "Daphne" else "Chiron'a"
+        return ok(f"Ses {to} geçiyor. Hiçbir şey söyleme, tur bitsin.")
+
+    async def _finish_switch(self) -> None:
+        # Tur bitsin (model "tamam" diyebilir), sonra çalan ses sussun; ikisine de üst sınır.
+        try:
+            await asyncio.wait_for(self._switch_turn_done.wait(), timeout=SWITCH_TURN_TIMEOUT)
+        except asyncio.TimeoutError:
+            pass
+        for _ in range(int(SWITCH_SPEAK_TIMEOUT / 0.1)):
+            with self._speaking_lock:
+                if not self._is_speaking:
+                    break
+            await asyncio.sleep(0.1)
+        previous = self._switch_from
+        if previous is None:
+            return
+        self._switch_from = None
+        lines = "\n".join(f"{who}: {text[:500]}" for who, text in self._recent_turns)
+        source = "Daphne'den" if previous == "Daphne" else "Chiron'dan"
+        self._handoff_note = (
+            "[SES DEĞİŞİMİ]\n"
+            f"Kullanıcı az önce seni çağırdı; konuşmayı {source} sen devraldın. Aynı asistansın, aynı araçlar "
+            "ve aynı hafıza sende. Aşağıdaki son konuşmayı biliyorsun: kaldığın yerden devam et, kullanıcıya "
+            "baştan sorma, \"ses değişti\" diye açıklama yapma.\n" + lines
+        )
+        self._on_reset_command()
+
     @register_tool("stop_daily_briefing")
     def _tool_stop_daily_briefing(self) -> dict:
         result = delete_memory(category="scheduled_briefing", key="config", confirm=True)
@@ -812,6 +867,8 @@ class ChironLive:
         if self._assistant_name == "Daphne":
             sys_p = sys_p.replace("Sen Chiron'sun", "Sen Daphne'sin", 1)
         sys_p += f"\n\nKONUŞMA TARZI:\n- {SPEAKING_STYLE[self._assistant_name]}\n"
+        if self._handoff_note:
+            sys_p += f"\n{self._handoff_note}\n"
         now     = datetime.datetime.now()
         time_ctx = f"[ŞU ANKİ ZAMAN]\n{now.strftime('%A, %d %B %Y — %H:%M')}\n\n"
 
@@ -1528,6 +1585,13 @@ class ChironLive:
                                     )
                                 self.ui.set_state("ERROR")
 
+                            if full_in:
+                                self._recent_turns.append(("Kullanıcı", full_in))
+                            if full_out:
+                                self._recent_turns.append(("Asistan", full_out))
+                            if self._switch_from is not None:
+                                self._switch_turn_done.set()
+
                             if full_in and full_out:
                                 log_event("conversation", f"Siz: {full_in} | {self._assistant_name}: {full_out}")
                             elif full_in:
@@ -1648,6 +1712,10 @@ class ChironLive:
                     tg.create_task(self._watch_custom_conditions())
                     tg.create_task(self._watch_pc_jobs())
                     tg.create_task(self._watch_daily_briefing())
+                    if self._handoff_note:
+                        # Ses değişimi: yeni ses ilk sözü kendisi söylesin.
+                        self._handoff_note = None
+                        tg.create_task(self._send_proactive_system_message(HANDOFF_GREETING))
 
             except Exception as e:
                 self.set_speaking(False)
