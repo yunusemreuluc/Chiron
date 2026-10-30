@@ -585,6 +585,12 @@ async def komuta_context() -> dict:
     return {"success": True, "message": "bağlam", "data": {"metin": await asyncio.to_thread(sohbet.work_context)}}
 
 
+@router.get("/komuta/durum")
+async def komuta_status() -> dict:
+    """"İş ne durumda?" — sesli Chiron'un check_pc_job aracı (bkz. sohbet.job_status)."""
+    return {"success": True, "message": "durum", "data": {"metin": await asyncio.to_thread(sohbet.job_status)}}
+
+
 @router.post("/komuta/onay")
 async def komuta_answer(body: KomutaAnswer, response: Response) -> dict:
     try:

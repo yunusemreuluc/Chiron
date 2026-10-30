@@ -318,6 +318,49 @@ class Sohbet:
         )
         return "\n".join(lines)
 
+    def job_status(self) -> str:
+        """"İş ne durumda?" sorusunun canlı cevabı (check_pc_job, 2026-10-30). `work_context` yalnız ses oturumu
+        açılırken giriyor; iş sürerken sorulunca model eski bilgiyle konuşuyordu. Yalnız iş kaydının doğruladığı
+        durum: sıra/çalışıyor/onay/bitti/hata, kaç dakikadır, şu anki adım ve adım sayısı. Boş: iş yok."""
+        with self._lock:
+            claude_chats = [c for c in self._chats.values() if c["agent"] == "claude"]
+            chat = max(claude_chats, key=lambda c: c["updated"], default=None)
+            if chat is None or self.clock() - chat["updated"] > WORK_CONTEXT_DAYS * 86400:
+                return ""
+            if self._sync(chat):
+                self._save()
+            msg = next((m for m in reversed(chat["messages"]) if m.get("role") == "ajan"), None)
+            if msg is None:
+                return ""
+            msg = dict(msg)
+            title, cwd = chat["title"], chat.get("cwd")
+        now = self.clock()
+        where = f" ({Path(cwd).name} klasöründe)" if cwd else ""
+        status = msg.get("status")
+        if status in LIVE:
+            # Canlı mesajın `at`'i iş verildiği an; iş bitince bitiş anıyla değişir (_sync).
+            minutes = max(0, int((now - (msg.get("at") or now)) // 60))
+            state = "sırada bekliyor" if status == "sirada" else "çalışıyor"
+            lines = [f"\"{title}\"{where} işi {minutes} dakikadır {state}."]
+            steps = msg.get("steps") or []
+            if msg.get("last_step"):
+                lines.append(f"Şu anki adım: {msg['last_step']}.")
+            if steps:
+                lines.append(f"Şimdiye kadar {len(steps)} adım attı.")
+            return " ".join(lines)
+        ago = max(0, int((now - (msg.get("at") or now)) // 60))
+        ago_text = f"{ago} dakika önce" if ago < 120 else f"{ago // 60} saat önce"
+        summary = " ".join(str(msg.get("text") or "").split())[:WORK_CONTEXT_CHARS]
+        if status == "onay":
+            head = f"\"{title}\"{where} işi onay bekliyor: {msg.get('approval') or 'geri alınamayan bir adım'}."
+        elif status == "bitti":
+            head = f"\"{title}\"{where} işi {ago_text} bitti."
+        elif status == "durdu":
+            head = f"\"{title}\"{where} işi {ago_text} durduruldu."
+        else:
+            head = f"\"{title}\"{where} işi {ago_text} tamamlanamadan kaldı."
+        return f"{head} Sonuç: {summary}" if summary else head
+
     def answer_job(self, job_id: str, approved: bool) -> dict[str, Any]:
         """Telefondaki onay cevabı iş kimliğiyle gelir: o işin sohbetini bulup aynı oturumu sürdürür."""
         with self._lock:

@@ -22,7 +22,8 @@ from backend.core.config import PORT
 from core.tool_registry import register_tool
 
 KOMUTA_URL = f"http://127.0.0.1:{PORT}/api/remote/komuta"
-JOB_URL = f"http://127.0.0.1:{PORT}/api/remote/claude/{{job_id}}"
+STATUS_URL = f"http://127.0.0.1:{PORT}/api/remote/komuta/durum"
+JOB_URL =f"http://127.0.0.1:{PORT}/api/remote/claude/{{job_id}}"
 MAX_TASK_CHARS = 4000
 SUMMARY_CHARS = 600
 FINISHED = ("done", "needs_approval", "failed", "timeout", "interrupted", "cancelled")
@@ -64,6 +65,20 @@ def finished_announcements() -> list[str]:
             hint = "İş tamamlanamadı. Ne olduğunu tek cümlede söyle."
         messages.append(f"[SİSTEM] PC işi sonucu (kullanıcının sözü değil). {hint} Claude'dan söz etme. Özet: {summary}")
     return messages
+
+
+@register_tool("check_pc_job")
+def check_pc_job() -> dict:
+    """"İş ne durumda?" (2026-10-30): [SÜREN İŞ] yalnız oturum açılırken giriyor, iş sürerken sorulunca canlı
+    durum buradan. Salt okuma; işi durdurmaz, değiştirmez."""
+    try:
+        data = requests.get(STATUS_URL, timeout=5).json() or {}
+    except Exception as error:
+        return fail(f"İş durumu alınamadı: Chiron'un arka ucuna ulaşılamadı ({error.__class__.__name__}).")
+    text = str((data.get("data") or {}).get("metin") or "")
+    if not text:
+        return ok("Süren ya da son üç günde verilmiş bir PC işi yok.", busy=False)
+    return ok(text + " Bunu kısa ve kendi işin gibi söyle; adım ayrıntısını yalnız sorulursa oku.")
 
 
 @register_tool("delegate_to_pc")

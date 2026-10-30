@@ -84,3 +84,25 @@ def test_finished_jobs_are_announced_once(monkeypatch):
     assert pc_isi._pending == {"a1"}  # süren iş bekliyor; biten, iptal ve kaydı olmayan düştü
     assert pc_isi.finished_announcements() == []  # aynı sonuç ikinci kez söylenmez
     pc_isi._pending.clear()
+
+
+def test_check_pc_job_reads_live_status(monkeypatch):
+    urls = []
+
+    def get(url, timeout):
+        urls.append(url)
+        return _Response({"data": {"metin": '"Dilcep" işi 3 dakikadır çalışıyor.'}})
+
+    monkeypatch.setattr(pc_isi.requests, "get", get)
+    result = pc_isi.check_pc_job()
+    assert result["success"] and "3 dakikadır çalışıyor" in result["message"] and urls == [pc_isi.STATUS_URL]
+
+    monkeypatch.setattr(pc_isi.requests, "get", lambda url, timeout: _Response({"data": {"metin": ""}}))
+    idle = pc_isi.check_pc_job()
+    assert idle["success"] and idle["data"] == {"busy": False}
+
+    def down(*a, **k):
+        raise ConnectionError("kapalı")
+
+    monkeypatch.setattr(pc_isi.requests, "get", down)
+    assert not pc_isi.check_pc_job()["success"]
