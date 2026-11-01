@@ -7,6 +7,43 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-11-01 — Araştırma panosu (ROSE benzeri)
+
+- Yunus ROSE reel'indeki "isteyince ekrana pano veriyor" özelliğini istedi → [[Arastirma-Panosu]]: `research_board`
+  (arka planda Claude CLI WebSearch, canlı kart), bitince sesli haber, "göster" → `show_research_board` tam ekran kart
+  duvarı (rakam/metin/grafik/YouTube/kaynaklar), tepsideyse pencere öne gelir. Gemini arama bu hesapta 429 → motor Claude.
+- Test: VR konusu 37 sn, 13 blok, 5 kaynak; arayüz Playwright'ta sahte sunucuyla görüldü. Testler 307/308 (bekçi
+  testi yine basetemp yüzünden). `npm run build` yapıldı. Commit yok. Gerçek Chiron içinde sesli deneme yok — yeniden başlat.
+- Yunus gerçek Chiron'da araştırma yaptırdı ("yapay zekâ ajanları", 13 blok). İsteği üzerine pano açılınca çekirdek
+  küçülüp sağ kolona kayıyor (CameraRig zoom + viewOffset), pano yarı saydam, HUD çekiliyor; Playwright'ta geçiş görüldü.
+- Tepsi göstergesi: 3D çekirdek penceresi denendi, "çok kötü" → kaldırıldı. 15 taslak (artifact
+  DG2Z8UCzQVK7mzUzNT3W3r), Yunus 07/08/10/12/15'i seçti → `core/tray_indicator.py` (Win32 per-pixel alpha, 5 stil,
+  `tray_indicator` ayarı, `--demo`). Yunus 07'yi seçti (varsayılan `parcacik`, 15 seçenek); evreler eklendi: dinliyor (mavi) → düşünüyor (mor) →
+  konuşuyor (turkuaz) → 3 sn kalış. Gerçek Chiron'da sesle denenmedi — yeniden başlatma gerekiyor. Testler 307/308.
+- Yunus "güzel olmuş" dedi; hepsi commit'lendi (push yok). Mikrofon yedeği `config/api_keys.json.yedek-mic`
+  anahtar içerdiği için commit'e girmedi, takipsiz duruyor.
+- **YARIN (Yunus, 2026-11-01): tepsi göstergesini telefona uygula** — `chiron-mobile` (Kotlin). Aynı fikir:
+  07 parçacık bulutu, evreler dinliyor (buz mavisi #7fb2ff) → düşünüyor (mor #9c6ef0) → konuşuyor (turkuaz #4fd6a8)
+  → 3 sn kalış; davranış ve süreler `core/speaking_overlay.py` + `core/tray_indicator.py`'de. Telefonda karşılığı
+  büyük ihtimalle uygulama arka plandayken diğer uygulamaların üstünde çizilen bir kaplama (SYSTEM_ALERT_WINDOW)
+  ya da uygulama içi ekran — önce Yunus'a hangisi sorulacak. Ayrıca bekliyor: araştırma panosu ve tepsi göstergesinin
+  gerçek Chiron'da sesli denemesi.
+
+## Önceki oturumlar
+
+## Oturum: 2026-10-31 — Ekranda açık olanı izle + "ben de istiyorum"
+
+- Chiron Instagram reel'ini "sadece YouTube" diye reddetti; kod destekliyordu, tarif yanlıştı → düzeltildi.
+- Yeni araçlar `analyze_open_content` + `build_like_analyzed` ([[Ekran-Icerigi]]): ses/yazı/tepsi aynı oturum.
+  Tarayıcıdaki linki UI Automation ile okur, değilse 10 sn ekran kaydı; son analiz `%LOCALAPPDATA%\Chiron\son_analiz`.
+  `_download_video` canlı yayını reddediyor. Testler 265/266 (bekçi testi basetemp Temp altında olunca kalıyor, ilgisiz).
+- Commit'lenmedi. Chiron yeniden başlatılmalı; gerçek sesli/yazılı deneme ve "ben de istiyorum" ile gerçek Komuta işi
+  henüz denenmedi. Gemini video analizi yavaş (10 sn kayıt 177 sn).
+- Mikrofon: Windows varsayılanı Realtek "Headset Microphone" 60 sn konuşma boyunca tam 0 verdi, laptop
+  "Microphone Array" 765'e kadar duydu → `config/api_keys.json` `"mic_device": "Microphone Array"` (yedek:
+  `api_keys.json.yedek-mic`). Kulaklık mikrofonu çalışır hale gelirse bu satır boşaltılmalı.
+
+
 ## Oturum: 2026-10-30 — Sesler: Chiron Algieba, Daphne Achernar
 
 **Ne yapıldı (commit'li, push'lu — Chiron c6676b1, chiron-mobile 227fc03):**
@@ -341,7 +378,5 @@ Code oturumunda henüz doğrulanmadı.
 
 **Sıradaki:** İlk açılışta `[Hafıza — Son Oturum]` bloğunun geldiğini teyit et.
 Gelmiyorsa `claude --debug` ile hook çıktısına bak.
-
-## Önceki oturumlar
 
 <!-- Eski bloklar buraya. Parser bu başlıkta durur, altını okumaz. -->

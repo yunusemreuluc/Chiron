@@ -5,6 +5,7 @@ import { useAIStateStore, type AIState } from '@/stores/aiStateStore';
 import { useConversationStore } from '@/stores/conversationStore';
 import { useMicStore } from '@/stores/micStore';
 import { useOfficeStore, type OfficeSnapshot } from '@/stores/officeStore';
+import { useResearchStore, type ResearchRun } from '@/stores/researchStore';
 import {
   useVisionStore,
   type Detection,
@@ -194,6 +195,15 @@ export function useAIStateConnection() {
               if (Array.isArray(data.desks)) {
                 useOfficeStore.getState().setSnapshot(data as OfficeSnapshot);
               }
+              break;
+            // ── Araştırma panosu (2026-11-01) — actions/arastirma_panosu.py ──
+            case 'research_update':
+              if (typeof data.id === 'string' && typeof data.status === 'string') {
+                useResearchStore.getState().update(data as ResearchRun);
+              }
+              break;
+            case 'research_show':
+              useResearchStore.getState().setOpen(Boolean(data.open));
               break;
             default:
               // panel_focus/user_activity — henüz arayüzde karşılığı yok.

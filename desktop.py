@@ -648,6 +648,17 @@ class TrayController:
         speaking_overlay.set_enabled(False)
         self._window.show()
 
+    def bring_forward(self) -> None:
+        """Araştırma panosu "göster" denince (2026-11-01): tepsideyse geri getirir, simge durumundaysa açar."""
+        if self._icon is not None:
+            self._restore()
+            return
+        try:
+            self._window.restore()
+        except Exception:
+            pass
+        self._window.show()
+
     def _quit(self, *_args) -> None:
         # Onay ikon kaldırılmadan ÖNCE: "Hayır" denince Chiron tepside kalmalı.
         if not QuitGuard.confirm():
@@ -857,6 +868,7 @@ def main() -> int:
 
     tray = TrayController(window)
     commands.register("tray", lambda _payload: tray.minimize())
+    commands.register("show_window", lambda _payload: tray.bring_forward())
     # F11 (arayüzde dinleniyor → /api/settings/fullscreen): görev çubuğunu da kapatan tam ekran, tekrar
     # basınca eski hâli. Esc de çıkarır (arayüz yalnız tam ekrandayken gönderir).
     commands.register("fullscreen", lambda _payload: fullscreen.toggle())

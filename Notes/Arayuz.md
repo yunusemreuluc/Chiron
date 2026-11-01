@@ -38,6 +38,7 @@ yapıldığını** özetliyor.
 | Sağ | Vision paneli, altında düğüm odak kartı |
 | Sağ alt | Sohbet dock'u (`AssistantDock.tsx`) |
 | Orta | 3D sahne (`three/Scene.tsx`) |
+| Üst orta (yalnız araştırma sürerken) | Araştırma canlı kartı; "göster" ile pano — çekirdek küçülüp sağ kolona kayar, kartlar öne gelir — [[Arastirma-Panosu]] |
 
 Sağ taraf **tek bir flex kolon** (`AppShell.tsx`). Önceden her panel kendini
 `absolute right-7` ile konumlandırıyordu ve üst üste biniyorlardı.
@@ -406,6 +407,32 @@ yukarı kaydırılmışken kendi mesajı alta çekiyor, başkasının mesajı `s
 `core/speaking_overlay.py`. Chiron tepsiye alındığında pencere görünmüyor, yani
 konuştuğunu anlamanın hiçbir görsel yolu kalmıyordu. Artık sağ üstte küçük bir
 ses dalgası çıkıyor, susunca kapanıyor.
+
+### 2026-11-01: gerçek saydam göstergeler (`core/tray_indicator.py`)
+
+İlk deneme: ana sahnenin 3D çekirdeği ikinci bir pywebview penceresinde. WebView2'de gerçek saydamlık alınamadı
+(pywebview `transparent` beyaz zemin + her yüklemede odak çalıyor; LWA_COLORKEY WebView2'ye uygulanmadı), daire
+bölgesiyle kesilince sert kenarlı koyu bir küre çıktı — Yunus "çok kötü" dedi, kaldırıldı. 15 taslak gösterildi
+(artifact DG2Z8UCzQVK7mzUzNT3W3r); seçilenler 07 parçacık, 08 kayan kart, 10 imleç arkadaşı, 12 osiloskop, 15 2D çekirdek.
+
+- **Win32 katmanlı pencere + UpdateLayeredWindow:** kare numpy ile önceden çarpılmış BGRA → kenar, ışıma, gölge
+  gerçekten saydam. WS_EX_TRANSPARENT (tıklama geçer) + NOACTIVATE + TOOLWINDOW + TOPMOST. Pencere, mesaj
+  döngüsü ve çizim tek iş parçacığında. 64 bit tanıtıcılar için tüm GDI/User32 argtypes tanımlı — yoksa
+  `OverflowError: int too long` (yaşandı).
+- **Işık modeli:** parlak öğeler renk*yoğunluk olarak toplanır, alfa da yoğunluk kadar artar; kart (08) normal
+  PIL bileşimi. 2x çizip küçültme = kenar yumuşatma (PIL çizgileri yumuşatmasız).
+- **Ölçüldü (150 px, %125):** kare başına parçacık 3.3 ms, kart 5.7, imleç 0.3, osiloskop 2.1, çekirdek 4.6; 40 FPS.
+- **Seçim:** `config` → `tray_indicator`: `parcacik | kart | imlec | osiloskop | cekirdek` (varsayılan cekirdek) ya da
+  `dalga` (eski Tk). 2 sn'de bir okunur, değişince anında geçer. Kart, Chiron'un o an söylediğini gösterir
+  (`push_caption`, main.py çıkış transkripti; 3 sn sessizlikte yeni cümle).
+- **Deneme:** `venv\Scripts\python.exe -m core.tray_indicator --demo [stil...]` beşini 9'ar sn simüle konuşmayla
+  gerçek ekranda oynatır. Kilit ekranında ilk deneme: pencere görünür/stil/konum doğru, beşi hatasız döndü; gözle
+  bakış Yunus'ta.
+- **Evreler (aynı gün, Yunus: "konuşma başlamadan belirsin, sonra biraz durup gitsin, beni dinlerken de
+  görünsün"):** `dinliyor` (giriş transkripti, 1.2 sn; dalgalanma mikrofondan) → `dusunuyor` (kullanıcı sustu ve
+  cevap yok, en fazla 12 sn; ya da araç çalıştı, 4 sn) → `konusuyor` → `bitti` (3 sn, yarı parlaklıkta söner).
+  Renk evreye göre: ICE / DEEP_VIOLET / PLASMA_TEAL (çekirdekle aynı). Kullanıcı konuşması ham mikrofondan değil
+  transkriptten anlaşılıyor — oda gürültüsü göstergeyi açmasın. Varsayılan stil artık `parcacik` (07); 15 seçenek.
 
 **Yalnızca tepsideyken.** Pencere açıkken gereksiz — çekirdek zaten konuşurken
 turkuaza dönüyor ([[Arayuz]] § Beş tepki). İki gösterge aynı anda aynı şeyi

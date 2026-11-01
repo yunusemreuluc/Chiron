@@ -81,6 +81,8 @@ from actions.file_manager import manage_files  # noqa: F401 — @register_tool y
 from actions.power_control import execute_power_action
 from actions.gemini_automation import gemini_desktop_task  # noqa: F401 — @register_tool yan etkisi için
 from actions.video_analysis import analyze_video  # noqa: F401
+from actions.ekran_icerigi import analyze_open_content, build_like_analyzed  # noqa: F401 — @register_tool yan etkisi için
+from actions import arastirma_panosu  # noqa: F401 — research_board / show_research_board / cancel_research
 from actions.youtube_stats import get_youtube_channel_report  # noqa: F401
 from memory.memory_manager import delete_memory  # noqa: F401 — @register_tool yan etkisi için
 from memory.activity_log import log_event, get_daily_activity  # noqa: F401 — @register_tool yan etkisi için
@@ -955,6 +957,7 @@ class ChironLive:
         # yazmak (MEMORY) ve kameraya bakmak (VISION) çekirdekte ayrı görünüyor.
         # Sınıflandırma core/web_ui.py'de — bkz. state_for_tool.
         self.ui.set_tool_state(name)
+        speaking_overlay.mark_thinking()  # tepsi göstergesi: araç çalışırken "düşünüyor"
 
         loop = asyncio.get_event_loop()
         had_exception = False
@@ -1086,6 +1089,16 @@ class ChironLive:
                 logger.exception("[CHIRON] PC işi kontrolü başarısız")
                 continue
             for text in messages:
+                await self._send_proactive_system_message(text)
+
+    async def _watch_research(self):
+        """Arka plandaki araştırma bitince sesli haber (2026-11-01). Yerel liste, ağ yok — 3 sn'de bir bakmak ucuz.
+        Chiron konuşurken/duraklatılmışken söylemez; haber listede kalır, sonraki turda gider."""
+        while True:
+            await asyncio.sleep(3)
+            if not arastirma_panosu._announcements or not self._proactive_checks_allowed():
+                continue
+            for text in arastirma_panosu.pop_announcements():
                 await self._send_proactive_system_message(text)
 
     async def _watch_gelisim(self):
@@ -1526,7 +1539,9 @@ class ChironLive:
                 # bildirim. Susturulmuş/duraklatılmışken sıfır gönderiliyor —
                 # mikrofon kapalıyken dalgalanan bir çubuk, kapalı olmadığını
                 # söylerdi.
-                self.ui.update_mic_level(self._mic_level(data) if listening else 0.0)
+                level = self._mic_level(data) if listening else 0.0
+                self.ui.update_mic_level(level)
+                speaking_overlay.push_mic(level)  # tepsi göstergesi: "dinliyor" evresinde dalgalanma
                 if listening:
                     await self.out_queue.put({"data": data, "mime_type": "audio/pcm"})
         except RuntimeError as e:
@@ -1622,12 +1637,14 @@ class ChironLive:
                                         output_noise_samples.append(raw_txt)
                                 if txt:
                                     out_buf.append(txt)
+                                    speaking_overlay.push_caption(txt)
 
                         if sc.input_transcription and sc.input_transcription.text:
                             txt = sc.input_transcription.text.strip()
                             if txt:
                                 in_buf.append(txt)
                                 self.ui.mark_user_activity(True)
+                                speaking_overlay.mark_user()
 
                         if sc.turn_complete:
                             # Yarım kalan düşünce varsa tur bitmeden yayınla —
@@ -1788,6 +1805,7 @@ class ChironLive:
                     tg.create_task(self._watch_system_health())
                     tg.create_task(self._watch_custom_conditions())
                     tg.create_task(self._watch_pc_jobs())
+                    tg.create_task(self._watch_research())
                     tg.create_task(self._watch_gelisim())
                     tg.create_task(self._watch_daily_briefing())
                     if self._handoff_note:

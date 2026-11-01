@@ -65,6 +65,8 @@ dosya bulunamazsa kısa bir fallback prompt kullanılır (main.py:162).
 | `get_youtube_channel_report` | [[Youtube-Stats]] |
 | `send_whatsapp_message`, `save_whatsapp_contact` | [[WhatsApp]] |
 | `analyze_video` | [[Video-Analizi]] |
+| `analyze_open_content`, `build_like_analyzed` | [[Ekran-Icerigi]] |
+| `research_board`, `show_research_board`, `cancel_research` | [[Arastirma-Panosu]] |
 | `save_memory`, `delete_memory` | [[Bellek-ve-Config]] |
 
 Araçların arayüzde nasıl göründüğü (Vision paneli, zaman çizelgesi) için [[Arayuz]].

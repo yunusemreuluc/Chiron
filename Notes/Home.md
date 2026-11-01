@@ -63,7 +63,9 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 - [[Gemini-Masaustu]] — Chrome'da Gemini'ye prompt gönderme otomasyonu
 - [[Youtube-Stats]] — YouTube Data API kanal raporu
 - [[WhatsApp]] — mesaj gönderme, kişi kaydetme, vCard içe aktarma
-- [[Video-Analizi]] — YouTube linki veya yerel video dosyasını Gemini'ye izletip rapor aldırma
+- [[Video-Analizi]] — video linki (YouTube, Instagram…) veya yerel video dosyasını Gemini'ye izletip rapor aldırma
+- [[Ekran-Icerigi]] — ekranda açık olanı izleme + "nasıl yapmış, ben de istiyorum" ile yaptırma
+- [[Arastirma-Panosu]] — "şunu araştır" → arka planda kaynaklı araştırma → ekranda kart duvarı (ROSE benzeri)
 
 ## Genel akış
 1. `main.py` içindeki `ChironLive.run()` Gemini Live API'ye bağlanır (`LIVE_MODEL`).

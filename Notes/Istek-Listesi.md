@@ -62,3 +62,9 @@ Durum değerleri: `yeni` → `bakıldı` → `yapıldı` / `yapılmayacak`. Duru
   - Ayrıntı: Kullanıcı Windows Terminal uygulamasında yeni bir sekme açmak ve bu sekme üzerinden Claude'a bağlanmak istiyor. Mevcut araç setinde Terminal içinde sekme açma veya Claude entegrasyonu sağlama işlevi bulunmamaktadır. İdeal olarak, komut doğrudan PC'de yürütülmelidir.
 <!-- ids: 6870dc01-f4eb-47da-b34c-2bf12e6cb247 -->
 
+### İ-011 · Del uygulamasında detaylı hesap kısmı
+**Durum:** yeni · **Sayı:** 1 · **Bildirildi:** hayır
+- 2026-10-29 13:07 · "Del uygulamasında hesap kısmını daha detaylı yap" · denenen: delegate_to_claude — onaylanamadi · Xiaomi 22101316G, 0.1.0
+  - Ayrıntı: Kullanıcı 'Del uygulamasında hesap kısmını daha detaylı yap' talebini iletti. delegate_to_claude aracıyla başlatma ve onaylama aşamaları teknik bir hata (uyumsuzluk) nedeniyle tekrar tekrar başarısız oldu. Kullanıcı bu özelliği kullanmak istediği için istek listesine eklenmesi talep edildi. İdeal durumda onay mekanizmasının sorunsuz çalışması beklenir.
+<!-- ids: 0a1f6c61-38f8-4560-819b-1fa674f3c16f -->
+

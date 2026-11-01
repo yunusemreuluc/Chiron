@@ -843,7 +843,8 @@ TOOL_DECLARATIONS = [
     {
         "name": "analyze_video",
         "description": (
-            "Bir YouTube linkini veya bilgisayardaki bir video dosyasini basindan sonuna "
+            "Bir video linkini (YouTube, Instagram reel/gonderi, TikTok, X vb. — yt-dlp'nin "
+            "destekledigi her site) veya bilgisayardaki bir video dosyasini basindan sonuna "
             "(goruntu + ses) izleyip Turkce bir rapor/ozet cikarir. Kullanici bir videoyu "
             "'izle', 'analiz et', 'ozetle' dediginde ya da video hakkinda soru sordugunda kullan. "
             "Video 720p'ye kadar indirilir, ~60 dakikaya kadar videolari destekler, isleme birkac "
@@ -854,7 +855,7 @@ TOOL_DECLARATIONS = [
             "properties": {
                 "source": {
                     "type": "STRING",
-                    "description": "YouTube linki (https://...) veya bilgisayardaki video dosyasinin tam yolu."
+                    "description": "Video linki (https://... — YouTube, Instagram, TikTok, X vb.) veya bilgisayardaki video dosyasinin tam yolu."
                 },
                 "question": {
                     "type": "STRING",
@@ -863,6 +864,80 @@ TOOL_DECLARATIONS = [
             },
             "required": ["source"]
         }
+    },
+    {
+        "name": "analyze_open_content",
+        "description": (
+            "Kullanicinin ekraninda su an acik olan seyi izleyip Turkce rapor cikarir. Tarayicida bir video/sayfa "
+            "aciksa adres cubugundaki linki bulup videoyu basindan sonuna (goruntu + ses) izler; degilse ekrani "
+            "10 saniye kaydedip o kaydi izler. Link vermeden 'ekranimda acik olani analiz et', 'su an izledigim "
+            "videoyu izle', 'bu acik olan ne' dendiginde kullan. Sonuc hatirlanir; ardindan 'ben de istiyorum' "
+            "denirse build_like_analyzed ile yaptirilir. Birkac dakika surebilir."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "question": {
+                    "type": "STRING",
+                    "description": "Kullanicinin ozel bir sorusu varsa (or. 'bu arayuz nasil yapilmis'). Yoksa bos birak."
+                }
+            }
+        }
+    },
+    {
+        "name": "build_like_analyzed",
+        "description": (
+            "En son analiz edilen video/ekran icerigindeki seyi kullanicinin projesinde yaptirir: 'bunu nasil yapmis, "
+            "ben de istiyorum', 'aynisini bize de yap', 'bunu Chiron'a ekle' dendiginde kullan. Isi PC'de "
+            "Komuta'ya verir; video dosyasi ve rapor ise eklenir, bitince sonuc sesli bildirilir."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "request": {
+                    "type": "STRING",
+                    "description": "Kullanicinin istedigi sey, kendi sozuyle (or. 'o arastirma kartini ve panel duvarini istiyorum')."
+                },
+                "project": {
+                    "type": "STRING",
+                    "description": "Kullanici bir proje adi soylediyse (Chiron, Dilcep...). Soylemediyse bos birak."
+                }
+            }
+        }
+    },
+    {
+        "name": "research_board",
+        "description": (
+            "Bir konuyu ARKA PLANDA internetten kaynakli arastirir ve sonucu ekranda kart panosu (metin, rakam, grafik, "
+            "YouTube videolari) olarak hazirlar. 'Su konuyu arastir', 'X hakkinda rapor hazirla', 'X'in durumu ne, "
+            "arastir' dendiginde kullan. Hemen doner; arastirma 1-4 dakika surer, bitince sistem mesajiyla haber gelir."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "topic": {"type": "STRING", "description": "Arastirilacak konu, kullanicinin sozuyle (or. 'VR sektorunun durumu')."},
+                "focus": {"type": "STRING", "description": "Ozellikle istenen bir aci varsa (or. 'satis rakamlari'). Yoksa bos birak."}
+            },
+            "required": ["topic"]
+        }
+    },
+    {
+        "name": "show_research_board",
+        "description": (
+            "Son arastirma panosunu ekranda acar (Chiron tepsideyse pencereyi one getirir) ya da kapatir. "
+            "'Goster', 'panoyu ac', 'ekrana getir' -> show=true; 'kapat', 'panoyu kaldir' -> show=false."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "show": {"type": "BOOLEAN", "description": "true = ac, false = kapat. Varsayilan true."}
+            }
+        }
+    },
+    {
+        "name": "cancel_research",
+        "description": "Suren arastirmayi durdurur ('arastirmayi durdur', 'bosver o arastirmayi').",
+        "parameters": {"type": "OBJECT", "properties": {}}
     },
     {
         "name": "save_memory",

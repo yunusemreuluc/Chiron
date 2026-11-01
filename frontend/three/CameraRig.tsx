@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useNodeFocusStore } from '@/stores/nodeFocusStore';
+import { useResearchStore } from '@/stores/researchStore';
 import { readOrbitNodePosition } from './nodeData';
 
 // Notes/Tasarim-Kurallari.md § Hareket (fare) — fare ile derinlik/perspektif, asla abartılı.
@@ -51,6 +52,23 @@ const FOCUS_PARALLAX_SUPPRESS = 0.5;
 
 const ORIGIN = new THREE.Vector3(0, 0, 0);
 
+// ── Kenara çekilme (2026-11-01, kullanıcı isteği) ───────────────────────────
+// Araştırma panosu açılınca çekirdek perdenin arkasında kaybolmuyor: küçülüp sağ
+// kolona kayıyor, kartlar onun yerine öne çıkıyor ("ortadaki animasyon küçülüp
+// kenara geçsin"). Sahne yeniden kurulmuyor — yalnız kamera: `zoom` küçültüyor,
+// `setViewOffset` kadrajı kaydırıyor. İkisi de projeksiyonda, yani çekirdeğin,
+// tozun ve bloom'un kendi oranları ve sis mesafesi değişmiyor (kamerayı geri
+// çekmek sisi devreye sokup çekirdeği soldururdu).
+const DOCK_ZOOM = 0.34;
+/** Çekirdeğin oturduğu nokta: sağ kenardan px, yükseklik oranı. research.css'teki sağ kolonla eşleşir. */
+const DOCK_RIGHT_PX = 170;
+const DOCK_Y_RATIO = 0.62;
+/** Bu genişliğin altında sağ kolon yok (research.css) — çekirdek sağ alt köşeye, daha küçük. */
+const DOCK_NARROW_PX = 1100;
+const DOCK_DAMPING = 2.6;
+/** Kenardayken fare tepkisi kısılır: kart okunurken arka plan kaymasın. */
+const DOCK_PARALLAX_SUPPRESS = 0.8;
+
 export function CameraRig() {
   const angle = useRef(0);
   const focus = useRef(0);
@@ -64,6 +82,8 @@ export function CameraRig() {
   // (sahnedeki diğer kare döngüleri de aynı deseni izliyor).
   const positionScratch = useRef(new THREE.Vector3());
   const lookScratch = useRef(new THREE.Vector3());
+  const dock = useRef(0);
+  const docked = useRef(false);
 
   useFrame((state, delta) => {
     const camera = state.camera;
@@ -94,7 +114,9 @@ export function CameraRig() {
     // ── Varsayılan kadraj ──
     angle.current += delta * IDLE_ORBIT_SPEED;
     const idleScale = 1 - focusAmount * FOCUS_IDLE_SUPPRESS;
-    const parallaxScale = 1 - focusAmount * FOCUS_PARALLAX_SUPPRESS;
+    dock.current = THREE.MathUtils.damp(dock.current, useResearchStore.getState().open ? 1 : 0, DOCK_DAMPING, delta);
+    const dockAmount = dock.current < 0.001 ? 0 : dock.current;
+    const parallaxScale = (1 - focusAmount * FOCUS_PARALLAX_SUPPRESS) * (1 - dockAmount * DOCK_PARALLAX_SUPPRESS);
 
     const restX =
       Math.sin(angle.current) * IDLE_ORBIT_X * idleScale +
@@ -123,6 +145,32 @@ export function CameraRig() {
     lookAt.current.y = THREE.MathUtils.damp(lookAt.current.y, lookTarget.y, DAMPING, delta);
     lookAt.current.z = THREE.MathUtils.damp(lookAt.current.z, lookTarget.z, DAMPING, delta);
     camera.lookAt(lookAt.current);
+
+    // ── Kenara çekilme: projeksiyon ──
+    const perspective = camera as THREE.PerspectiveCamera;
+    if (dockAmount > 0) {
+      const { width, height } = state.size;
+      const narrow = width < DOCK_NARROW_PX;
+      const targetX = narrow ? width - 110 : width - DOCK_RIGHT_PX;
+      const targetY = narrow ? height - 110 : height * DOCK_Y_RATIO;
+      // Negatif kayma: kadraj penceresi tam karenin solundan/üstünden başlar → içerik sağa/aşağı kayar.
+      perspective.setViewOffset(
+        width,
+        height,
+        -(targetX - width / 2) * dockAmount,
+        -(targetY - height / 2) * dockAmount,
+        width,
+        height,
+      );
+      perspective.zoom = 1 - dockAmount * (1 - (narrow ? DOCK_ZOOM * 0.7 : DOCK_ZOOM));
+      perspective.updateProjectionMatrix();
+      docked.current = true;
+    } else if (docked.current) {
+      perspective.clearViewOffset();
+      perspective.zoom = 1;
+      perspective.updateProjectionMatrix();
+      docked.current = false;
+    }
   });
 
   return null;

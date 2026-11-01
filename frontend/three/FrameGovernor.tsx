@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import { useAIStateStore } from '@/stores/aiStateStore';
 import { usePowerStore } from '@/stores/powerStore';
+import { useResearchStore } from '@/stores/researchStore';
 
 // Uyarlanır kare hızı (Faz 0, 2026-10-02).
 //
@@ -55,6 +56,10 @@ export function FrameGovernor() {
     window.addEventListener('pointerdown', markInput, { passive: true });
     window.addEventListener('wheel', markInput, { passive: true });
     window.addEventListener('keydown', markInput);
+    // Araştırma panosu açılıp kapanırken çekirdek kenara kayıyor (CameraRig) — geçiş 30 FPS'te kesik görünür.
+    const stopResearch = useResearchStore.subscribe((s, prev) => {
+      if (s.open !== prev.open) markInput();
+    });
 
     // Tanı: `window.__chironGovernor()` — hangi kural, hangi hedef, kaç tick/kare.
     // FrameProbe ile aynı gerekçe: "boşta 30 FPS" bir iddia, ölçülebilir kalmalı.
@@ -97,6 +102,7 @@ export function FrameGovernor() {
       window.removeEventListener('pointerdown', markInput);
       window.removeEventListener('wheel', markInput);
       window.removeEventListener('keydown', markInput);
+      stopResearch();
     };
   }, [invalidate]);
 

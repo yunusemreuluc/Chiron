@@ -9,6 +9,9 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 
 ## Açık
 
+### Tepsi göstergesi telefona — konuşurken parçacık bulutu
+**Durum:** PC'de bitti ve commit'li (2026-11-01, `core/tray_indicator.py`, 07 parçacık + dinliyor/düşünüyor/konuşuyor renkleri); Yunus "yarın telefona uygulayacağız" dedi — chiron-mobile'da başlanmadı, önce kaplama mı uygulama içi mi sorulacak
+
 ### Aıron Mobil — Play Store yayını
 **Durum:** Plan yazıldı (2026-10-14, [[Plan-Play-Yayini]]); hedef "benim telefonumdaki gibi": özellik kesilmeyecek, kod başlamadı
 

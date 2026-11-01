@@ -37,6 +37,8 @@ EventType = Literal[
     "user_activity",  # kullanıcı konuşuyor (giriş transkripti geldi)
     "assistant_status",  # muted/paused gibi kalıcı durum bayrakları
     "office_update",  # Ajan Ofisi anlık görüntüsü (backend/core/ofis.py)
+    "research_update",  # araştırma panosu: ilerleme / bitti / hata (actions/arastirma_panosu.py)
+    "research_show",  # araştırma panosunu aç/kapat (show_research_board)
 ]
 
 

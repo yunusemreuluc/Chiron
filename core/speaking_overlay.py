@@ -1,4 +1,9 @@
-"""Tepsideyken konuşma göstergesi — ekranın sağ üstünde küçük bir ses dalgası.
+"""Tepsideyken konuşma göstergesi.
+
+2026-11-01: asıl gösterge artık `core/tray_indicator.py` — gerçek saydam (per-pixel alpha) pencerede beş stil
+(parçacık, kayan kart, imleç, osiloskop, 2D çekirdek), `tray_indicator` ayarıyla seçilir. Önce 3D çekirdek
+WebView2 penceresinde denendi; saydamlık alınamadı, köşesi kesik koyu daire oldu, Yunus "çok kötü" dedi —
+kaldırıldı. Aşağıdaki Tk ses dalgası `tray_indicator = "dalga"` ile hâlâ seçilebilir.
 
 Kullanıcı isteği (2026-08-01): Chiron tepsiye alındığında pencere görünmüyor,
 dolayısıyla konuştuğunu anlamanın hiçbir görsel yolu kalmıyor. Konuşurken sağ
@@ -44,6 +49,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import time
 from collections import deque
 
 logger = logging.getLogger("chiron")
@@ -72,6 +78,21 @@ TRANSPARENT_KEY = "#ff00fe"
 # Ses gelmediğinde çubuklar donmasın diye her karede uygulanan sönme.
 DECAY = 0.82
 
+# Yeni göstergeler: ses parçaları arasındaki kısa sessizliklerde sönüp yanmasın — son parçadan bu kadar sonra
+# "sustu" sayılır (sönme ayrıca yumuşak). Gemini cümle aralarında ~0.3-0.8 sn boşluk bırakıyor.
+HOLD_SECONDS = 0.5
+# Evreler (2026-11-01, Yunus: "konuşma başlamadan önce belirsin, konuşsun, sonra biraz daha durup gitsin; beni
+# dinlerken de görünsün"). Kullanıcı konuşması giriş transkriptinden anlaşılıyor, ham mikrofon seviyesinden DEĞİL:
+# oda gürültüsü göstergeyi boşuna açardı. Seviye yalnız "dinliyor" evresinde dalgalanma için kullanılıyor.
+USER_HOLD_SECONDS = 1.2      # son transkript parçasından sonra hâlâ "dinliyor"
+THINK_MAX_SECONDS = 12.0     # kullanıcı sustu, cevap gelmedi: en fazla bu kadar "düşünüyor"
+TOOL_HOLD_SECONDS = 4.0      # araç çalıştı: bu kadar "düşünüyor"
+LINGER_SECONDS = 3.0         # konuşma bittikten sonra kalış
+# Altyazı: bu kadar süre yeni metin gelmezse sıradaki konuşma yeni bir cümle başlatır.
+CAPTION_RESET_SECONDS = 3.0
+# Stil ayarı her karede dosyadan okunmasın.
+STYLE_REFRESH_SECONDS = 2.0
+
 
 class SpeakingOverlay:
     def __init__(self) -> None:
@@ -81,6 +102,14 @@ class SpeakingOverlay:
         self._level = 0.0            # en son ses seviyesi (0..1)
         self._thread: threading.Thread | None = None
         self._stop = threading.Event()
+        self._last_spoke = 0.0
+        self._caption = ""
+        self._caption_at = 0.0
+        self._mic = 0.0
+        self._user_at = 0.0
+        self._tool_at = 0.0
+        self._style = ""
+        self._style_at = 0.0
 
     # ── Dışarıdan çağrılanlar (herhangi bir thread'den güvenli) ────────────
 
@@ -95,8 +124,65 @@ class SpeakingOverlay:
     def set_speaking(self, speaking: bool) -> None:
         with self._lock:
             self._speaking = speaking
-            if not speaking:
+            if speaking:
+                self._last_spoke = time.monotonic()
+            else:
                 self._level = 0.0
+
+    def push_mic(self, level: float) -> None:
+        """Mikrofon seviyesi (main.py dinleme döngüsü) — yalnız "dinliyor" evresinde dalgalanma."""
+        self._mic = max(0.0, min(1.0, float(level)))
+
+    def mark_user(self) -> None:
+        """Kullanıcı konuşuyor (giriş transkripti geldi)."""
+        with self._lock:
+            self._user_at = time.monotonic()
+
+    def mark_thinking(self) -> None:
+        """Bir araç çalışmaya başladı — cevap gecikecek, "düşünüyor" göster."""
+        with self._lock:
+            self._tool_at = time.monotonic()
+
+    def _phase(self) -> tuple[str, float]:
+        """(evre, seviye) — kilit ALTINDA çağrılır. Bkz. core/tray_indicator.run."""
+        now = time.monotonic()
+        if self._speaking or now - self._last_spoke < HOLD_SECONDS:
+            return "konusuyor", self._level
+        if now - self._user_at < USER_HOLD_SECONDS:
+            return "dinliyor", self._mic
+        if (self._user_at > self._last_spoke and now - self._user_at < THINK_MAX_SECONDS)                 or now - self._tool_at < TOOL_HOLD_SECONDS:
+            return "dusunuyor", 0.0
+        if self._last_spoke and now - self._last_spoke < LINGER_SECONDS:
+            return "bitti", 0.0
+        return "", 0.0
+
+    def push_caption(self, text: str) -> None:
+        """Chiron'un o an söylediği metin (çıkış transkripti, main.py) — kayan kart bunu gösterir."""
+        text = " ".join(str(text or "").split())
+        if not text:
+            return
+        now = time.monotonic()
+        with self._lock:
+            if now - self._caption_at > CAPTION_RESET_SECONDS:
+                self._caption = ""
+            self._caption = f"{self._caption} {text}".strip()[-400:]
+            self._caption_at = now
+
+    def _style_name(self) -> str:
+        now = time.monotonic()
+        if now - self._style_at > STYLE_REFRESH_SECONDS or not self._style:
+            try:
+                from app_config import get_app_config_value
+
+                self._style = str(get_app_config_value("tray_indicator", "") or "")
+            except Exception:
+                self._style = ""
+            from core import tray_indicator
+
+            if self._style not in tray_indicator.STYLES and self._style != "dalga":
+                self._style = tray_indicator.DEFAULT_STYLE
+            self._style_at = now
+        return self._style
 
     def push_level(self, level: float) -> None:
         with self._lock:
@@ -112,9 +198,25 @@ class SpeakingOverlay:
             return
         self._stop.clear()
         self._thread = threading.Thread(
-            target=self._run, name="chiron-speaking-overlay", daemon=True
+            target=self._run if self._style_name() == "dalga" else self._run_indicator,
+            name="chiron-speaking-overlay", daemon=True,
         )
         self._thread.start()
+
+    def _run_indicator(self) -> None:
+        """core/tray_indicator.py döngüsü; tepsiden çıkınca (enabled=False) biter."""
+        from core import tray_indicator
+
+        def state() -> tuple[bool, str, float, str]:
+            with self._lock:
+                phase, level = self._phase()
+                self._level *= 0.85  # yeni parça gelmezse sön
+                return self._enabled, phase, level, self._caption
+
+        try:
+            tray_indicator.run(state, self._style_name, lambda: self._stop.is_set() or not self._enabled)
+        except Exception:
+            logger.exception("[CHIRON] Tepsi göstergesi çöktü")
 
     def _run(self) -> None:
         try:

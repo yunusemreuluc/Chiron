@@ -39,4 +39,10 @@ Gerçek uçtan uca test edildi — hem YouTube linki hem yerel dosya yoluyla, ik
 tek bir sabit resim değil, gerçekten tüm video (görüntü+ses) Gemini'ye gidiyor — rapor
 zaman damgalı önemli noktalar içeriyor, uydurma değil videodan gerçekten "görüp duyduğu" şeyler.
 
+**2026-10-31 — Instagram:** kod linki hiç YouTube'la sınırlamıyor (her http linki yt-dlp'ye
+gider), ama tarif "YouTube linki" dediği için model Instagram reel'ini aracı çağırmadan
+"desteklemiyorum" diye reddetti. Tarif (`tool_defs.py`, `core/prompt.txt`) "video linki —
+YouTube, Instagram, TikTok, X vb." oldu. Herkese açık reel uçtan uca test edildi, rapor
+doğru. Gizli hesap/giriş isteyen gönderi için çerez desteği yok.
+
 Tool: `analyze_video` ([[Arac-Tanimlari]]). Yeni bağımlılık: `yt-dlp` (`requirements.txt`).

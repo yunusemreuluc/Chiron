@@ -8,6 +8,8 @@ import { BootOverlay } from '@/components/BootOverlay';
 import { BrandBadge } from '@/components/BrandBadge';
 import { LeftPanel } from '@/components/LeftPanel';
 import { OfficeView } from '@/components/office/OfficeView';
+import { ResearchBoard } from '@/components/research/ResearchBoard';
+import { ResearchChip } from '@/components/research/ResearchChip';
 import { Sidebar } from '@/components/Sidebar';
 import { SleepVeil } from '@/components/SleepVeil';
 import { TelemetryCard } from '@/components/TelemetryCard';
@@ -18,6 +20,7 @@ import { useThinkingSound } from '@/hooks/useThinkingSound';
 import { fetchSettings } from '@/services/settingsApi';
 import { configureSfx, playSfx } from '@/services/sfxPlayer';
 import { usePowerStore } from '@/stores/powerStore';
+import { useResearchStore } from '@/stores/researchStore';
 
 // WebGL yalnızca istemcide anlamlı — SSR sırasında render edilmiyor.
 const Scene = dynamic(() => import('@/three/Scene').then((mod) => mod.Scene), {
@@ -84,8 +87,11 @@ export function AppShell() {
   // _watch_fullscreen_keys Windows'tan okuyor. /api/settings/fullscreen yine duruyor (uzaktan/elle).
 
   const isAsleep = usePowerStore((state) => state.powerState === 'asleep');
+  // Araştırma panosu açıkken de HUD çekiliyor: pano artık yarı saydam (çekirdek kenarda görünsün diye),
+  // altındaki paneller kartların arasından sızmasın.
+  const researchOpen = useResearchStore((state) => state.open);
   const hudClass = `transition-opacity duration-[900ms] ${
-    isAsleep ? 'pointer-events-none opacity-0' : 'opacity-100'
+    isAsleep || researchOpen ? 'pointer-events-none opacity-0' : 'opacity-100'
   }`;
 
   return (
@@ -159,6 +165,9 @@ export function AppShell() {
 
       {/* Ajan Ofisi — "Ajanlar" modülü tam ekran açılır (bkz. components/office). */}
       <OfficeView />
+      {/* Araştırma: süren işin ilerleme kartı (üst orta) + tam ekran pano (bkz. components/research). */}
+      <ResearchChip />
+      <ResearchBoard />
       <SleepVeil />
       <BootOverlay />
     </div>

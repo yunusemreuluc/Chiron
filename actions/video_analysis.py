@@ -1,5 +1,5 @@
 """
-Video analizi — bir YouTube linkini veya bilgisayardaki bir video dosyasını Gemini'nin
+Video analizi — bir video linkini (yt-dlp'nin desteklediği her site: YouTube, Instagram...) veya bilgisayardaki bir video dosyasını Gemini'nin
 video-anlama özelliğine (Files API) yükleyip baştan sona "izletip" rapor aldırır.
 
 screen_vision.py ile aynı desenler: model fallback listesi + geçici hata retry'ı,
@@ -10,6 +10,8 @@ kabul edilmiş bir tekrar).
 from __future__ import annotations
 
 import importlib.util
+import json
+import os
 import shutil
 import tempfile
 import time
@@ -47,6 +49,35 @@ MAX_VIDEO_SECONDS = 3600  # Gemini'nin varsayılan ayarlarda pratik üst sınır
 UPLOAD_POLL_INTERVAL = 3.0
 UPLOAD_MAX_WAIT_SECONDS = 300.0
 
+# Son analiz (2026-10-31): "bunu nasıl yapmış, ben de istiyorum" denince işi alan taraf
+# (build_like_analyzed → Komuta) videoya kendisi bakabilsin diye indirilen/kaydedilen video
+# silinmez, buraya taşınır; yalnız EN SON analiz tutulur. Repo dışında: video büyük olabilir.
+LAST_DIR = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "Chiron" / "son_analiz"
+LAST_FILE = LAST_DIR / "son_analiz.json"
+
+
+def remember_analysis(*, url: str, label: str, report: str, video_path: str, owned: bool, kind: str) -> None:
+    """Son analizi diske yazar. `owned`: video bizim geçici dosyamız (indirme/kayıt) — LAST_DIR'e
+    taşınır; değilse kullanıcının kendi dosyasıdır, yalnız yolu tutulur, dokunulmaz."""
+    LAST_DIR.mkdir(parents=True, exist_ok=True)
+    kept = video_path
+    if owned and video_path and Path(video_path).exists():
+        for old in LAST_DIR.glob("video.*"):
+            old.unlink(missing_ok=True)
+        kept = str(LAST_DIR / f"video{Path(video_path).suffix or '.mp4'}")
+        shutil.move(video_path, kept)
+    LAST_FILE.write_text(json.dumps({
+        "at": time.time(), "kind": kind, "url": url, "label": label,
+        "report": report, "video_path": kept,
+    }, ensure_ascii=False, indent=1), encoding="utf-8")
+
+
+def last_analysis() -> dict | None:
+    try:
+        return json.loads(LAST_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
 
 def _is_url(source: str) -> bool:
     try:
@@ -83,6 +114,9 @@ def _download_video(url: str) -> tuple[bool, str, str, str]:
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
+            if info.get("is_live"):  # süresi yok: indirme yayın bitene dek sürerdi (ekrandaki sekme canlı yayın olabilir)
+                shutil.rmtree(tmp_dir, ignore_errors=True)
+                return False, "Bu bir canlı yayın; canlı yayın indirilip izlenemiyor.", "", ""
             duration = info.get("duration") or 0
             if duration and duration > MAX_VIDEO_SECONDS:
                 shutil.rmtree(tmp_dir, ignore_errors=True)
@@ -221,6 +255,22 @@ def _analyze_with_gemini(client: genai.Client, video_file: types.File, question:
     raise RuntimeError(_friendly_error(last_error))
 
 
+def analyze_file(video_path: str, question: str, label: str, api_key: str) -> str:
+    """Videoyu Gemini'ye yükleyip raporu döner; yüklenen dosya her durumda silinir.
+    Hata durumunda kullanıcıya söylenebilir mesajlı RuntimeError fırlatır."""
+    client = genai.Client(api_key=api_key)
+    uploaded_file = None
+    try:
+        uploaded_file = _upload_and_wait(client, video_path)
+        return _analyze_with_gemini(client, uploaded_file, question, label)
+    finally:
+        if uploaded_file is not None:
+            try:
+                client.files.delete(name=uploaded_file.name)
+            except Exception:
+                pass
+
+
 @register_tool("analyze_video")
 def analyze_video(source: str, question: str = "") -> dict:
     if not source or not source.strip():
@@ -248,18 +298,12 @@ def analyze_video(source: str, question: str = "") -> dict:
             video_path = result
             label = Path(video_path).name
 
-        client = genai.Client(api_key=api_key)
-
-        uploaded_file = None
+        analysis = analyze_file(video_path, question, label, api_key)
         try:
-            uploaded_file = _upload_and_wait(client, video_path)
-            analysis = _analyze_with_gemini(client, uploaded_file, question, label)
-        finally:
-            if uploaded_file is not None:
-                try:
-                    client.files.delete(name=uploaded_file.name)
-                except Exception:
-                    pass
+            remember_analysis(url=source.strip() if tmp_dir else "", label=label, report=analysis,
+                              video_path=video_path, owned=bool(tmp_dir), kind="video")
+        except Exception:
+            pass  # hatırlanamaması analizi bozmaz; yalnız "ben de istiyorum" adımı videosuz kalır
 
         return ok(f"[Video: {label}]\n{analysis}", label=label)
 
