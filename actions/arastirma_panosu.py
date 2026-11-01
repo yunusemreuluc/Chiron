@@ -28,6 +28,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import subprocess
 import tempfile
 import threading
@@ -294,6 +295,8 @@ def _run_claude(board_id: str, topic: str, focus: str, progress: dict[str, Any])
         proc.wait(timeout=30)
     finally:
         timer.cancel()
+        # Boş çalışma klasörü her araştırmada Temp'te birikiyordu (2026-11-01 performans taraması: 2 adet).
+        shutil.rmtree(workdir, ignore_errors=True)
     if progress.get("cancelled"):
         raise RuntimeError("Araştırma durduruldu.")
     if error:

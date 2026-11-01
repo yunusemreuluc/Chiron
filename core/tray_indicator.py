@@ -224,11 +224,17 @@ class LayeredWindow:
 class Light:
     """Önceden çarpılmış renk + alfa biriktirici. `add` ışık ekler; `bgra` Windows'un beklediği biçim."""
 
+    _grids: dict[tuple[int, int], tuple[np.ndarray, np.ndarray]] = {}
+
     def __init__(self, w: int, h: int) -> None:
         self.w, self.h = w, h
         self.c = np.zeros((h, w, 3), np.float32)
         self.a = np.zeros((h, w), np.float32)
-        self.yy, self.xx = np.mgrid[0:h, 0:w].astype(np.float32)
+        # Koordinat ızgarası boyut başına bir kez (her karede yeniden kurmak gereksizdi); salt okunur kullanılıyor.
+        if (w, h) not in Light._grids:
+            yy, xx = np.mgrid[0:h, 0:w].astype(np.float32)
+            Light._grids[(w, h)] = (yy, xx)
+        self.yy, self.xx = Light._grids[(w, h)]
 
     def add(self, mask: np.ndarray, color: np.ndarray, gain: float = 1.0) -> None:
         m = mask * gain

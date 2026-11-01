@@ -22,6 +22,9 @@ indir. Üç madde yeter; roman değil, köprü.
   konuşuyor (turkuaz) → 3 sn kalış. Gerçek Chiron'da sesle denenmedi — yeniden başlatma gerekiyor. Testler 307/308.
 - Yunus "güzel olmuş" dedi; hepsi commit'lendi (push yok). Mikrofon yedeği `config/api_keys.json.yedek-mic`
   anahtar içerdiği için commit'e girmedi, takipsiz duruyor.
+- Kapanış performans taraması (03:45): PC boşta (CPU ~%0, RAM 14.5/31 GB, C: 405 GB boş, 84 sa açık); test artığı süreç
+  yok. Gemini kotası gün boyu dolu — 19 istek 429, çoğu ekran bekçisi (`flash-latest` + `flash-lite`); kota TR ~10:00'da
+  sıfırlanır. Düzeltildi: araştırma geçici klasörü silinmiyordu; gösterge ızgarası önbellekte (parçacık 3.3 → 2.5 ms/kare).
 - **YARIN (Yunus, 2026-11-01): tepsi göstergesini telefona uygula** — `chiron-mobile` (Kotlin). Aynı fikir:
   07 parçacık bulutu, evreler dinliyor (buz mavisi #7fb2ff) → düşünüyor (mor #9c6ef0) → konuşuyor (turkuaz #4fd6a8)
   → 3 sn kalış; davranış ve süreler `core/speaking_overlay.py` + `core/tray_indicator.py`'de. Telefonda karşılığı
