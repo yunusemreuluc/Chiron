@@ -1,0 +1,5 @@
+Infinite, 3D Head Scan by Lee Perry-Smith is licensed under a Creative Commons
+Attribution 3.0 Unported License (https://creativecommons.org/licenses/by/3.0/).
+Based on a work at www.triplegangers.com. Copied from the three.js r128 example
+models (examples/models/gltf/LeePerrySmith/LeePerrySmith.glb).
+Used by Chiron's humanoid view (frontend/three/humanoidKrom.ts).

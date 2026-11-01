@@ -573,26 +573,32 @@ Sonuç (görünür Edge, gerçek GPU, 45 sn boşta): GPU %69,5 → **%22,5**, ta
 ## İnsan görünümü
 
 2026-11-01, Yunus'un isteği (Instagram'daki "Opening Humanoid view" referansı): **çift parmak
-şıklatması** (ya da arayüzde **H**; **Esc** çıkar) çekirdeği parçacıklardan bir büste çeviriyor.
+şıklatması** (ya da arayüzde **H**; **Esc** çıkar) çekirdeği parçacıklardan bir insansı robota çeviriyor.
 
-- **Akış:** çekirdek ve tendriller sönerken çekirdekten bir parçacık kuyruklu yıldızı fışkırıyor,
-  parçacıklar aşağıdan yukarı büstteki yerlerine akıyor (2.8 sn, kapanış 1.8 sn). İki yanda parçacık
-  dağları yükseliyor (mavi + turuncu "lav" çizgileri). HUD çekiliyor; altta kısa duyuru, sonra sönük ipucu.
-- **Büst model dosyası değil, matematik** (`three/humanoidGeometry.ts`): her yükseklikte elips kesit,
-  parçacıklar kesit çevresinde → önden yatay kontur çizgileri. Burun/kaş/çene Gauss tümsekleri. Yüzde
-  turuncu kor (konturlar + bantlı parıltı sprite'ı), boyunda altın damarlar, kafanın arkasında hale halkaları.
-- **Canlı:** kafa imleci izliyor (4 sn kıpırtısızsa kendi salınıyor), Chiron konuşurken konturlarda
-  dalga + hale nabzı, dinlerken mikrofon seviyesine tepki. Kare yöneticisi bu modda 60 FPS istiyor.
-- **Ses:** dosya yok, WebAudio sentezi (`playMaterialize`): yükselen süzgeçli hışırtı + uğultu + çınlama.
-  SFX ayarına uyuyor, uzak modda susuyor.
+- **Biçim: "Krom"** (2026-11-02). İlk sürüm elipslerden çizilmiş bir büsttü, Yunus "güzel olmamış" dedi.
+  Sonra 3 tur taslak yapıldı (10 soyut/robot, 10 film/anime esinli, 6 insansı). Yunus "insansı robot"
+  dedi ve 6 insansıdan Krom'u seçti. Taslaklar: claude.ai/artifact/3bzbjjjnmGMq5J8L9fJaob (ilk iki tur),
+  claude.ai/artifact/SnG67xU7wjc5PxP5gp3v9s (insansı; diğer beşi Kontur/Ava/Siborg/Neon/Altın orada duruyor).
+- **Kafa elle çizilmiyor:** gerçek kafa taraması (`public/models/head-scan.glb`, Lee Perry-Smith, **CC BY 3.0**,
+  three.js örnek modeli — lisans `head-scan-LICENSE.txt`, atıf satışa/yayına çıkarken gerekli) yüzeyinden
+  150k nokta örnekleniyor (`three/humanoidKrom.ts`, MeshSurfaceSampler). Tarama yalnız mod ilk açılınca iniyor.
+- **Tuzak:** taramada ağız boşluğu gibi iç yüzeyler var; ışıkla toplanınca ağzın çevresinde parlak bir kutu
+  çıkıyordu. Önden ızgarada dış yüzeyin 0.12 gerisinde kalan örnekler atılıyor.
+- **Krom:** ışıkla gölgelenmiş gümüş (sol üst önden ışık — heykel gibi okunmasını sağlayan bu), mavi panel
+  dikişleri (alın ortası, alın bandı, çene hattı, boyun halkaları), buz mavisi gözler, göğüste turuncu çekirdek.
+  Aynı geometri iki kez çiziliyor: normal + 3.4 kat büyük soluk parlama geçişi (ucuz bloom).
+- **Canlı:** kafa+boyun imleci izliyor (omuz sabit, pivot boyunda), 2.5–6.5 sn'de bir göz kırpıyor,
+  konuşurken çene açılıp kapanıyor ve gözler/dikişler parlıyor, dinlerken mikrofona tepki.
+- **Akış:** çekirdek sönerken sürü fışkırıyor, aşağıdan yukarı toplanıyor (3 sn, kapanış 1.8 sn). HUD çekiliyor;
+  altta kısa duyuru, sonra sönük ipucu. Ses: WebAudio sentezi (`playMaterialize`), SFX ayarına uyuyor.
 - **Şıklatma** `core/snap_detector.py` (numpy, model yok): ani atak (+15 dB), tiz (fark enerjisi oranı),
   ~50 ms'de sönüp yeniden yükselmeme. Konuşma ve masa vuruşu testte elenir; **alkış da tetikler**.
   Chiron konuşurken ve uzak modda kapalı; susturulmuş/duraklatılmışken açık (ses dışarı gitmiyor).
   Ayar `snap_gesture`: `false` kapalı, `1` tek şıklatma, varsayılan `2`.
-- **Durum** backend'de (`web_ui.humanoid`, `assistant_status` anlık görüntüsünde) — sonradan açılan pencere de
-  biliyor. `POST /api/voice/humanoid {value}`. İlerleme kare başına `humanoidProgress` düz nesnesinde (store değil).
-- **Henüz yok:** webcam ile yüz takibi (referanstaki "motion tracking"; şimdilik imleç), sesli komutla açma aracı.
-  Eşikler sentetik sesle ayarlandı — gerçek mikrofonda yanlış/eksik tetiklenirse `[SNAP]` debug loguna bak.
+- **Durum** backend'de (`web_ui.humanoid`, `assistant_status` anlık görüntüsünde). `POST /api/voice/humanoid {value}`.
+  İlerleme kare başına `humanoidProgress` düz nesnesinde (store değil).
+- **Henüz yok:** webcam ile yüz takibi (şimdilik imleç), sesli komutla açma aracı. Şıklatma eşikleri sentetik
+  sesle ayarlandı — gerçek mikrofonda sorun olursa `[SNAP]` debug loguna bak.
 
 ## Küçük parçalar
 

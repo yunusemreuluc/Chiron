@@ -7,7 +7,7 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
-## Oturum: 2026-11-01 (akşam) — İnsan görünümü (parmak şıklatma)
+## Oturum: 2026-11-01/02 — İnsan görünümü (parmak şıklatma) → Krom
 
 - Yunus Instagram'daki "Humanoid view" reel'ini gösterdi (ekran görüntüleriyle; Instagram girişsiz okunmuyor):
   çift şıklatınca çekirdek parçacık büstüne dönüşüyor → [[Arayuz]] § İnsan görünümü. `core/snap_detector.py`
@@ -17,6 +17,9 @@ indir. Üç madde yeter; roman değil, köprü.
   Testler 316/317 (bekçi testi yine basetemp yüzünden). `npm run build` yapıldı. Commit'lendi.
 - **Denenmedi:** gerçek mikrofonla şıklatma — Chiron yeniden başlatılınca Yunus'la dene, eşik gerekirse
   `[SNAP]` debug logundan ayarla. Sonraki adım adayı: webcam yüz takibi, sesli komutla açma.
+- Yunus ilk büstü beğenmedi → 3 tur taslak (10 soyut/robot, 10 film/anime, 6 insansı; gerçek kafa taraması
+  Lee Perry-Smith CC BY 3.0). **Krom'u seçti** → Chiron'a kondu (`three/humanoidKrom.ts`, eski elips büst ve dağlar
+  silindi). [[Arayuz]] § İnsan görünümü. Build alındı; gerçek Chiron'da Yunus'la henüz görülmedi.
 
 ## Önceki oturumlar
 
