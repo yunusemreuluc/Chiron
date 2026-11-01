@@ -16,10 +16,9 @@
    ══════════════════════════════════════════════════════════════════════════ */
 :root {
   /* ── Zemin ──
-     Saf siyah yerine çok hafif mavimsi-siyah: cam panellerin blur'ı saf siyah
-     üzerinde "ölü" görünüyor, birkaç birimlik mavi taban ona derinlik veriyor.
-     Yıldızlar ve ufuk parıltısı hâlâ derinliğin ana kaynağı. */
-  --background: #05070c;
+     Kullanıcı isteğiyle (2026-11-02) saf siyah. Derinliği yıldızlar ve toz veriyor.
+     three/Scene.tsx (zemin + sis) ve three/Background.tsx (nebula) da aynı siyah. */
+  --background: #000000;
   --background-secondary: #080b13;
   --background-elevated: #0b0f18;
 

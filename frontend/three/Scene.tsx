@@ -48,10 +48,10 @@ export function Scene() {
       dpr={[1, maxDpr]}
       gl={{ antialias: true, alpha: false }}
     >
-      {/* Zemin, CSS'teki --background ile birebir aynı (#05070c) — sahnenin
+      {/* Zemin, CSS'teki --background ile birebir aynı (#000000) — sahnenin
           kenarı ile HTML katmanı arasında görünür bir dikiş kalmasın diye. */}
-      <color attach="background" args={['#05070c']} />
-      <fog attach="fog" args={['#05070c', 15, 44]} />
+      <color attach="background" args={['#000000']} />
+      <fog attach="fog" args={['#000000', 15, 44]} />
 
       <Lighting />
       <Background />

@@ -91,7 +91,7 @@ WINDOW_SIZE = (960, 620)
 WINDOW_MIN_SIZE = (880, 560)
 # app/globals.css'teki --background ile aynı: pencere açılırken WebGL sahnesi
 # hazır olana kadar beyaz bir kare parlamasın.
-WINDOW_BACKGROUND = "#05070C"
+WINDOW_BACKGROUND = "#000000"
 
 SERVER_START_TIMEOUT = 15.0
 

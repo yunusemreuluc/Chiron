@@ -23,7 +23,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   // Çentik/ada altına kadar çizilsin; boşluklar CSS'te env(safe-area-inset-*).
   viewportFit: 'cover',
-  themeColor: '#05070c',
+  themeColor: '#000000',
   // Klavye açılınca yerleşim daralsın, yazı kutusu klavyenin altında kalmasın.
   interactiveWidget: 'resizes-content',
 };

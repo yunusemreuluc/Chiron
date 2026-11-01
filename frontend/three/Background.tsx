@@ -30,9 +30,10 @@ function NebulaBackdrop() {
     // Neredeyse siyah; tepeye doğru çok hafif soğuk bir mavi yükseliyor. Amaç
     // "renk" değil derinlik: tamamen düz siyah bir küre, üzerindeki yıldız
     // alanını sahnenin geri kalanından kopuk gösteriyordu.
-    const bottom = new THREE.Color('#02040a');
-    const top = new THREE.Color('#070d1a');
-    const accent = new THREE.Color('#0d1830');
+    // 2026-11-02, kullanıcı isteği: arka plan tamamen siyah — gradyan kapatıldı.
+    const bottom = new THREE.Color('#000000');
+    const top = new THREE.Color('#000000');
+    const accent = new THREE.Color('#000000');
     const tmp = new THREE.Color();
 
     for (let i = 0; i < position.count; i++) {
