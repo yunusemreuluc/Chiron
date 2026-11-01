@@ -155,6 +155,11 @@ class WebUI:
         # girmeden ÖNCEKİ hâline dönüyor (kullanıcı zaten kapatmışsa kapalı kalır).
         self.remote_mode = False
         self.speaker_muted = False
+        # İnsan görünümü (2026-11-01): çift parmak şıklatması ya da arayüzdeki H
+        # tuşu çekirdeği parçacık büstüne çeviriyor (frontend/three/HumanoidBust.tsx).
+        # Kalıcı durum: assistant_status anlık görüntüsünde taşınıyor, sonradan
+        # açılan pencere de hangi görünümde olduğunu biliyor.
+        self.humanoid = False
         self._log_history: deque[dict[str, Any]] = deque(maxlen=LOG_HISTORY_LINES)
         self._log_lock = threading.Lock()
         # Telefondaki Chiron'un `query_desktop_chiron` aracı (2026-09-15). Soru
@@ -227,6 +232,7 @@ class WebUI:
         commands.register("voice", self._handle_voice)
         commands.register("remote_mode", self._handle_remote_mode)
         commands.register("ask", self._handle_ask)
+        commands.register("humanoid", self._handle_humanoid)
         # Vision paneli (2026-07-30). `on_webcam_toggle` yuvası 2026-07-29'dan
         # beri vardı ve ChironLive onu dolduruyordu, ama komut olarak HİÇ
         # kaydedilmemişti — yani kamerayı yalnızca Chiron kendi aracıyla
@@ -288,6 +294,20 @@ class WebUI:
                 + (", mikrofon senin tercihinle kapalı." if self._user_muted else ".")
             )
         self._emit_status()
+
+    def _handle_humanoid(self, payload: dict) -> None:
+        value = payload.get("value")
+        self.set_humanoid(not self.humanoid if value is None else bool(value))
+
+    def set_humanoid(self, active: bool) -> None:
+        if active == self.humanoid:
+            return
+        self.humanoid = active
+        self._emit_status()
+
+    def toggle_humanoid(self) -> None:
+        """main.py'nin şıklatma algılayıcısı çağırıyor."""
+        self.set_humanoid(not self.humanoid)
 
     def _handle_ask(self, payload: dict) -> None:
         """Soruyu gönderir ve SONRAKİ Chiron cevabını `on_answer`'a teslim eder.
@@ -390,6 +410,7 @@ class WebUI:
             "paused": self.paused,
             "ready": self.is_ready(),
             "remote": self.remote_mode,
+            "humanoid": self.humanoid,
         }
 
     def _emit_status(self) -> None:

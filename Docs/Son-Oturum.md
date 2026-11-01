@@ -7,6 +7,19 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-11-01 (akşam) — İnsan görünümü (parmak şıklatma)
+
+- Yunus Instagram'daki "Humanoid view" reel'ini gösterdi (ekran görüntüleriyle; Instagram girişsiz okunmuyor):
+  çift şıklatınca çekirdek parçacık büstüne dönüşüyor → [[Arayuz]] § İnsan görünümü. `core/snap_detector.py`
+  (9 test), `three/HumanoidBust.tsx` + `humanoidGeometry.ts` + `shaders/humanoid.ts`, `HumanoidOverlay` (H/Esc,
+  duyuru, WebAudio sesi), `web_ui.humanoid` + `/api/voice/humanoid`.
+- Playwright (SwiftShader, 4 FPS) ile üç tur görsel ayar: kafa büyütüldü, omuzlar eğimlendi, damarlar altın.
+  Testler 316/317 (bekçi testi yine basetemp yüzünden). `npm run build` yapıldı. Commit'lendi.
+- **Denenmedi:** gerçek mikrofonla şıklatma — Chiron yeniden başlatılınca Yunus'la dene, eşik gerekirse
+  `[SNAP]` debug logundan ayarla. Sonraki adım adayı: webcam yüz takibi, sesli komutla açma.
+
+## Önceki oturumlar
+
 ## Oturum: 2026-11-01 — Araştırma panosu (ROSE benzeri)
 
 - Yunus ROSE reel'indeki "isteyince ekrana pano veriyor" özelliğini istedi → [[Arastirma-Panosu]]: `research_board`
@@ -31,8 +44,6 @@ indir. Üç madde yeter; roman değil, köprü.
   büyük ihtimalle uygulama arka plandayken diğer uygulamaların üstünde çizilen bir kaplama (SYSTEM_ALERT_WINDOW)
   ya da uygulama içi ekran — önce Yunus'a hangisi sorulacak. Ayrıca bekliyor: araştırma panosu ve tepsi göstergesinin
   gerçek Chiron'da sesli denemesi.
-
-## Önceki oturumlar
 
 ## Oturum: 2026-10-31 — Ekranda açık olanı izle + "ben de istiyorum"
 

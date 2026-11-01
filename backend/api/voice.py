@@ -69,6 +69,14 @@ async def set_pause(command: ToggleCommand) -> dict:
     return {"success": True, "message": "güncellendi", "data": {"paused": command.value}}
 
 
+@router.post("/humanoid")
+async def set_humanoid(command: ToggleCommand) -> dict:
+    """İnsan görünümü (H tuşu). Şıklatma aynı bayrağı backend içinden çeviriyor."""
+    if not commands.dispatch("humanoid", {"value": command.value}):
+        return {"success": False, "message": "Sesli asistan çalışmıyor.", "data": {}}
+    return {"success": True, "message": "güncellendi", "data": {"humanoid": command.value}}
+
+
 @router.post("/reset")
 async def reset_session() -> dict:
     """Sohbet bağlamını sıfırlar — yeni, boş bağlamlı bir Gemini Live oturumu."""

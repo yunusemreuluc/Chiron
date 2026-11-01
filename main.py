@@ -1524,6 +1524,17 @@ class ChironLive:
         stream, capture_rate = await asyncio.to_thread(
             open_input_stream, pya, device_index, SEND_SAMPLE_RATE, CHUNK_SIZE
         )
+        # Çift parmak şıklatması → İnsan görünümü (core/snap_detector.py). Yerel
+        # sinyal işleme; ses hiçbir yere gitmiyor, o yüzden susturulmuşken ve
+        # duraklatılmışken de çalışıyor. Chiron konuşurken kapalı: hoparlörden
+        # gelen kendi sesini şıklatma sanmasın. Ayar: app_config "snap_gesture"
+        # (False = kapalı, 1 = tek şıklatma, varsayılan 2).
+        snap_setting = get_app_config_value("snap_gesture", 2)
+        snap_detector = None
+        if snap_setting:
+            from core.snap_detector import SnapDetector
+
+            snap_detector = SnapDetector(SEND_SAMPLE_RATE, required=int(snap_setting))
         try:
             while True:
                 raw = await asyncio.to_thread(
@@ -1535,6 +1546,14 @@ class ChironLive:
                 with self._speaking_lock:
                     chiron_speaking = self._is_speaking
                 listening = not chiron_speaking and not self.ui.muted and not self._paused
+                if snap_detector is not None:
+                    if chiron_speaking or getattr(self.ui, "remote_mode", False):
+                        snap_detector.reset()
+                    elif snap_detector.feed(data):
+                        toggle = getattr(self.ui, "toggle_humanoid", None)
+                        if callable(toggle):
+                            logger.info("[CHIRON] 🫰 Şıklatma — İnsan görünümü değişiyor")
+                            toggle()
                 # Dalga formu (2026-07-30): sohbet dock'undaki görsel geri
                 # bildirim. Susturulmuş/duraklatılmışken sıfır gönderiliyor —
                 # mikrofon kapalıyken dalgalanan bir çubuk, kapalı olmadığını

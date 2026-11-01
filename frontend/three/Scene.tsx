@@ -9,6 +9,7 @@ import { EnergyCore } from './EnergyCore';
 import { EnergyTendrils } from './EnergyTendrils';
 import { FrameGovernor } from './FrameGovernor';
 import { FrameProbe } from './FrameProbe';
+import { HumanoidBust } from './HumanoidBust';
 import { Lighting } from './Lighting';
 import { PostProcessing } from './PostProcessing';
 import { useNavigationStore } from '@/stores/navigationStore';
@@ -57,6 +58,8 @@ export function Scene() {
       <CameraRig />
       <EnergyCore />
       <EnergyTendrils />
+      {/* İnsan görünümü — çift şıklatma / H tuşu (2026-11-01). Kapalıyken görünmez ve çizilmez. */}
+      <HumanoidBust />
       {/* 2026-10-29, kullanıcı isteği: dönen düğümler (dosya, hafıza…), aralarındaki çizgiler ve şimşek
           (ElectricArcs) kaldırıldı — çekirdek, tendriller ve toz kaldı. */}
       <PostProcessing />

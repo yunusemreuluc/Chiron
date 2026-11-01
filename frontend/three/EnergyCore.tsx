@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useAIStateStore, type AIState } from '@/stores/aiStateStore';
+import { corePresence } from '@/stores/humanoidStore';
 import { usePowerStore } from '@/stores/powerStore';
 import { playSfx } from '@/services/sfxPlayer';
 import { dampColor, SLEEP_PALETTE, STATE_PALETTE } from './palette';
@@ -193,6 +194,8 @@ export function EnergyCore() {
   // geçmek kafesi bir motor gibi tekletiyor. "Never use linear movement"
   // (Notes/Tasarim-Kurallari.md § Animasyon) hız değişimi için de geçerli.
   const rotationMultiplierRef = useRef(1);
+  // Sönümlenen ölçek, İnsan görünümü çarpanından AYRI tutuluyor (bkz. useFrame sonu).
+  const baseScaleRef = useRef(0);
 
   useFrame((state, delta) => {
     const group = groupRef.current;
@@ -282,7 +285,12 @@ export function EnergyCore() {
           getExtraScale(aiState) +
           (hoveredRef.current ? HOVER_SCALE_BOOST : 0)) *
         reveal;
-    group.scale.setScalar(THREE.MathUtils.damp(group.scale.x, targetScale, REACT_DAMPING, delta));
+    // İnsan görünümünde çekirdek sürüye çözülüyor (three/HumanoidBust.tsx). Çarpan
+    // sönümden SONRA uygulanıyor: zaten yumuşak bir rampa, üstüne sönüm gecikme ekler.
+    const presence = corePresence();
+    group.visible = presence > 0.001;
+    baseScaleRef.current = THREE.MathUtils.damp(baseScaleRef.current, targetScale, REACT_DAMPING, delta);
+    group.scale.setScalar(Math.max(baseScaleRef.current * presence, 1e-4));
   });
 
   return (

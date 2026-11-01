@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useThree } from '@react-three/fiber';
 import { useAIStateStore } from '@/stores/aiStateStore';
+import { humanoidProgress } from '@/stores/humanoidStore';
 import { usePowerStore } from '@/stores/powerStore';
 import { useResearchStore } from '@/stores/researchStore';
 
@@ -73,6 +74,8 @@ export function FrameGovernor() {
       if (usePowerStore.getState().powerState === 'asleep') return ((rule = 'uyku'), ASLEEP_FPS);
       if (now - born < BOOT_FULL_MS) return ((rule = 'açılış'), ACTIVE_FPS);
       if (useAIStateStore.getState().aiState !== 'idle') return ((rule = 'aktif'), ACTIVE_FPS);
+      // İnsan görünümü sürekli hareket ediyor (kafa imleci izliyor, dağlar parıldıyor).
+      if (humanoidProgress.value > 0) return ((rule = 'insan'), ACTIVE_FPS);
       if (now - lastInput < ACTIVITY_HOLD_MS) return ((rule = 'girdi'), ACTIVE_FPS);
       return document.hasFocus() ? ((rule = 'boşta'), IDLE_FPS) : ((rule = 'odak dışı'), BLURRED_FPS);
     };

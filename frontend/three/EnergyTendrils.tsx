@@ -4,6 +4,7 @@ import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useAIStateStore } from '@/stores/aiStateStore';
+import { corePresence } from '@/stores/humanoidStore';
 import { usePowerStore } from '@/stores/powerStore';
 import { dampColor, SLEEP_PALETTE, STATE_PALETTE } from './palette';
 import { getRevealProgress } from './reveal';
@@ -113,7 +114,7 @@ export function EnergyTendrils() {
       delta,
     );
     const reveal = getRevealProgress(state.clock.elapsedTime, REVEAL_DELAY, REVEAL_DURATION);
-    material.uniforms.uPointSize.value = baseSizeRef.current * reveal;
+    material.uniforms.uPointSize.value = baseSizeRef.current * reveal * corePresence();
   });
 
   return (

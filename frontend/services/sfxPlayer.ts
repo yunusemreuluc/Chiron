@@ -77,3 +77,75 @@ export function setThinkingLoop(active: boolean): void {
   audio.volume = volume * THINKING_VOLUME_SCALE;
   void audio.play().catch(() => {});
 }
+
+// ── İnsan görünümü sesi (2026-11-01) ────────────────────────────────────────
+// Dosya değil, WebAudio sentezi: yükselen süzgeçli bir "hışırtı" (parçacıklar
+// toplanıyor) + derinden gelen bir uğultu + sonda tek bir kristal çınlama
+// (büst tamamlandı). Kapanışta aynı şey ters yönde ve daha kısa. SFX ayarlarına
+// (açık/kapalı, seviye) uyuyor.
+let audioContext: AudioContext | null = null;
+
+export function playMaterialize(opening: boolean): void {
+  if (!enabled || typeof window === 'undefined') return;
+  try {
+    audioContext ??= new AudioContext();
+    const ctx = audioContext;
+    void ctx.resume();
+    const now = ctx.currentTime;
+    const duration = opening ? 2.6 : 1.6;
+    const master = ctx.createGain();
+    master.gain.value = volume * 1.6;
+    master.connect(ctx.destination);
+
+    // Hışırtı: beyaz gürültü → kayan bant geçiren süzgeç.
+    const noise = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * duration), ctx.sampleRate);
+    const channel = noise.getChannelData(0);
+    for (let i = 0; i < channel.length; i++) channel[i] = Math.random() * 2 - 1;
+    const source = ctx.createBufferSource();
+    source.buffer = noise;
+    const band = ctx.createBiquadFilter();
+    band.type = 'bandpass';
+    band.Q.value = 2.2;
+    band.frequency.setValueAtTime(opening ? 280 : 4200, now);
+    band.frequency.exponentialRampToValueAtTime(opening ? 4200 : 220, now + duration);
+    const hiss = ctx.createGain();
+    hiss.gain.setValueAtTime(0.0001, now);
+    hiss.gain.exponentialRampToValueAtTime(0.35, now + duration * 0.55);
+    hiss.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    source.connect(band).connect(hiss).connect(master);
+    source.start(now);
+    source.stop(now + duration);
+
+    // Uğultu: alçak sinüs, açılırken yükselen perde.
+    const hum = ctx.createOscillator();
+    hum.type = 'sine';
+    hum.frequency.setValueAtTime(opening ? 48 : 96, now);
+    hum.frequency.exponentialRampToValueAtTime(opening ? 96 : 40, now + duration);
+    const humGain = ctx.createGain();
+    humGain.gain.setValueAtTime(0.0001, now);
+    humGain.gain.exponentialRampToValueAtTime(0.5, now + duration * 0.4);
+    humGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    hum.connect(humGain).connect(master);
+    hum.start(now);
+    hum.stop(now + duration);
+
+    if (opening) {
+      // Çınlama: iki hafif akortsuz sinüs, büst tamamlanırken.
+      for (const freq of [1318.5, 1324]) {
+        const ping = ctx.createOscillator();
+        ping.type = 'sine';
+        ping.frequency.value = freq;
+        const pingGain = ctx.createGain();
+        const at = now + duration * 0.82;
+        pingGain.gain.setValueAtTime(0.0001, at);
+        pingGain.gain.exponentialRampToValueAtTime(0.12, at + 0.02);
+        pingGain.gain.exponentialRampToValueAtTime(0.0001, at + 1.4);
+        ping.connect(pingGain).connect(master);
+        ping.start(at);
+        ping.stop(at + 1.5);
+      }
+    }
+  } catch {
+    // Ses kartı yok / otomatik oynatma engelli — görsel geçiş yine çalışıyor.
+  }
+}

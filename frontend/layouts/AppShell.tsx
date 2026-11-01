@@ -10,6 +10,7 @@ import { LeftPanel } from '@/components/LeftPanel';
 import { OfficeView } from '@/components/office/OfficeView';
 import { ResearchBoard } from '@/components/research/ResearchBoard';
 import { ResearchChip } from '@/components/research/ResearchChip';
+import { HumanoidOverlay } from '@/components/HumanoidOverlay';
 import { Sidebar } from '@/components/Sidebar';
 import { SleepVeil } from '@/components/SleepVeil';
 import { TelemetryCard } from '@/components/TelemetryCard';
@@ -19,6 +20,7 @@ import { useAIStateConnection } from '@/hooks/useAIStateConnection';
 import { useThinkingSound } from '@/hooks/useThinkingSound';
 import { fetchSettings } from '@/services/settingsApi';
 import { configureSfx, playSfx } from '@/services/sfxPlayer';
+import { useHumanoidStore } from '@/stores/humanoidStore';
 import { usePowerStore } from '@/stores/powerStore';
 import { useResearchStore } from '@/stores/researchStore';
 
@@ -90,8 +92,10 @@ export function AppShell() {
   // Araştırma panosu açıkken de HUD çekiliyor: pano artık yarı saydam (çekirdek kenarda görünsün diye),
   // altındaki paneller kartların arasından sızmasın.
   const researchOpen = useResearchStore((state) => state.open);
+  // İnsan görünümü tam sahne: paneller çekiliyor, büst ekranı tek başına dolduruyor.
+  const humanoid = useHumanoidStore((state) => state.active);
   const hudClass = `transition-opacity duration-[900ms] ${
-    isAsleep || researchOpen ? 'pointer-events-none opacity-0' : 'opacity-100'
+    isAsleep || researchOpen || humanoid ? 'pointer-events-none opacity-0' : 'opacity-100'
   }`;
 
   return (
@@ -168,6 +172,7 @@ export function AppShell() {
       {/* Araştırma: süren işin ilerleme kartı (üst orta) + tam ekran pano (bkz. components/research). */}
       <ResearchChip />
       <ResearchBoard />
+      <HumanoidOverlay />
       <SleepVeil />
       <BootOverlay />
     </div>

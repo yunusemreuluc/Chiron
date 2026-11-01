@@ -570,6 +570,30 @@ Sonuç (görünür Edge, gerçek GPU, 45 sn boşta): GPU %69,5 → **%22,5**, ta
 - İlk denemede bir kez boşta 0,5 FPS görüldü; kök nedeni kesinleşmedi, birikimli zamanlama +
   tanıdan sonra tekrar etmedi. Gerçek pencerede `__chironGovernor()` ile doğrulanmalı.
 
+## İnsan görünümü
+
+2026-11-01, Yunus'un isteği (Instagram'daki "Opening Humanoid view" referansı): **çift parmak
+şıklatması** (ya da arayüzde **H**; **Esc** çıkar) çekirdeği parçacıklardan bir büste çeviriyor.
+
+- **Akış:** çekirdek ve tendriller sönerken çekirdekten bir parçacık kuyruklu yıldızı fışkırıyor,
+  parçacıklar aşağıdan yukarı büstteki yerlerine akıyor (2.8 sn, kapanış 1.8 sn). İki yanda parçacık
+  dağları yükseliyor (mavi + turuncu "lav" çizgileri). HUD çekiliyor; altta kısa duyuru, sonra sönük ipucu.
+- **Büst model dosyası değil, matematik** (`three/humanoidGeometry.ts`): her yükseklikte elips kesit,
+  parçacıklar kesit çevresinde → önden yatay kontur çizgileri. Burun/kaş/çene Gauss tümsekleri. Yüzde
+  turuncu kor (konturlar + bantlı parıltı sprite'ı), boyunda altın damarlar, kafanın arkasında hale halkaları.
+- **Canlı:** kafa imleci izliyor (4 sn kıpırtısızsa kendi salınıyor), Chiron konuşurken konturlarda
+  dalga + hale nabzı, dinlerken mikrofon seviyesine tepki. Kare yöneticisi bu modda 60 FPS istiyor.
+- **Ses:** dosya yok, WebAudio sentezi (`playMaterialize`): yükselen süzgeçli hışırtı + uğultu + çınlama.
+  SFX ayarına uyuyor, uzak modda susuyor.
+- **Şıklatma** `core/snap_detector.py` (numpy, model yok): ani atak (+15 dB), tiz (fark enerjisi oranı),
+  ~50 ms'de sönüp yeniden yükselmeme. Konuşma ve masa vuruşu testte elenir; **alkış da tetikler**.
+  Chiron konuşurken ve uzak modda kapalı; susturulmuş/duraklatılmışken açık (ses dışarı gitmiyor).
+  Ayar `snap_gesture`: `false` kapalı, `1` tek şıklatma, varsayılan `2`.
+- **Durum** backend'de (`web_ui.humanoid`, `assistant_status` anlık görüntüsünde) — sonradan açılan pencere de
+  biliyor. `POST /api/voice/humanoid {value}`. İlerleme kare başına `humanoidProgress` düz nesnesinde (store değil).
+- **Henüz yok:** webcam ile yüz takibi (referanstaki "motion tracking"; şimdilik imleç), sesli komutla açma aracı.
+  Eşikler sentetik sesle ayarlandı — gerçek mikrofonda yanlış/eksik tetiklenirse `[SNAP]` debug loguna bak.
+
 ## Küçük parçalar
 
 - **Ses dalga formu** — veri tarayıcıdan değil backend'den (`mic_level`, ~12 FPS).

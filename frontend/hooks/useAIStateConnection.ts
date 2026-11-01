@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useAIStateStore, type AIState } from '@/stores/aiStateStore';
 import { useConversationStore } from '@/stores/conversationStore';
+import { useHumanoidStore } from '@/stores/humanoidStore';
 import { useMicStore } from '@/stores/micStore';
 import { useOfficeStore, type OfficeSnapshot } from '@/stores/officeStore';
 import { useResearchStore, type ResearchRun } from '@/stores/researchStore';
@@ -159,6 +160,10 @@ export function useAIStateConnection() {
                 ready: data.ready,
                 remote: data.remote,
               });
+              // İnsan görünümü bayrağı (core/web_ui.py) — şıklatma backend'de algılanıyor.
+              if (typeof data.humanoid === 'boolean') {
+                useHumanoidStore.getState().setActive(data.humanoid);
+              }
               break;
             // ── Görü (2026-07-30) ──
             case 'webcam_state':
