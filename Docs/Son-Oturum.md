@@ -7,6 +7,30 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-11-02 — Telefonda parçacık göstergesi + YouTube ara kontrolü
+
+- Yunus tepsi göstergesinin telefon halini istedi, **A (diğer uygulamaların üstünde)** seçti → chiron-mobile
+  `ui/ParticleOverlay.kt` (c2f6f9e, push yok): PC'deki 07 Parcacik'in Canvas kopyası, 96dp sağ üst, dokunmaya kapalı,
+  BlendMode.PLUS. Evreler: LISTENING soluk mavi (mikrofonla) · THINKING/WORKING/CONNECTING mor · SPEAKING turkuaz
+  (yapay ses dalgası; çalma seviyesi önden geldiği için kullanılmadı) · konuşma sonrası 3 sn kalış. Uygulama ekranı
+  açıkken gizli (`BackgroundLaunch.activityVisible`). Ayarlarda "Parçacık göstergesi" anahtarı (varsayılan açık).
+  Servis onCreate/onStartCommand'da eklenir. APK derlendi, kablosuz adb ile kuruldu (çökme yok); **gerçek oturumda
+  ekranda görülmedi** — Yunus telefonu kullanıyordu, oturum adb'den açılamıyor.
+- İlk sürüm arka planda donuyordu (View.postOnAnimation: uygulama arka plandayken Choreographer kare vermedi, ana iş
+  parçacığı 3 sn'de 0 bağlam değişimi) → SurfaceView + kendi çizim iş parçacığı (~40 fps), pencere yalnız oturumda ekli,
+  görünmezken FLAG_NOT_TOUCHABLE. Sürükleme (yer `overlay_x/y`'de) + dokununca Chiron açılır. Yunus: "tmm oldu".
+- "Chiron: açık/kapalı" düğmesi → "Arka plana al / Arka planda"; açınca ana ekrana geçer (f0d7e89, push yok).
+- "Arka plana al" sonrası sesi duymuyor: mikrofon sessize alınmamış (dumpsys audio silenced:false, capability M);
+  sebep uyandırma modelinin hâlâ **"Aıron"** sözüne eğitilmiş olması (logda 0,2 üstü skor yok). Kayıt ekranı Chiron'a
+  çevrildi: yönergeler + yeni benzer kelimeler, klasör `wake-samples-chiron` (85da7f1). Telefondaki eski
+  `wake-samples/positive` 16 kayıt (10-29) hangi söz belli değil, kullanılmadı.
+- **YARIN (Yunus "yarın uğraşırım"):** Yunus 40 Chiron + 40 benzer + 6 konuşma + 4 ortam kaydeder → `adb pull`,
+  chiron-wake'te synth (edge-tts "Chiron") + filter + features + train → yeni ONNX telefona (assets/wake), eşik ayarı.
+- YouTube: token yenilendi, analiz alındı (k19 quit gym 1216 rekor, 8200 izlenme/2 abone). k21–k24 yüklemesi auto mode
+  tarafından engellendi; komut Yunus'a verildi (3–4 Kas 12/17). 7-8 dk Flow animasyonu konusu sonraya kaldı.
+
+## Önceki oturumlar
+
 ## Oturum: 2026-11-01/02 — İnsan görünümü (parmak şıklatma) → Krom
 
 - Yunus Instagram'daki "Humanoid view" reel'ini gösterdi (ekran görüntüleriyle; Instagram girişsiz okunmuyor):
@@ -21,7 +45,6 @@ indir. Üç madde yeter; roman değil, köprü.
   Lee Perry-Smith CC BY 3.0). **Krom'u seçti** → Chiron'a kondu (`three/humanoidKrom.ts`, eski elips büst ve dağlar
   silindi). [[Arayuz]] § İnsan görünümü. Build alındı; gerçek Chiron'da Yunus'la henüz görülmedi.
 
-## Önceki oturumlar
 
 ## Oturum: 2026-11-01 — Araştırma panosu (ROSE benzeri)
 
