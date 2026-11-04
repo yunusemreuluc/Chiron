@@ -7,6 +7,14 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-11-04 (gece) — Kendini geliştirme K-015: pencere yönetimi
+
+- Yeni `manage_window` aracı (ctypes user32/dwmapi, bağımlılık yok): "Chrome'a geç", "pencereyi küçült/büyüt",
+  "Spotify'ı kapat", "sola/sağa yasla", "masaüstünü göster", "hangi pencereler açık". Dört yer tamam ([[Pencereler]]);
+  `tests/test_windows.py` 10 test, paket 368/368. prompt.txt'de "X'e geç" artık intervene_screen yerine manage_window.
+- Gerçek Not Defteri penceresinde yedi eylem doğrulandı; bir denemede öne getirme ön plan kilidine takıldı (dürüst hata).
+- **Yarın:** birleşince sesli canlı deneme ("Chrome'a geç", "bunu sola yasla"); K-014 (zamanlayıcı) ile tool_defs/prompt/main'de komşu satır çakışmasına bak.
+
 ## Oturum: 2026-11-04 (sabah 2) — Kendini geliştirme K-013: ekran parlaklığı
 
 - Yeni `set_brightness` aracı (WMI, PowerShell, bağımlılık yok): "parlaklığı kıs", "yüzde kırk yap", "parlaklık kaç".
