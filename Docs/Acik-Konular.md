@@ -9,6 +9,9 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 
 ## Açık
 
+### Gözetim — bütün Claude oturumları tek ekranda
+**Durum:** 2026-11-04 yörünge + Gözetim + yörünge ekleri + Chiron'dan onay (hook settings.json'da) yazıldı, uçtan uca test edildi, commit'siz; açık: Chiron yeniden başlatılıp gerçekte denenmeli (hook beklerken terminal sorusu görünüyor mu), telefon özeti (taslak F)
+
 ### Tepsi göstergesi telefona — konuşurken parçacık bulutu
 **Durum:** PC'de bitti ve commit'li (2026-11-01, `core/tray_indicator.py`, 07 parçacık + dinliyor/düşünüyor/konuşuyor renkleri); Yunus "yarın telefona uygulayacağız" dedi — chiron-mobile'da başlanmadı, önce kaplama mı uygulama içi mi sorulacak
 

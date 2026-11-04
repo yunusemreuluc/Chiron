@@ -122,6 +122,27 @@ FILES_CAP = 200
 SNAPSHOT_TASKS = 80
 SNAPSHOT_FINISHED_WORKERS = 40
 CODEX_LINK_WINDOW_S = 90.0
+MARKS_LEN = 600
+RESEARCH_LEN = 60
+FILE_HEAT_CAP = 400
+
+
+def tool_category(name: str | None) -> str:
+    """Gözetim'in araç karışımı ve şerit renkleri için kaba kategori."""
+    n = name or ""
+    if n in ("Read", "Grep", "Glob", "LS", "NotebookRead"):
+        return "okuma"
+    if n in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
+        return "duzenle"
+    if n in ("Bash", "PowerShell", "BashOutput", "KillShell", "Monitor"):
+        return "shell"
+    if n in ("WebFetch", "WebSearch"):
+        return "web"
+    if n in ("Agent", "Task"):
+        return "ajan"
+    if n.startswith("mcp__"):
+        return "mcp"
+    return "diger"
 
 # ── Lane tanıma ──────────────────────────────────────────────────────────────
 # Komut segmentinin BAŞINDA olmalı: `grep "codex exec" dosya` bir lane değil.
@@ -266,6 +287,10 @@ class Worker:
     cmd_model: str | None = None
     pinned_dir: bool = False  # cwd komuttaki -C / cd'den mi geldi (kesin) yoksa oturumdan mı
     turns: int = 0
+    # Gözetim (2026-11-04): şefin Claude Code kaydı (token/bağlam/maliyet oradan okunur) ve
+    # şerit görünümü için araç izleri — (ts, kategori). Kategori: okuma|duzenle|shell|web|ajan|mcp|diger|onay|hata
+    transcript_path: str | None = None
+    marks: deque = field(default_factory=lambda: deque(maxlen=MARKS_LEN))
 
     def summary(self) -> dict[str, Any]:
         return {
@@ -292,6 +317,8 @@ class Worker:
             "tokens": dict(self.tokens),
             "files_written": len(self.files_written),
             "files_read": len(self.files_read),
+            # Yörüngedeki araç kıvılcımının rengi için (Gözetim, 2026-11-04).
+            "last_cat": self.marks[-1][1] if self.marks else None,
         }
 
     def detail(self) -> dict[str, Any]:
@@ -373,6 +400,14 @@ class OfficeState:
         self.events_seen = 0
         self.last_event_ts: float | None = None
         self.version = 0
+        # Gözetim sayaçları — gün değişince sıfırlanır (bkz. _radar_day).
+        self.radar_day = ""
+        self.tool_mix: dict[str, int] = {}
+        self.research: deque = deque(maxlen=RESEARCH_LEN)
+        self.file_heat: dict[str, dict[str, Any]] = {}
+        # Arka plana atılan shell komutları (run_in_background) — yörüngede oturumun uydusu.
+        # tool_use_id → {session, label, started, status, ended}. Bitiş task-notification'dan gelir.
+        self.bg_jobs: dict[str, dict[str, Any]] = {}
 
     def session_active(self, session_id: str, horizon: float = 6 * 3600) -> bool:
         """Bu Claude oturumu açık görünüyor mu: SessionEnd gelmemiş ve son olayı `horizon` içinde.
@@ -409,6 +444,9 @@ class OfficeState:
             self._add_worker(w)
         if rec.get("cwd"):
             w.cwd = rec["cwd"]
+        # Alt ajan olaylarında da ana kaydın yolu gelir ama emin olmak için yalnız şefin kendi olayı yazar.
+        if rec.get("transcript_path") and not rec.get("agent_id"):
+            w.transcript_path = rec["transcript_path"]
         return w
 
     def _add_worker(self, w: Worker) -> None:
@@ -577,6 +615,9 @@ class OfficeState:
         code = _EXIT_CODE.search(summary)
         ok = status == "completed" and (code is None or code.group(1) == "0")
         target = None
+        if tool and tool.group(1) in self.bg_jobs:
+            job = self.bg_jobs[tool.group(1)]
+            job["status"], job["ended"] = ("bitti" if ok else "hata"), ts
         if tool:
             target = self._by_tool(tool.group(1), "lane") or self._by_tool(tool.group(1), "subagent")
         if target is not None and target.status in (WORKING, WAITING, IDLE, LEFT):
@@ -612,6 +653,8 @@ class OfficeState:
             lane = classify_lane(rec.get("command"))
             if lane:
                 self._spawn_lane(actor, rec, lane)
+            elif rec.get("background") and rec.get("tool_use_id"):
+                self._track_bg(actor, rec)
         if name in ("Write", "Edit", "NotebookEdit"):
             self._add_file(actor.files_written, rec.get("file_path"))
             root = self._root_task(actor)
@@ -619,7 +662,64 @@ class OfficeState:
                 self._add_file(root.files_changed, rec.get("file_path"))
         elif name == "Read":
             self._add_file(actor.files_read, rec.get("file_path"))
+        self._radar(actor, rec, name, ts)
         self._log(actor, ts, "arac", text)
+
+    BG_KEEP_DONE_S = 120
+    BG_MAX_AGE_S = 6 * 3600
+
+    def _track_bg(self, actor: Worker, rec: dict[str, Any]) -> None:
+        ts = rec["ts"]
+        for k in [k for k, j in self.bg_jobs.items()
+                  if (j["ended"] and j["ended"] < ts - self.BG_KEEP_DONE_S) or j["started"] < ts - self.BG_MAX_AGE_S]:
+            self.bg_jobs.pop(k, None)
+        chief_id = self._chief_id(actor.session_id) if actor.session_id else actor.id
+        self.bg_jobs[rec["tool_use_id"]] = {
+            "id": rec["tool_use_id"],
+            "session": chief_id,
+            "label": _first_line(mask(rec.get("description") or rec.get("command") or ""), 48),
+            "started": ts,
+            "status": "calisiyor",
+            "ended": None,
+        }
+
+    def _radar_day(self, ts: float) -> None:
+        day = datetime.fromtimestamp(ts).strftime("%Y-%m-%d")
+        if day != self.radar_day:
+            self.radar_day = day
+            self.tool_mix = {}
+            self.file_heat = {}
+
+    def _radar(self, actor: Worker, rec: dict[str, Any], name: str, ts: float) -> None:
+        """Gözetim sayaçları: araç karışımı, araştırma akışı, dosya ısısı, şerit izi."""
+        self._radar_day(ts)
+        cat = tool_category(name)
+        self.tool_mix[cat] = self.tool_mix.get(cat, 0) + 1
+        actor.marks.append((ts, cat))
+        chief_id = self._chief_id(actor.session_id) if actor.session_id else actor.id
+        if name in ("WebFetch", "WebSearch") and rec.get("target"):
+            self.research.append({
+                "ts": ts,
+                "kind": "ara" if name == "WebSearch" else "oku",
+                "target": _first_line(rec.get("target"), 160),
+                "worker_id": actor.id,
+                "session": chief_id,
+            })
+        path = rec.get("file_path")
+        if path and cat in ("okuma", "duzenle"):
+            heat = self.file_heat.get(path)
+            if heat is None:
+                if len(self.file_heat) >= FILE_HEAT_CAP:
+                    coldest = min(self.file_heat, key=lambda p: self.file_heat[p]["last"])
+                    self.file_heat.pop(coldest, None)
+                heat = self.file_heat[path] = {"reads": 0, "writes": 0, "writers": [], "last": ts}
+            heat["last"] = ts
+            if cat == "duzenle":
+                heat["writes"] += 1
+                if chief_id not in heat["writers"]:
+                    heat["writers"].append(chief_id)
+            else:
+                heat["reads"] += 1
 
     def _on_PostToolUse(self, rec: dict[str, Any], failed: bool = False) -> None:
         actor = self._actor(rec)
@@ -634,6 +734,8 @@ class OfficeState:
         name = rec.get("tool_name")
         interrupted = bool(rec.get("interrupted"))
         bad = failed or interrupted or bool(rec.get("is_error"))
+        if bad:
+            actor.marks.append((ts, "hata"))
         # Lane / alt ajan bu çağrıyla mı başlamıştı?
         child = self._by_tool(tuid, "lane")
         if child is not None and child.status == WORKING:
@@ -694,6 +796,7 @@ class OfficeState:
                                 or rec.get("input") or "", 200),
         }
         actor.status = WAITING
+        actor.marks.append((rec["ts"], "onay"))
         root = self._root_task(actor)
         if root is not None:
             root.column = COL_APPROVAL
@@ -782,6 +885,10 @@ class OfficeState:
             return
         ts = rec["ts"]
         w.status, w.ended = LEFT, ts
+        # Claude Code kapanınca arka plan shell'lerini de kapatır; uydu olarak kalmasınlar.
+        for job in self.bg_jobs.values():
+            if job["session"] == w.id and job["ended"] is None:
+                job["status"], job["ended"] = "durdu", ts
         t = self.tasks.get(w.task_id or "")
         if t is not None and t.column in (COL_RUN, COL_APPROVAL, COL_REVIEW):
             t.column, t.updated = COL_STOPPED, ts

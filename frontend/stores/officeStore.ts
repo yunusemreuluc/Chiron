@@ -58,6 +58,8 @@ export interface WorkerSummary {
   tokens: Record<string, number>;
   files_written: number;
   files_read: number;
+  /** Son aracın kategorisi (okuma|duzenle|shell|web|ajan|mcp|diger|onay|hata) — yörüngedeki kıvılcımın rengi. */
+  last_cat?: string | null;
 }
 
 export interface ActivityItem {
@@ -121,10 +123,17 @@ export interface OfficeSnapshot {
 
 // pano = yazılabilir kart panosu (CardBoard), etkinlik = oturumların gözlem panosu (TaskBoard).
 // Komuta (2026-10-27): sohbet + mini istasyon + senden bekleyenler · İşler: kart panosu · Geçmiş: görev akışı.
-export type OfficeTab = 'komuta' | 'isler' | 'gecmis';
+// Gözetim (2026-11-04): bütün Claude oturumları tek ekranda — backend/core/gozetim.py.
+export type OfficeTab = 'gozetim' | 'komuta' | 'isler' | 'gecmis';
 
 interface OfficeStore {
   snapshot: OfficeSnapshot | null;
+  /** Gözetim'de detayı açık oturum (şef işçi id'si, `claude:<session>`). Yörüngedeki küçük çekirdeğe tıklayınca da set edilir. */
+  focusSession: string | null;
+  /** Gözetim'den "Komuta'da sürdür" ile devralınan sohbet — Komuta açılınca alır ve temizler. */
+  pendingChatId: string | null;
+  setFocusSession: (id: string | null) => void;
+  setPendingChat: (id: string | null) => void;
   /** Ofis ekranında seçili masa (kart açık). */
   selectedDesk: string | null;
   /** Kartta odaklanılan işçi — bir masada birden çok işçi olabilir (paralel lane'ler). */
@@ -141,6 +150,10 @@ export const useOfficeStore = create<OfficeStore>((set) => ({
   selectedDesk: null,
   selectedWorker: null,
   tab: 'komuta',
+  focusSession: null,
+  pendingChatId: null,
+  setFocusSession: (focusSession) => set({ focusSession }),
+  setPendingChat: (pendingChatId) => set({ pendingChatId }),
   // Eski bir görüntü (yeniden bağlanırken gelen HTTP cevabı) yenisini ezmesin.
   setSnapshot: (snapshot) =>
     set((state) =>

@@ -57,6 +57,41 @@ TOOL_DECLARATIONS = [
         }
     },
     {
+        "name": "answer_approval",
+        "description": (
+            "PC'deki bir oturumun izin sorusuna (komut calistirma, dosya yazma) cevap verir. Kullanici 'izin ver', "
+            "'onayla', 'Dilcep'e izin ver', 'reddet', 'hayir yapma, sunu yap', 'ne onay bekliyor' derse bunu cagir. "
+            "IZIN icin once confirm=false: araç istegi dondurur, kullaniciya OKU ve sor; acikca evet derse ayni "
+            "oturumla confirm=true. Red tek adimda; kullanici bir talimat soylediyse message'a yaz."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "decision": {
+                    "type": "STRING",
+                    "description": "izin | red | liste (bekleyenleri soyle)"
+                },
+                "session": {
+                    "type": "STRING",
+                    "description": "Oturum/proje adi (Dilcep, Chiron...). Tek bekleyen varsa bos birak."
+                },
+                "message": {
+                    "type": "STRING",
+                    "description": "Red edilince oturuma iletilecek talimat, kullanicinin kendi sozuyle."
+                },
+                "always": {
+                    "type": "BOOLEAN",
+                    "description": "Kullanici 'bir daha sorma' derse true (yalniz izinde)."
+                },
+                "confirm": {
+                    "type": "BOOLEAN",
+                    "description": "Yalniz kullanici istegi duyup acikca onayladiktan sonra true."
+                }
+            },
+            "required": ["decision"]
+        }
+    },
+    {
         "name": "get_weather",
         "description": (
             "Anlik hava durumunu ozetler. Kullanici hava durumunu, sicakligi veya yagmur "

@@ -38,6 +38,7 @@ yapıldığını** özetliyor.
 | Sağ | Vision paneli, altında düğüm odak kartı |
 | Sağ alt | Sohbet dock'u (`AssistantDock.tsx`) |
 | Orta | 3D sahne (`three/Scene.tsx`) |
+| Orta, çekirdeğin çevresi | Oturum yörüngeleri — her canlı Claude oturumu küçük bir çekirdek (`three/SessionOrbits.tsx`), bkz. § Oturum yörüngeleri ve Gözetim |
 | Üst orta (yalnız araştırma sürerken) | Araştırma canlı kartı; "göster" ile pano — çekirdek küçülüp sağ kolona kayar, kartlar öne gelir — [[Arastirma-Panosu]] |
 
 Sağ taraf **tek bir flex kolon** (`AppShell.tsx`). Önceden her panel kendini
@@ -599,6 +600,69 @@ Sonuç (görünür Edge, gerçek GPU, 45 sn boşta): GPU %69,5 → **%22,5**, ta
   İlerleme kare başına `humanoidProgress` düz nesnesinde (store değil).
 - **Henüz yok:** webcam ile yüz takibi (şimdilik imleç), sesli komutla açma aracı. Şıklatma eşikleri sentetik
   sesle ayarlandı — gerçek mikrofonda sorun olursa `[SNAP]` debug loguna bak.
+
+## Oturum yörüngeleri ve Gözetim
+
+2026-11-04. Kaynak fikir: Atalay Karahan'ın açık kaynak "Atalay's Terminal"i (Claude Code oturumları
+yörünge haritasında). Taslak: claude.ai artifact `VEkhnxY622pqRZgHnXPNuM` (6 ekran).
+Kullanıcı isteği: **"şu anki yörüngeme, o animasyonuma dokunma; yanlarına onun gibi küçük ve farklı
+renkte yörüngeleri diz, sonra bu arayüzü yap."**
+
+**Ana sahne — `three/SessionOrbits.tsx`.** `EnergyCore.tsx` değişmedi. Her canlı şef oturumu (officeStore,
+`office_update`) iki katmanlı küçük bir tel kafes çekirdek: aynı shader'lar, oturumun kendi tonunda.
+- Renk = **hangi oturum** (`gozetimApi.hueMap`: kimliğin kendi tonu, alınmışsa sıradaki boş ton — iki canlı
+  oturum aynı renge düşmez). Buz mavisine yakın camgöbekleri listeden çıkarıldı: ana çekirdekle karışıyordu.
+- Durum = **hareket**: çalışıyor tam parlak · onay bekliyor nabız + kehribar halka · boşta kısık ve yavaş.
+  Alt ajanlar uydu noktaları.
+- Yörünge **ekran düzleminde** basık bir elips (`ORBIT_SQUASH`). İlk deneme derinlikteydi ve küçük çekirdek
+  ana çekirdeğin önünden geçip onu örtüyordu (ekran görüntüsünde yakalandı).
+- Hepsi **ortak bir çark** (`wheelAngle`, `performance.now()`), eşit aralıklı. Önce her biri kendi hızındaydı,
+  ikisi üst üste biniyordu. Sayı değişince yerine sönümle kayar.
+- 6 saattir olayı olmayan oturum gösterilmez (SessionEnd gelmeyebiliyor; `STALE_S`, backend'de de aynı).
+- Tıklama → Ofis › Gözetim, o oturumun detayı açık.
+
+**Ofis › Gözetim — `components/office/gozetim/`.** Backend `backend/core/gozetim.py`, uç `GET /api/office/gozetim`
+(3 sn'de bir). Yerleşim: üst sayı şeridi · sol oturum kartları (bağlam doluluğu, 30 dk aktivite, model, maliyet,
+"DÖNGÜ?" = son 24 izde ≥5 hata) · orta **Yörünge** (kendi küçük Canvas'ı, 30 FPS; ofis açıkken ana sahne durduğu
+için tek WebGL) ya da **Şerit** (son 30 dk, araç başına bir iz) · sağ araştırma, sıcak dosyalar (iki oturum aynı
+dosyaya yazınca ÇAKIŞMA), araç karışımı · alt canlı akış, alt ajanlar, harcama, senin sıran. Karta tıklayınca
+detay: akış, alt ajanlar, yazılan dosyalar, **Son cevabı kopyala** (kayıttan, ekrana sığmayan dahil) ve
+**Komuta'da sürdür** (`sohbet.takeover`; terminalde açıksa ikinci tıklamayla).
+
+Veri: oturum/araç/onay/araştırma/dosya ısısı `ofis.py` hook olaylarından (`tool_category`, `_radar`,
+`Worker.marks`); token/bağlam/model/maliyet şefin Claude Code kaydından (`transcript_path`), artımlı okuma,
+yanıt kimliğine göre teke indirme (bir yanıt içerik bloğu başına ayrı satır). **Maliyet API liste fiyatıyla
+eşdeğer** — abonelikte ödenen bu değil; fiyatı bilinmeyen model `?`/`+`. Fiyatlar `PRICES` (claude-api
+referansı, 2026-10-06), önbelleğe yazma 5 dk ×1.25, 1 sa ×2.
+
+**Kaçak süreç bandı:** psutil — sahibi ölmüş geliştirici süreci (node/python/…) 2 dk boyunca bir çekirdeğin
+%50'sini yakıyorsa ya da port tutuyorsa. Chiron'un kendisi, ataları, çocukları hariç. Sonlandırma yalnız tıkla,
+aynı pid + aynı başlangıç zamanı doğrulanır, bütün alt ağaç (TaskStop alt süreçleri bırakıyordu).
+
+Gözetim'in yörünge paneli (aynı gün, kullanıcı isteği): zemin düz siyah, iki katman tohumlu yıldız alanı
+(1400 sönük + 160 parlak, yarıçap 18–34 — döndürünce çekirdeğin önüne düşmesin), **fareyle döndürme**
+(drei `OrbitControls`: kaydırma kapalı, yakınlaşma 6–18, dikey açı sınırlı). Sürükleme küçük çekirdeğin
+üstünde biterse tıklama sayılmaz (`e.delta > 4`). Playwright'ta sürükleyip ölçüldü: görüş değişti, detay açılmadı.
+
+Ekrana bakarak düzeltilenler: alt şerit grid satırı kayınca eziliyordu (flex sütuna geçildi) · şerit izi
+`span` olduğu için 0 px'ti ve `<button>` içindeki grid sütunu genişlemiyordu (satır div, ad düğme).
+
+**Yörünge ekleri (aynı gün, Yunus dördünü de seçti):** veri `GET /api/office/gozetim/yorunge` (`orbit_view`,
+5 sn, `stores/orbitStore.ts` — iki sahne tek yoklayıcı).
+- Etiketin ikinci satırı: oturumun şu an / en son ne yaptığı (`doing()`; onay bekliyorsa hangi araç, kehribar).
+- **Araç kıvılcımı:** oturum (şef + alt ajanları) her araçta küçük çekirdekten Chiron'a kavisli bir ışık; rengi araç
+  türü (`last_cat`, `CAT_COLOR`). Sayaç anlık görüntüden (`syncToolStats`), ilk karede geçmiş için patlama yok.
+- **Bağlam halkası:** küçük çekirdeğin çevresinde doluluk yayı, %80'de kehribar.
+- **Uydular:** arka plana atılan shell komutları (`ofis.bg_jobs`, bitişi task-notification'dan) beyaz tel elmas;
+  oturumun klasöründe port dinleyen dev sunucusu nane dolu elmas + `:port`.
+- **Kaçak süreç meteoru:** dış yörüngede kuyruklu kızıl taş; tıklama Gözetim'i açar, sonlandırma orada (sahneden yok).
+- Kare döngüsünde değişen her şey `ref`'te, tamponlar JSX `<bufferGeometry>` + points ref üzerinden
+  (React Compiler `useMemo` değerini değiştirmeye izin vermiyor).
+
+**Onay:** yörüngede/kuyrukta onay bekleyen oturuma tıklayınca detayın üstünde **onay terminali** — ayrıntı
+[[Onay]]. Ses: `answer_approval`.
+
+Yapılmayan: telefondaki özet (taslak F).
 
 ## Küçük parçalar
 

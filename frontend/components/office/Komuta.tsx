@@ -113,12 +113,13 @@ export function Komuta() {
 
   const [memberId, setMemberId] = useState<CrewId>('jarvis');
   const [chats, setChats] = useState<ChatSummary[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  // Gözetim'den "Komuta'da sürdür" ile gelindiyse (2026-11-04) devralınan sohbet açık başlar.
+  const [activeId, setActiveId] = useState<string | null>(() => useOfficeStore.getState().pendingChatId);
   const [chat, setChat] = useState<Chat | null>(null);
   const [pano, setPano] = useState<PanoSnapshot | null>(null);
   const [notice, setNotice] = useState('');
   const [sending, setSending] = useState(false);
-  const picked = useRef(false); // kullanıcı bir sohbet seçti mi (yoksa ilk yüklemede en sonuncusu açılır)
+  const picked = useRef(!!activeId); // kullanıcı bir sohbet seçti mi (yoksa ilk yüklemede en sonuncusu açılır)
 
   const member = CREW.find((m) => m.id === memberId) ?? CREW[0];
 
@@ -157,6 +158,11 @@ export function Komuta() {
       clearInterval(id);
     };
   }, [activeId, live]);
+
+  // Gözetim'den "Komuta'da sürdür": devralınan sohbet ilk durumda açıldı (bkz. activeId); işaret temizlenir.
+  useEffect(() => {
+    if (useOfficeStore.getState().pendingChatId) useOfficeStore.getState().setPendingChat(null);
+  }, []);
 
   const loadPano = useCallback(() => fetchPano().then((data) => data && setPano(data)), []);
   useEffect(() => {

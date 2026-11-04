@@ -57,6 +57,7 @@ from actions.whatsapp  import send_whatsapp_message, save_whatsapp_contact  # no
 from actions.media     import play_media  # noqa: F401
 from actions.weather   import get_weather_summary  # noqa: F401
 from actions.pc_isi    import delegate_to_pc  # noqa: F401 — @register_tool yan etkisi için
+from actions.onay      import answer_approval  # noqa: F401 — @register_tool yan etkisi için
 from actions.ocr import HAS_EASYOCR, lines_to_text
 from actions.screen_vision import analyze_screen  # noqa: F401
 from actions.screen_control import intervene_screen  # noqa: F401
@@ -1091,6 +1092,29 @@ class ChironLive:
             for text in messages:
                 await self._send_proactive_system_message(text)
 
+    async def _watch_onay(self):
+        """PC oturumu izin bekliyorsa sesli haber (2026-11-04, "sesli komutla söyleyeyim"). Yerel HTTP, 3 sn'de bir;
+        haber kuyruğu backend'de (backend/core/onay.py pop_news), her istek bir kez söylenir. Chiron konuşurken ya da
+        duraklatılmışken söylemez — haber kuyrukta değil, kaybolur; istek Gözetim'de görünmeye devam eder."""
+        from backend.core.config import PORT
+
+        url = f"http://127.0.0.1:{PORT}/api/onay/haber"
+        while True:
+            await asyncio.sleep(3)
+            if not self._proactive_checks_allowed():
+                continue
+            try:
+                response = await asyncio.to_thread(requests.get, url, timeout=5)
+                items = ((response.json() or {}).get("data") or {}).get("items") or []
+            except Exception:
+                continue  # backend yok
+            for item in items[:3]:
+                await self._send_proactive_system_message(
+                    "[SİSTEM] Onay bekliyor (kullanıcının sözü değil): "
+                    f"{item.get('project')} oturumu şunu istiyor: {item.get('summary')}. Kullanıcıya tek cümleyle söyle "
+                    "ve izin verip vermeyeceğini sor; kendin izin verme. Claude'dan söz etme."
+                )
+
     async def _watch_research(self):
         """Arka plandaki araştırma bitince sesli haber (2026-11-01). Yerel liste, ağ yok — 3 sn'de bir bakmak ucuz.
         Chiron konuşurken/duraklatılmışken söylemez; haber listede kalır, sonraki turda gider."""
@@ -1824,6 +1848,7 @@ class ChironLive:
                     tg.create_task(self._watch_system_health())
                     tg.create_task(self._watch_custom_conditions())
                     tg.create_task(self._watch_pc_jobs())
+                    tg.create_task(self._watch_onay())
                     tg.create_task(self._watch_research())
                     tg.create_task(self._watch_gelisim())
                     tg.create_task(self._watch_daily_briefing())

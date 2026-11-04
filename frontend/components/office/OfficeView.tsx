@@ -10,12 +10,15 @@ import { isActive, useOfficeStore } from '@/stores/officeStore';
 import { AgentCard } from './AgentCard';
 import { CardBoard } from './CardBoard';
 import { Komuta } from './Komuta';
+import { Gozetim } from './gozetim/Gozetim';
 import { TaskBoard } from './TaskBoard';
 import { ago } from './format';
 
 // Komuta (2026-10-27) eski "Ofis" sekmesinin yerine: istasyon artık Komuta'nın sağ üstünde
 // küçük bir pencere — tam ekran sahne kalktı ("istasyon gözümün önünde olsun").
+// Gözetim (2026-11-04): bütün Claude oturumları tek ekranda — ana sahnedeki küçük çekirdeğe tıklayınca da buraya gelinir.
 const TABS = [
+  { id: 'gozetim', label: 'Gözetim' },
   { id: 'komuta', label: 'Komuta' },
   { id: 'isler', label: 'İşler' },
   { id: 'gecmis', label: 'Geçmiş' },
@@ -194,7 +197,15 @@ export function OfficeView() {
               exit={{ opacity: 0, y: 14 }}
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             >
-              {tab === 'komuta' ? <Komuta /> : tab === 'isler' ? <CardBoard /> : <TaskBoard />}
+              {tab === 'gozetim' ? (
+                <Gozetim />
+              ) : tab === 'komuta' ? (
+                <Komuta />
+              ) : tab === 'isler' ? (
+                <CardBoard />
+              ) : (
+                <TaskBoard />
+              )}
             </motion.div>
           </AnimatePresence>
 

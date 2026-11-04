@@ -12,6 +12,7 @@ import { FrameProbe } from './FrameProbe';
 import { HumanoidBust } from './HumanoidBust';
 import { Lighting } from './Lighting';
 import { PostProcessing } from './PostProcessing';
+import { SessionOrbits } from './SessionOrbits';
 import { useNavigationStore } from '@/stores/navigationStore';
 
 // app/globals.css'teki tablet kırılımıyla (1023px) aynı eşik — bkz. .app-shell
@@ -58,6 +59,9 @@ export function Scene() {
       <CameraRig />
       <EnergyCore />
       <EnergyTendrils />
+      {/* Oturum yörüngeleri (2026-11-04): her canlı Claude oturumu kendi renginde küçük bir çekirdek.
+          Ana çekirdeğe dokunmuyor — ayrı bileşen. Tıklayınca Ofis › Gözetim. */}
+      <SessionOrbits />
       {/* İnsan görünümü — çift şıklatma / H tuşu (2026-11-01). Kapalıyken görünmez ve çizilmez. */}
       <HumanoidBust />
       {/* 2026-10-29, kullanıcı isteği: dönen düğümler (dosya, hafıza…), aralarındaki çizgiler ve şimşek
