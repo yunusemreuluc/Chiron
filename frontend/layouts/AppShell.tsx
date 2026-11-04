@@ -9,6 +9,7 @@ import { BrandBadge } from '@/components/BrandBadge';
 import { LeftPanel } from '@/components/LeftPanel';
 import { OfficeView } from '@/components/office/OfficeView';
 import { OnayKutusu } from '@/components/onay/OnayMerkezi';
+import { CanliYukleme } from '@/components/canli/CanliYukleme';
 import { ResearchBoard } from '@/components/research/ResearchBoard';
 import { ResearchChip } from '@/components/research/ResearchChip';
 import { HumanoidOverlay } from '@/components/HumanoidOverlay';
@@ -176,6 +177,8 @@ export function AppShell() {
       <ResearchChip />
       <ResearchBoard />
       <HumanoidOverlay />
+      {/* Canlı yükleme: kod yaması bildirimi + yeni derlemede kendini yenileme (backend/core/canli_yukleme.py). */}
+      <CanliYukleme />
       <SleepVeil />
       <BootOverlay />
     </div>
