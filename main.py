@@ -56,7 +56,7 @@ from actions.shell     import shell_run  # noqa: F401
 from actions.whatsapp  import send_whatsapp_message, save_whatsapp_contact  # noqa: F401
 from actions.media     import play_media  # noqa: F401
 from actions.weather   import get_weather_summary  # noqa: F401
-from actions.pc_isi    import delegate_to_pc  # noqa: F401 — @register_tool yan etkisi için
+from actions.pc_isi    import check_pc_job, delegate_to_pc  # noqa: F401 — @register_tool yan etkisi için
 from actions.onay      import answer_approval  # noqa: F401 — @register_tool yan etkisi için
 from actions.terminal  import open_terminal  # noqa: F401 — @register_tool yan etkisi için
 from actions.ocr import HAS_EASYOCR, lines_to_text

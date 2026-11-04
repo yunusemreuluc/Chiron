@@ -118,6 +118,15 @@ TOOL_DECLARATIONS = [
         }
     },
     {
+        "name": "check_pc_job",
+        "description": (
+            "PC'de verilmis isin canli durumu: suruyor mu, kac dakikadir, su an hangi adimda, bittiyse sonucu. "
+            "Kullanici 'is ne durumda', 'bitti mi', 'ne yapiyorsun su an', 'Dilcep isi ne alemde' derse cagir. "
+            "Salt okuma; isi durdurmaz. [SUREN IS] bilgisi eski olabilir, durum sorulunca her zaman bunu cagir."
+        ),
+        "parameters": {"type": "OBJECT", "properties": {}}
+    },
+    {
         "name": "get_weather",
         "description": (
             "Anlik hava durumunu ozetler. Kullanici hava durumunu, sicakligi veya yagmur "

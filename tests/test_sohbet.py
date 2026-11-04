@@ -339,3 +339,27 @@ def test_work_context_tells_voice_the_current_job(tmp_path):
 
     store.clock = lambda: time.time() + 4 * 86400  # eski iş artık "süren iş" değil
     assert store.work_context() == ""
+
+
+def test_job_status_is_live_and_truthful(tmp_path):
+    """"İş ne durumda?" (check_pc_job, 2026-10-30): süre, şu anki adım ve sonuç iş kaydından okunur."""
+    store, jobs = _setup(tmp_path)
+    assert store.job_status() == ""
+    chat = store.create("claude", title="Dilcep alt bar")
+    store.send(chat["id"], "Dilcep'te alt barı yeşil yap")
+    assert "sırada bekliyor" in store.job_status()
+
+    jobs.run("j1", "Read: app/bar.tsx", "Edit: app/bar.tsx")
+    store.clock = lambda: time.time() + 5 * 60
+    text = store.job_status()
+    assert '"Dilcep alt bar"' in text and "5 dakikadır çalışıyor" in text
+    assert "Şu anki adım: Edit: app/bar.tsx" in text and "2 adım" in text
+
+    store.clock = time.time
+    jobs.finish("j1", summary="Alt bar yeşil oldu.")
+    text = store.job_status()
+    assert "bitti" in text and "Alt bar yeşil oldu." in text
+
+    store.send(chat["id"], "bir de yayınla")
+    jobs.jobs["j2"].update(status="needs_approval", summary="Hazır.", approval="git push", finished_at=time.time())
+    assert "onay bekliyor: git push" in store.job_status()
