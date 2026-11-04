@@ -37,7 +37,10 @@ indir. Üç madde yeter; roman değil, köprü.
   yedek settings.json.bak-onay) + `backend/core/onay.py` + Gözetim onay terminali + sesli `answer_approval` (iki adımlı
   izin). Uçtan uca: gerçek hook → tarayıcı → deny+mesaj. 291 test (+8 test_onay). Ayrıntı [[Onay]].
 - **Sırada:** Yunus Chiron'u YENİDEN BAŞLATMALI (yeni backend uçları + ses aracı); gerçek bir izin sorusunda terminal
-  sorusu hook beklerken görünüyor mu gözlenmeli (belgede yok; WAIT_S 60). Commit atılmadı. Telefon özeti (taslak F) yok.
+  sorusu hook beklerken görünüyor mu gözlenmeli (belgede yok; WAIT_S 60). Telefon özeti (taslak F) yok.
+- Commit: ab9b29f (Gözetim+onay), sonra kendini geliştirme kartları elle çakışma çözülerek birleşti: c5d5c92 K-009
+  open_terminal, 6146080 K-010 check_pc_job (297 test); kartlar panodan bitti'ye çekildi. Push yok. K-008 iptal ama
+  worktree'si (.pano-worktrees/Chiron-K-008) duruyor — Gözetim'de bayat 'frontend' oturumu oradan.
 
 ## Önceki oturumlar
 
