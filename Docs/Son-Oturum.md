@@ -1,17 +1,7 @@
 # Son Oturum
 
 Claude Code oturumları arasındaki köprü. `.claude/hooks/session_start.py` her
-açılışta buradaki **en üstteki** `## Oturum: 2026-10-30 (gece) — Kendini geliştirme K-009: terminalde Claude sekmesi
-
-**Ne yapıldı (commit'siz, pano/K-009 worktree):**
-- İ-010 için `open_terminal` aracı: `wt -w 0 new-tab -d <proje> cmd /k claude [--continue]`. Dört yer tamam
-  (araç, `tool_defs.py`, `core/prompt.txt`, [[Terminal]]); `tests/test_terminal.py`, paket 309/309.
-- Gerçek wt ile denenmedi (gece Yunus'un ekranına sekme açmamak için) — komut biçimi belgeden.
-
-**Nerede kalındı / yarın:** Birleşince sesle "Dilcep'te Claude aç" denenmeli. Telefondan açmak için
-`desktop_control` + mobil uygulamaya eylem gerekir (İ-010 `bakıldı`).
-
-## Oturum:` bloğunu okuyup context'e enjekte
+açılışta buradaki **en üstteki** `## Oturum:` bloğunu okuyup context'e enjekte
 ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
@@ -20,7 +10,7 @@ indir. Üç madde yeter; roman değil, köprü.
 ## Oturum: 2026-11-04 (sabah 2) — Kendini geliştirme K-013: ekran parlaklığı
 
 - Yeni `set_brightness` aracı (WMI, PowerShell, bağımlılık yok): "parlaklığı kıs", "yüzde kırk yap", "parlaklık kaç".
-  Dört yer tamam ([[Parlaklik]]); `tests/test_brightness.py` 7 test, paket 357/358 (`test_onay` hook testi önceden kırık, bekçi alanı).
+  Dört yer tamam ([[Parlaklik]]); `tests/test_brightness.py` 7 test, paket 357/358. `test_onay` kırığı Chiron oturumunda gelen `CHIRON_CLAUDE_JOB`'tan; test düzeltildi (cd5c3d5), 358/358.
 - Gerçek panelde okuma ve %99→%100 yazıp geri okuma doğrulandı. Telefondan PC ses/parlaklık mobil enum'a eylem ister (chiron-mobile).
 - **Yarın:** birleşince sesli canlı deneme ("parlaklığı kıs"); harici monitör (DDC/CI) istenirse ayrı iş.
 
