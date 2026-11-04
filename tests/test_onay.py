@@ -102,10 +102,12 @@ def _run_hook(stdin: dict, responses: list[dict], env: dict | None = None) -> st
     calls = iter(responses)
     out = io.StringIO()
     raw = io.BytesIO(json.dumps(stdin).encode())
+    # Test Chiron'un başlattığı bir Claude oturumunda koşabilir: o zaman CHIRON_CLAUDE_JOB dışarıdan gelir.
+    env = {"CHIRON_CLAUDE_JOB": "", **(env or {})}
     with mock.patch.object(mod, "call", side_effect=lambda *a, **k: next(calls)), \
          mock.patch.object(sys, "stdin", mock.Mock(buffer=raw)), \
          mock.patch.object(sys, "stdout", out), \
-         mock.patch.dict("os.environ", env or {}, clear=False):
+         mock.patch.dict("os.environ", env, clear=False):
         assert mod.main() == 0
     return out.getvalue()
 
