@@ -8,6 +8,18 @@ Chiron'un kendini geliştirme döngüsünün (backend/core/dongu.py § Kendini g
 kartı en üste bir kayıt ekler: ne yaptı, neden daha iyi, ne öğrendi, kaynak. Sonraki kartlar bunu okuyup
 tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 
+## 2026-11-04 — "Sesi kıs", "sesi yüzde otuz yap"
+- **Ne yaptım:** PC'deki sesli Chiron'a `set_volume` aracı ([[Ses-Seviyesi]], `actions/volume.py`): varsayılan
+  hoparlörün sesini okur, yüzdeye ayarlar, 10'ar puan (ya da söylenen kadar) kısar/açar, sessize alır/geri açar.
+- **Neden daha iyi:** Müzik açabiliyordum ama sesini ayarlayamıyordum; "sesi kıs" boşa düşüyordu. Artık tek cümle,
+  ve söylediğim yüzde aygıttan geri okunan gerçek değer — tahmin değil.
+- **Ne öğrendim:** Yeni bağımlılık olmadan Windows ses API'si ham ctypes vtable çağrısıyla kullanılabiliyor
+  (pycaw/comtypes gerekmez); yuva numaraları başlık dosyasındaki bildirim sırası. Medya ses tuşu yalnız 2 puanlık
+  göreli adım veriyor ve sonucu okutmuyor. Sesi açarken sessizliği de kaldırmak gerek, yoksa yüzde değişir ama
+  duyulmaz. Uygulama başına ses (yalnız Spotify'ı kıs) ayrı arayüz ister — sıradaki aday.
+  Taban testte `test_onay::test_hook_outputs...` worktree'de zaten kırıktı (hook çıktısı boş JSON), dokunmadım.
+- **Kaynak:** https://learn.microsoft.com/en-us/windows/win32/api/endpointvolume/nf-endpointvolume-iaudioendpointvolume-setmastervolumelevelscalar
+
 ## 2026-10-30 — "Terminalde yeni sekme aç ve Claude'a bağlan"
 - **Ne yaptım:** PC'deki sesli Chiron'a `open_terminal` aracı (`actions/terminal.py`, [[Terminal]]): Windows
   Terminal'in son penceresinde, söylenen projenin klasöründe (`~/Projects` altı, ad/önek eşleşmesi) yeni sekme açar,

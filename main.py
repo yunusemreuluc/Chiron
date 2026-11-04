@@ -59,6 +59,7 @@ from actions.weather   import get_weather_summary  # noqa: F401
 from actions.pc_isi    import check_pc_job, delegate_to_pc  # noqa: F401 — @register_tool yan etkisi için
 from actions.onay      import answer_approval  # noqa: F401 — @register_tool yan etkisi için
 from actions.terminal  import open_terminal  # noqa: F401 — @register_tool yan etkisi için
+from actions.volume    import set_volume  # noqa: F401 — @register_tool yan etkisi için
 from actions.ocr import HAS_EASYOCR, lines_to_text
 from actions.screen_vision import analyze_screen  # noqa: F401
 from actions.screen_control import intervene_screen  # noqa: F401

@@ -41,6 +41,7 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 ## Araçlar (actions/*.py — Gemini'nin çağırdığı fonksiyonlar)
 - [[Open-App]] — uygulama açma
 - [[Terminal]] — Windows Terminal'de proje klasöründe yeni sekme + Claude
+- [[Ses-Seviyesi]] — PC ses seviyesi: kıs/aç/yüzde/sessiz, aygıttan geri okunur
 - [[Sys-Info]] — pil/CPU/RAM/disk/saat/ağ
 - [[Ses-Gecisi]] — "Daphne'ye geç": ses değişir, konuşma kaldığı yerden sürer
 - [[Weather]] — hava durumu (wttr.in)

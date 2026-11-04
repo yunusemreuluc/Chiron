@@ -771,6 +771,32 @@ TOOL_DECLARATIONS = [
         }
     },
     {
+        "name": "set_volume",
+        "description": (
+            "PC'nin ses seviyesini okur ya da ayarlar (varsayilan hoparlor/kulaklik). "
+            "'Sesi kis', 'sesi ac', 'sesi yuzde otuz yap', 'sessize al', 'ses kac' dediginde kullan. "
+            "Donen yuzde aygittan okunan gercek degerdir; kullaniciya onu soyle."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "action": {
+                    "type": "STRING",
+                    "description": "get | set | up | down | mute | unmute. Sessizdeyken 'sesi ac' → unmute."
+                },
+                "level": {
+                    "type": "NUMBER",
+                    "description": "action=set icin hedef yuzde (0-100)."
+                },
+                "step": {
+                    "type": "NUMBER",
+                    "description": "up/down icin kac puan (varsayilan 10; 'biraz' 5, 'cok' 20)."
+                }
+            },
+            "required": ["action"]
+        }
+    },
+    {
         "name": "get_youtube_channel_report",
         "description": (
             "YouTube kanalinin public istatistiklerini ve son videolarin performansini raporlar. "
