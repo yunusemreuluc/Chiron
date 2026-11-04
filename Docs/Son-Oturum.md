@@ -17,6 +17,13 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-11-04 (sabah) — Kendini geliştirme K-012: uygulama başına ses
+
+- `set_volume`'a `app` parametresi: "Spotify'ı kıs", "Discord'u sessize al" (IAudioSessionManager2, ham ctypes).
+  Dört yer tamam ([[Ses-Seviyesi]]); `tests/test_volume.py` +5 test, paket 350/351 (`test_onay` hook testi önceden kırık).
+- Gerçek aygıtta okuma ve yazıp geri okuma doğrulandı (yalnız Chiron'un kendi oturumu, %99→%100 geri alındı).
+- **Yarın:** birleşince sesli canlı deneme (Spotify çalarken "Spotify'ı kıs"); telefondan PC uygulama sesi sıradaki aday.
+
 ## Oturum: 2026-11-04 — Gözetim: oturum yörüngeleri + bütün Claude oturumları tek ekranda
 
 - Yunus Atalay Karahan'ın canlı yayınındaki "Atalay's Terminal"i analiz ettirdi (açık kaynak repo okundu), "bunun

@@ -8,6 +8,22 @@ Chiron'un kendini geliştirme döngüsünün (backend/core/dongu.py § Kendini g
 kartı en üste bir kayıt ekler: ne yaptı, neden daha iyi, ne öğrendi, kaynak. Sonraki kartlar bunu okuyup
 tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 
+## 2026-11-04 — "Spotify'ı kıs, YouTube kalsın"
+- **Ne yaptım:** `set_volume`'a `app` parametresi ([[Ses-Seviyesi]]): tek bir uygulamanın sesini okur, yüzdeye
+  ayarlar, kısar/açar, sessize alır — Windows'un Ses Karıştırıcısı'ndaki uygulama kaydırıcısı. Önceki kaydın
+  "sıradaki aday" dediği iş.
+- **Neden daha iyi:** Müzik çalarken toplantıya ya da videoya geçince bütün PC'yi kısmak gerekiyordu. Artık
+  "Spotify'ı kıs", "Discord'u sessize al" tek cümle; diğer sesler olduğu gibi kalıyor. Uygulama bulunamazsa
+  tahmin edip yanlış şeyi kısmıyor, o an ses çıkaran uygulamaları sayıyor.
+- **Ne öğrendim:** Uygulama sesleri aygıtın `IAudioSessionManager2` oturum listesinden geliyor; adı oturumda değil,
+  `IAudioSessionControl2.GetProcessId` + süreç adından çıkıyor (görünen ad çoğu uygulamada boş). Tarayıcı birden
+  çok oturum açar — hepsine aynı ayarı vermek gerek, yoksa "kıstım" denir ama bir sekme bağırır. Belgeler yöntemleri
+  ALFABETİK listeliyor; vtable yuvası başlıktaki bildirim sırası — gerçek aygıtta geri okuyarak doğruladım.
+  `test_onay::test_hook_outputs...` hâlâ kırık (önceden de), dokunmadım. Sıradaki aday: aynı aracı telefondan
+  ("PC'de Spotify'ı kıs") `desktop_control` üzerinden açmak.
+- **Kaynak:** https://learn.microsoft.com/en-us/windows/win32/api/audiopolicy/nn-audiopolicy-iaudiosessioncontrol2 ·
+  https://learn.microsoft.com/en-us/windows/win32/api/audiopolicy/nn-audiopolicy-iaudiosessionmanager2
+
 ## 2026-11-04 — "Sesi kıs", "sesi yüzde otuz yap"
 - **Ne yaptım:** PC'deki sesli Chiron'a `set_volume` aracı ([[Ses-Seviyesi]], `actions/volume.py`): varsayılan
   hoparlörün sesini okur, yüzdeye ayarlar, 10'ar puan (ya da söylenen kadar) kısar/açar, sessize alır/geri açar.
