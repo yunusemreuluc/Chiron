@@ -17,6 +17,14 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-11-04 (öğle) — Kendini geliştirme K-014: sesli zamanlayıcı
+
+- `set_timer` aracı: "10 dakika sonra çayı hatırlat", "saat 15:30'da toplantı", "ne kadar kaldı", iptal; dolunca
+  `_watch_timers` sesle söyletir. Dört yer tamam ([[Zamanlayici]]); `tests/test_zamanlayici.py` 7 test, paket
+  357/358 (`test_onay` hook testi önceden kırık).
+- Canlı ses oturumunda denenmedi (worktree). **Yarın:** birleşince "1 dakika sonra hatırlat" ile canlı deneme;
+  kalıcılık (yeniden başlatmada kaybolmasın) ve telefondan kurma sıradaki adaylar.
+
 ## Oturum: 2026-11-04 (sabah) — Kendini geliştirme K-012: uygulama başına ses
 
 - `set_volume`'a `app` parametresi: "Spotify'ı kıs", "Discord'u sessize al" (IAudioSessionManager2, ham ctypes).

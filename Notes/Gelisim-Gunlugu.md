@@ -8,6 +8,22 @@ Chiron'un kendini geliştirme döngüsünün (backend/core/dongu.py § Kendini g
 kartı en üste bir kayıt ekler: ne yaptı, neden daha iyi, ne öğrendi, kaynak. Sonraki kartlar bunu okuyup
 tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 
+## 2026-11-04 — "10 dakika sonra çayı hatırlat"
+- **Ne yaptım:** `set_timer` aracı ([[Zamanlayici]], `actions/zamanlayici.py`): sesle zamanlayıcı/kısa hatırlatıcı
+  kurar (dakika/saniye ya da "saat 15:30"), kalan süreyi söyler, ada göre iptal eder; dolunca main.py
+  `_watch_timers` Chiron'a sesle söyletir ("çay zamanı").
+- **Neden daha iyi:** "Hatırlat" deyince `add_reminder` yalnız tarayıcıda To-Do açıyordu — zamanı gelince kimse
+  haber vermiyordu. Şimdi çay, ocak, pomodoro, "toplantıya 10 dakika" tek cümle; Chiron konuşurken dolsa bile
+  kaybolmaz, sırası gelince söylenir.
+- **Ne öğrendim:** İyi sesli zamanlayıcının özü ad: dolunca adı söylemek, sorma/iptali ada göre yapmak (Alexa'nın
+  adlı zamanlayıcıları). Birden çok zamanlayıcı varken ad verilmeden iptal istenirse tahmin etmek yerine sormak
+  daha dürüst. Kodda: araştırma panosunun "liste + bekçi" haber yolu yeni proaktif özellikler için hazır kalıp;
+  bekçi `_proactive_checks_allowed` kapalıyken listeden almadığı için haber kaybolmuyor. Türkçe `-lık/-lik` ekinde
+  "saat" istisna. Zamanlayıcılar bellekte — kalıcı hatırlatma ve telefondan kurma sıradaki adaylar.
+  `test_onay::test_hook_outputs...` hâlâ önceden kırık, dokunmadım.
+- **Kaynak:** https://developer.amazon.com/docs/alexa-voice-service/enable-named-timers-and-reminders.html ·
+  https://www.techhive.com/article/578364/how-to-make-the-most-of-your-alexa-timers.html
+
 ## 2026-11-04 — "Spotify'ı kıs, YouTube kalsın"
 - **Ne yaptım:** `set_volume`'a `app` parametresi ([[Ses-Seviyesi]]): tek bir uygulamanın sesini okur, yüzdeye
   ayarlar, kısar/açar, sessize alır — Windows'un Ses Karıştırıcısı'ndaki uygulama kaydırıcısı. Önceki kaydın

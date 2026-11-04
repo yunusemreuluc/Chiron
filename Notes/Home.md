@@ -42,6 +42,7 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 - [[Open-App]] — uygulama açma
 - [[Terminal]] — Windows Terminal'de proje klasöründe yeni sekme + Claude
 - [[Ses-Seviyesi]] — PC ses seviyesi: kıs/aç/yüzde/sessiz, tek uygulama (Spotify), aygıttan geri okunur
+- [[Zamanlayici]] — sesli zamanlayıcı/kısa hatırlatıcı: "10 dakika sonra çayı hatırlat", dolunca sesle haber
 - [[Sys-Info]] — pil/CPU/RAM/disk/saat/ağ
 - [[Ses-Gecisi]] — "Daphne'ye geç": ses değişir, konuşma kaldığı yerden sürer
 - [[Weather]] — hava durumu (wttr.in)
