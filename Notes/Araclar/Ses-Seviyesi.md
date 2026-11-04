@@ -21,9 +21,19 @@ edilir ve `CoUninitialize` çağrılmaz. Nesneler `with` çıkışında bırakı
 - Sesi yükseltmek/ayarlamak sessizliği de kaldırır (sessizde yüzde değişmesi duyulmaz). Sıfıra çekmek dokunmaz.
 - Medya tuşu (`VK_VOLUME_UP`, 2 puan/basış) yerine bu yol: mutlak seviye + geri okuma.
 
+**Uygulama başına ses (2026-11-04, K-012):** `app` parametresi — "Spotify'ı kıs, YouTube kalsın", "Discord'u
+sessize al". `_AppSessions` aynı aygıttan `IAudioSessionManager2` (Activate) → `GetSessionEnumerator` (5) → her
+oturum `IAudioSessionControl` → QI `IAudioSessionControl2.GetProcessId` (14) → psutil süreç adı (`.exe`'siz) → QI
+`ISimpleAudioVolume` (Set/GetMasterVolume 3/4, SetMute/GetMute 5/6). Oturum sesi ana sesin ORANI (Ses
+Karıştırıcısı kaydırıcısı), ana sese dokunmaz.
+- Eşleşme `match_app`: Türkçe ek atılır ("Spotify'ı"), önce tam ad, yoksa içerme. Bulunamazsa ya da iki farklı
+  uygulamaya uyarsa HİÇBİRİNE dokunmaz, ses çıkaranların listesini döndürür (model doğru adla tekrar dener).
+- Aynı uygulamanın birden çok oturumu (tarayıcı) → hepsine aynı ayar; söylenen "şu anki" en yükseği.
+- pid 0 (Sistem sesleri) ve adı okunamayan süreç atlanır. YouTube ayrı uygulama değil — tarayıcının adı (chrome/msedge).
+- Gerçek aygıtta doğrulandı: oturum listesi (Chiron'un kendi `pythonw`'u), %99'a yazıp geri okuma, %100'e geri alma.
+
 **Tuzaklar:**
 - Çıkış aygıtı yoksa `0x80070490` → "hoparlör bulunamadı" cümlesi.
-- Yalnız ANA seviye; uygulama başına ses (Spotify'ı kıs, YouTube kalsın) `IAudioSessionManager2` ister — yok.
 - 2026-11-04 gece: gerçek aygıtta okuma (%20) ve aynı değeri yazıp geri okuma doğrulandı; sesi duyulur biçimde
   değiştirme denenmedi (Yunus'un ekranı/kulaklığı). Sesli canlı deneme birleşince.
 

@@ -775,6 +775,7 @@ TOOL_DECLARATIONS = [
         "description": (
             "PC'nin ses seviyesini okur ya da ayarlar (varsayilan hoparlor/kulaklik). "
             "'Sesi kis', 'sesi ac', 'sesi yuzde otuz yap', 'sessize al', 'ses kac' dediginde kullan. "
+            "'Spotify'i kis', 'Discord'u sessize al' gibi TEK uygulama icin app parametresini ver. "
             "Donen yuzde aygittan okunan gercek degerdir; kullaniciya onu soyle."
         ),
         "parameters": {
@@ -791,6 +792,14 @@ TOOL_DECLARATIONS = [
                 "step": {
                     "type": "NUMBER",
                     "description": "up/down icin kac puan (varsayilan 10; 'biraz' 5, 'cok' 20)."
+                },
+                "app": {
+                    "type": "STRING",
+                    "description": (
+                        "Yalniz tek uygulamanin sesi icin uygulama adi: 'Spotify'i kis' → spotify, "
+                        "'Discord'u sessize al' → discord, YouTube/tarayici → chrome ya da msedge. "
+                        "Bos birakilirsa tum PC'nin sesi. Uygulama bulunamazsa ses cikaranlarin listesi doner."
+                    )
                 }
             },
             "required": ["action"]

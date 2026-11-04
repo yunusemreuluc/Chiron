@@ -92,3 +92,72 @@ def test_tool_is_declared():
     assert "set_volume" in names
     prompt = (PROJECT_ROOT / "core" / "prompt.txt").read_text(encoding="utf-8")
     assert "set_volume" in prompt
+
+
+# --- Uygulama başına ses (K-012) ---
+
+def test_match_app_prefers_exact_then_contains():
+    names = ["Spotify", "chrome", "msedge", "msedgewebview2"]
+    assert volume.match_app("Spotify'ı", names) == ["Spotify"]  # Türkçe ek atılır
+    assert volume.match_app("SPOTIFY.exe", names) == ["Spotify"]
+    assert volume.match_app("Microsoft Edge", names) == []  # yanlışlıkla eşleşmez — liste döner
+    assert volume.match_app("edge", names) == ["msedge", "msedgewebview2"]  # belirsiz
+    assert volume.match_app("msedge", names) == ["msedge"]  # tam eşleşme içermeyi yener
+    assert volume.match_app("Discord", ["Discord", "Discord"]) == ["Discord"]  # tekrarsız
+    assert volume.match_app("İTunes", ["iTunes"]) == ["iTunes"]  # Türkçe büyük İ
+    assert volume.match_app("  ", names) == []
+
+
+class _FakeSessions:
+    def __init__(self, sessions):
+        self.sessions = sessions
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return None
+
+
+class _FakeApp(_FakeEndpoint):
+    def __init__(self, name, level=100, muted=False):
+        super().__init__(level=level, muted=muted)
+        self.name = name
+
+
+def test_app_volume_changes_only_that_app(monkeypatch):
+    spotify_a, spotify_b, chrome = _FakeApp("Spotify", 80), _FakeApp("Spotify", 60), _FakeApp("chrome", 70)
+    monkeypatch.setattr(volume, "_AppSessions", lambda: _FakeSessions([spotify_a, chrome, spotify_b]))
+    result = volume.set_volume("down", step=30, app="spotify")
+    assert result["success"]
+    assert result["message"] == "Spotify sesi yüzde 50."  # en yüksek oturum 80 → 50, hepsi aynı
+    assert (spotify_a.level(), spotify_b.level(), chrome.level()) == (50, 50, 70)
+    assert result["data"] == {"level": 50, "muted": False, "app": "Spotify"}
+
+    result = volume.set_volume("mute", app="Spotify")
+    assert result["message"] == "Spotify sesi yüzde 50, sessizde."
+    assert not chrome.muted()
+
+
+def test_app_volume_missing_or_ambiguous_lists_apps(monkeypatch):
+    sessions = [_FakeApp("chrome"), _FakeApp("msedge"), _FakeApp("msedgewebview2")]
+    monkeypatch.setattr(volume, "_AppSessions", lambda: _FakeSessions(sessions))
+    missing = volume.set_volume("down", app="Spotify")
+    assert not missing["success"] and missing["data"]["apps"] == ["chrome", "msedge", "msedgewebview2"]
+    assert "Ses çıkaranlar: chrome, msedge, msedgewebview2." in missing["message"]
+    ambiguous = volume.set_volume("down", app="edge")
+    assert not ambiguous["success"] and ambiguous["data"]["apps"] == ["msedge", "msedgewebview2"]
+    assert all(s.level() == 100 for s in sessions)  # belirsizken hiçbirine dokunulmaz
+
+
+def test_blank_app_means_master_volume(monkeypatch):
+    monkeypatch.setattr(volume, "_Endpoint", lambda: _FakeEndpoint(level=40))
+    monkeypatch.setattr(volume, "_AppSessions", lambda: pytest.fail("ana ses için oturumlara bakılmamalı"))
+    assert volume.set_volume("get", app="  ")["message"] == "Ses yüzde 40."
+
+
+def test_app_parameter_is_declared():
+    from tool_defs import TOOL_DECLARATIONS
+
+    decl = next(d for d in TOOL_DECLARATIONS if d["name"] == "set_volume")
+    assert "app" in decl["parameters"]["properties"]
