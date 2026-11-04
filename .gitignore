@@ -53,6 +53,7 @@ config/pano.json
 config/dongu.json
 # Sohbetler (sohbet.py) — konuşmaların metni
 config/sohbet.json
+config/sohbet_ekler/
 # Claude işlerinin tam akışı (claude_jobs.py) — konuşma kaydı, depoya girmez
 logs/claude-jobs/
 # Bekçinin araç günlüğü ve modu (bekci.py) — komut metinleri, depoya girmez

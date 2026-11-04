@@ -1924,6 +1924,71 @@
   outline: none;
 }
 .komuta-compose textarea::placeholder { color: var(--foreground-disabled); }
+/* Görsel ekleri (2026-11-04): yapıştır / sürükle / düğme. Önizlemeler yazı alanının üstünde. */
+.komuta-compose { flex-wrap: wrap; padding-left: 6px; }
+.komuta-compose.is-drop {
+  border-color: rgba(127, 178, 255, 0.75);
+  box-shadow: 0 0 0 3px rgba(127, 178, 255, 0.16), inset 0 0 40px -12px rgba(127, 178, 255, 0.35);
+}
+.komuta-attach {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 4px 2px;
+}
+.komuta-attach__item {
+  position: relative;
+  margin: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 11px;
+  overflow: hidden;
+  border: 1px solid rgba(127, 178, 255, 0.28);
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.8);
+}
+.komuta-attach__item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.komuta-attach__remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #eef3ff;
+  background: rgba(4, 6, 12, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-out-quint);
+}
+.komuta-attach__item:hover .komuta-attach__remove,
+.komuta-attach__remove:focus-visible { opacity: 1; }
+.komuta-attach-btn {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 38px;
+  border-radius: 10px;
+  color: var(--foreground-secondary);
+  transition:
+    color var(--duration-fast) var(--ease-out-quint),
+    background var(--duration-fast) var(--ease-out-quint);
+}
+.komuta-attach-btn:hover:not(:disabled) { color: #9fbcff; background: rgba(127, 178, 255, 0.1); }
+.komuta-attach-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.komuta-attach-btn:focus-visible { outline: 2px solid rgba(127, 178, 255, 0.8); outline-offset: 1px; }
+.komuta-msg__images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.komuta-msg__images a { display: block; border-radius: 9px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.16); }
+.komuta-msg__images img { display: block; max-width: 220px; max-height: 160px; object-fit: cover; }
 .komuta-send {
   flex: none;
   display: grid;

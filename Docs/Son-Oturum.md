@@ -7,6 +7,25 @@ ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
+## Oturum: 2026-11-04 (gece 2) — Canlı yükleme
+
+- Kod değişikliği yeniden başlatmadan uygulanıyor: `backend/core/canli_yukleme.py` fonksiyonların `__code__`'unu yamalar, durum korunur; arayüz derlenince pencere kendini yeniler. Ayrıntı [[Canli-Yukleme]].
+- 340/340 test, ayrı inceleyici (code-reviewer) 19 bulgu verdi, yüksek/orta olanlar düzeltildi + testlendi. Onay penceresi küçültüldü (760 px).
+- **Çalışan Chiron'a bir kez yeniden başlatma lazım** (izleyici lifespan'de başlıyor); sonrası canlı. Canlı denenmedi. Codex yok.
+
+## Oturum: 2026-11-04 (gece) — Ana ekranda onay merkezi
+
+- "Senden bekleyenler" ana ekranda (sağ kolon); karta tıklayınca pencere: özet, test, bekçi, dosya listesi + diff, "Ana dala al"/"Reddet". Yeni uç `GET /api/pano/{id}/changes`. Ayrıntı `Notes/Arayuz.md` § Onay merkezi.
+- Pano testleri 44/44, tsc + eslint temiz, `npm run build` tamam. Ekran görüntüsüyle denendi (diff, sahte cevapla); çalışan Chiron yeniden başlatılmadı — `/changes` yeniden başlatınca devreye girer. K-015 birleştirilmedi, karar Yunus'ta.
+- Codex yok, çapraz inceleme yapılmadı.
+
+## Oturum: 2026-11-04 — Komuta sohbetine görsel ekleme
+
+- Komuta'da resim düğmesi + yapıştır + sürükle-bırak; ek `config/sohbet_ekler/`'e yazılıp yolu göreve ekleniyor (Claude `--add-dir`, Gemini `--include-directories`). Ayrıntı `Notes/Arayuz.md`.
+- 318/318 test, `npm run build` tamam. Çalışan Chiron yeniden başlatılmadı (oturum onun içinde koşuyordu) — yeni uçlar yeniden başlatınca devreye girer; canlı denenmedi.
+- Ana ekrandaki Chiron sohbet paneline de görsel eklendi: Gemini Live görseli aynı turda görür, PC'ye iş verirse görsel Komuta işine taşınır. 320/320.
+- Telefondaki Komuta (chiron-mobile) için görsel ekleme yok, istenirse ayrı iş. Codex yok, çapraz inceleme yapılmadı.
+
 ## Oturum: 2026-11-04 (sabah 2) — Kendini geliştirme K-013: ekran parlaklığı
 
 - Yeni `set_brightness` aracı (WMI, PowerShell, bağımlılık yok): "parlaklığı kıs", "yüzde kırk yap", "parlaklık kaç".

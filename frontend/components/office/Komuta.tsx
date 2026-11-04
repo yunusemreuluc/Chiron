@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type DragEvent, type KeyboardEvent } from 'react';
 import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LuArrowUp, LuSquare, LuTrash2, LuMonitor, LuPlus } from 'react-icons/lu';
+import { LuArrowUp, LuSquare, LuTrash2, LuMonitor, LuPlus, LuImagePlus, LuX } from 'react-icons/lu';
 import {
   answerChat,
   createChat,
@@ -11,7 +11,9 @@ import {
   fetchChat,
   fetchChats,
   fetchTerminalSessions,
+  imageUrl,
   sendMessage,
+  uploadImage,
   stopChat,
   takeOver,
   type Chat,
@@ -30,6 +32,7 @@ import {
   type PanoSnapshot,
 } from '@/services/panoApi';
 import type { ApiResult } from '@/services/apiClient';
+import { IMAGE_TYPES, MAX_IMAGES, toAttachments, type Attachment } from '@/services/imageAttach';
 import { useOfficeStore, type WorkerStatus } from '@/stores/officeStore';
 import type { CrewId } from './station/StationScene';
 import { ago, basename } from './format';
@@ -226,7 +229,7 @@ export function Komuta() {
     void act(() => createChat(agent));
   };
 
-  const send = async (text: string) => {
+  const send = async (text: string, images: Attachment[] = []) => {
     const agent = member.chat;
     if (!agent || sending) return false;
     setSending(true);
@@ -238,7 +241,17 @@ export function Komuta() {
         id = created.id;
       }
       const target = id;
-      return !!(await act(() => sendMessage(target, text)));
+      // Görseller sohbet kimliği belli olunca yüklenir (yeni sohbet ilk mesajla açılıyor).
+      const names: string[] = [];
+      for (const img of images) {
+        const up = await uploadImage(target, img.dataUrl);
+        if (!up.success || !up.data) {
+          setNotice(up.message || 'Görsel yüklenemedi.');
+          return false;
+        }
+        names.push(up.data.name);
+      }
+      return !!(await act(() => sendMessage(target, text, names)));
     } finally {
       setSending(false);
     }
@@ -476,11 +489,32 @@ function ChatPane({
   now: number;
   notice: string;
   sending: boolean;
-  onSend: (text: string) => Promise<boolean>;
+  onSend: (text: string, images: Attachment[]) => Promise<boolean>;
   onStop: () => void;
   onAnswer: (approved: boolean) => void;
 }) {
   const [draft, setDraft] = useState('');
+  const [images, setImages] = useState<Attachment[]>([]);
+  const [imgError, setImgError] = useState('');
+  const [dragging, setDragging] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const addFiles = async (files: Iterable<File>) => {
+    const { items, error } = await toAttachments(files, MAX_IMAGES - images.length);
+    setImgError(error);
+    if (items.length) setImages((prev) => [...prev, ...items].slice(0, MAX_IMAGES));
+  };
+  const onPaste = (e: ClipboardEvent<HTMLTextAreaElement>) => {
+    const files = [...e.clipboardData.files].filter((f) => f.type.startsWith('image/'));
+    if (!files.length) return;
+    e.preventDefault();
+    void addFiles(files);
+  };
+  const onDrop = (e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragging(false);
+    if (canTalk && !busy) void addFiles(e.dataTransfer.files);
+  };
   const endRef = useRef<HTMLDivElement>(null);
   const messages = useMemo(() => chat?.messages ?? [], [chat]);
   const last = messages[messages.length - 1];
@@ -494,8 +528,12 @@ function ChatPane({
   const canTalk = !!member.chat && (!chat || chat.agent === member.chat);
   const submit = async () => {
     const text = draft.trim();
-    if (!text || busy || sending) return;
-    if (await onSend(text)) setDraft('');
+    if ((!text && !images.length) || busy || sending) return;
+    if (await onSend(text, images)) {
+      setDraft('');
+      setImages([]);
+      setImgError('');
+    }
   };
   const onKey = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
@@ -541,7 +579,7 @@ function ChatPane({
         )}
         <AnimatePresence initial={false}>
           {messages.map((m, i) => (
-            <Message key={`${m.at}-${i}`} m={m} isLast={i === messages.length - 1} onAnswer={onAnswer} now={now} />
+            <Message key={`${m.at}-${i}`} m={m} chatId={chat?.id ?? ''} isLast={i === messages.length - 1} onAnswer={onAnswer} now={now} />
           ))}
         </AnimatePresence>
         <div ref={endRef} />
@@ -549,8 +587,67 @@ function ChatPane({
 
       <footer className="komuta-chat__foot">
         {notice && <p className="komuta-notice">{notice}</p>}
+        {imgError && <p className="komuta-notice">{imgError}</p>}
         {canTalk ? (
-          <div className="komuta-compose">
+          <div
+            className={`komuta-compose${dragging ? ' is-drop' : ''}${images.length ? ' has-images' : ''}`}
+            onDragOver={(e) => {
+              if (![...e.dataTransfer.types].includes('Files')) return;
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={onDrop}
+          >
+            {images.length > 0 && (
+              <div className="komuta-attach" aria-label="Eklenen görseller">
+                <AnimatePresence initial={false}>
+                  {images.map((img) => (
+                    <motion.figure
+                      key={img.key}
+                      className="komuta-attach__item"
+                      initial={{ opacity: 0, scale: 0.85 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.85 }}
+                      transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element -- yerel data URL önizlemesi */}
+                      <img src={img.dataUrl} alt={img.name} />
+                      <button
+                        type="button"
+                        className="komuta-attach__remove"
+                        onClick={() => setImages((prev) => prev.filter((x) => x.key !== img.key))}
+                        aria-label={`${img.name} kaldır`}
+                        disabled={sending}
+                      >
+                        <LuX size={11} strokeWidth={2.6} />
+                      </button>
+                    </motion.figure>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
+            <input
+              ref={fileRef}
+              type="file"
+              accept={IMAGE_TYPES.join(',')}
+              multiple
+              hidden
+              onChange={(e) => {
+                if (e.target.files) void addFiles(e.target.files);
+                e.target.value = '';
+              }}
+            />
+            <button
+              type="button"
+              className="komuta-attach-btn"
+              onClick={() => fileRef.current?.click()}
+              disabled={busy || sending || images.length >= MAX_IMAGES}
+              aria-label="Görsel ekle"
+              title="Görsel ekle (yapıştır ya da sürükle de olur)"
+            >
+              <LuImagePlus size={17} />
+            </button>
             <label htmlFor="komuta-input" className="sr-only">
               Mesaj
             </label>
@@ -560,6 +657,7 @@ function ChatPane({
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={onKey}
+              onPaste={onPaste}
               placeholder={busy ? `${member.name} çalışıyor — bitince yazabilirsin` : `${member.name}’e yaz…  (Enter gönderir, Shift+Enter alt satır)`}
               disabled={busy}
               maxLength={4000}
@@ -568,7 +666,7 @@ function ChatPane({
               type="button"
               className="komuta-send"
               onClick={() => void submit()}
-              disabled={busy || sending || !draft.trim()}
+              disabled={busy || sending || (!draft.trim() && !images.length)}
               aria-label="Gönder"
             >
               <LuArrowUp size={16} strokeWidth={2.2} />
@@ -611,11 +709,13 @@ function Rich({ text }: { text: string }) {
 
 function Message({
   m,
+  chatId,
   isLast,
   onAnswer,
   now,
 }: {
   m: ChatMessage;
+  chatId: string;
   isLast: boolean;
   onAnswer: (approved: boolean) => void;
   now: number;
@@ -633,6 +733,16 @@ function Message({
   if (m.role === 'ben') {
     return (
       <motion.div className="komuta-msg is-me" {...motionProps}>
+        {!!m.images?.length && (
+          <div className="komuta-msg__images">
+            {m.images.map((name) => (
+              <a key={name} href={imageUrl(chatId, name)} target="_blank" rel="noreferrer" title="Tam boy aç">
+                {/* eslint-disable-next-line @next/next/no-img-element -- backend'den gelen ek */}
+                <img src={imageUrl(chatId, name)} alt="Eklenen görsel" loading="lazy" />
+              </a>
+            ))}
+          </div>
+        )}
         {m.text}
       </motion.div>
     );

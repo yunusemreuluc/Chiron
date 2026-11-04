@@ -32,9 +32,13 @@ class Jobs:
         self.calls: list[dict] = []
         self.cancelled: list[str] = []
 
-    def submit(self, task, resume_of=None, origin="telefon", cwd=None, engine="claude", mode="auto", session_id=None):
+    def submit(self, task, resume_of=None, origin="telefon", cwd=None, engine="claude", mode="auto", session_id=None,
+               **extra):
         job_id = f"j{len(self.jobs) + 1}"
-        self.calls.append({"task": task, "origin": origin, "cwd": cwd, "engine": engine, "session_id": session_id})
+        call = {"task": task, "origin": origin, "cwd": cwd, "engine": engine, "session_id": session_id}
+        if extra:
+            call["extra"] = extra
+        self.calls.append(call)
         self.jobs[job_id] = {"id": job_id, "status": "queued", "summary": "", "session_id": session_id,
                              "approval": "", "error": "", "trail": [], "last_step": "", "cost_usd": None, "bekci": []}
         return SimpleNamespace(id=job_id)
@@ -267,6 +271,59 @@ def test_api_flow(tmp_path, monkeypatch):
     assert bad.status_code == 409 and terminal == []
 
 
+# ── Görsel ekleri (2026-11-04) ──────────────────────────────────────────────
+
+PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 32
+
+
+def test_image_attach_flow(tmp_path):
+    store, jobs = _setup(tmp_path)
+    chat = store.create("claude")
+    saved = store.save_image(chat["id"], PNG)
+    assert saved["name"].endswith(".png")
+    path = store.image_path(chat["id"], saved["name"])
+    assert path.read_bytes() == PNG and path.parent.parent == tmp_path / "sohbet_ekler"
+
+    chat = store.send(chat["id"], "", images=[saved["name"]])
+    me = chat["messages"][-2]
+    assert me["images"] == [saved["name"]] and me["text"] == "Ekteki görsele bak."
+    call = jobs.calls[0]
+    assert str(path) in call["task"] and call["extra"]["add_dirs"] == [str(path.parent)]
+
+    with pytest.raises(SohbetError):
+        store.save_image(chat["id"], b"<svg onload=alert(1)>")
+    with pytest.raises(SohbetError):
+        store.image_path(chat["id"], "../sohbet.json")
+    with pytest.raises(SohbetError):
+        store.send(chat["id"], "x", images=["aaaaaaaaaaaa.png"])  # yüklenmemiş ek
+
+    jobs.finish("j1")
+    store.get(chat["id"])
+    store.delete(chat["id"])
+    assert not path.parent.exists()
+
+
+def test_image_api(tmp_path, monkeypatch):
+    import base64
+
+    store, jobs = _setup(tmp_path)
+    monkeypatch.setattr(sohbet_api, "sohbet", store)
+    app = FastAPI()
+    app.include_router(sohbet_api.router)
+    with TestClient(app) as client:
+        cid = client.post("/api/sohbet", json={"agent": "gemini"}).json()["data"]["chat"]["id"]
+        data = "data:image/png;base64," + base64.b64encode(PNG).decode()
+        up = client.post(f"/api/sohbet/{cid}/ek", json={"data": data}).json()
+        name = up["data"]["name"]
+        got = client.get(f"/api/sohbet/{cid}/ek/{name}")
+        missing = client.get(f"/api/sohbet/{cid}/ek/000000000000.png")
+        bad = client.post(f"/api/sohbet/{cid}/ek", json={"data": "!!!"})
+        sent = client.post(f"/api/sohbet/{cid}/mesaj", json={"text": "bu ne?", "images": [name]})
+    assert up["success"] and got.status_code == 200 and got.content == PNG
+    assert missing.status_code == 404 and bad.status_code == 400
+    assert sent.status_code == 200 and jobs.calls[0]["engine"] == "gemini" and name in jobs.calls[0]["task"]
+
+
 # ── claude_jobs: oturumu kimliğiyle sürdürme + araç adımları ─────────────────
 
 def test_claude_jobs_session_id_and_trail(tmp_path):
@@ -363,3 +420,33 @@ def test_job_status_is_live_and_truthful(tmp_path):
     store.send(chat["id"], "bir de yayınla")
     jobs.jobs["j2"].update(status="needs_approval", summary="Hazır.", approval="git push", finished_at=time.time())
     assert "onay bekliyor: git push" in store.job_status()
+
+
+def test_voice_images_follow_delegated_task(tmp_path):
+    """Ana ekran sohbetine eklenen görsel, Chiron işi PC'ye verince Komuta sohbetine kopyalanır."""
+    store, jobs = _setup(tmp_path)
+    path, mime = store.save_voice_image(PNG)
+    assert mime == "image/png" and path.parent == tmp_path / "sohbet_ekler" / "sesli"
+    with pytest.raises(SohbetError):
+        store.voice_image_path("../sohbet.json")
+    chat = store.phone_task("şu ekrandaki hatayı düzelt", via="pc", voice_images=[path.name])
+    me = chat["messages"][-2]
+    assert len(me["images"]) == 1
+    copied = store.image_path(chat["id"], me["images"][0])
+    assert copied.read_bytes() == PNG and str(copied) in jobs.calls[0]["task"]
+
+
+def test_pc_isi_images_taken_once(monkeypatch):
+    from actions import pc_isi
+
+    sent = []
+
+    class Resp:
+        def json(self):
+            return {"success": True, "data": {"job_id": "x1", "title": "t"}}
+
+    monkeypatch.setattr(pc_isi.requests, "post", lambda url, json, timeout: sent.append(json) or Resp())
+    pc_isi.remember_images(["aaaaaaaaaaaa.png"])
+    pc_isi.delegate_to_pc("bak")
+    pc_isi.delegate_to_pc("tekrar")
+    assert sent[0]["images"] == ["aaaaaaaaaaaa.png"] and "images" not in sent[1]

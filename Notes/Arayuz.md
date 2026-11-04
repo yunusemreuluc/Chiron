@@ -621,6 +621,20 @@ renkte yörüngeleri diz, sonra bu arayüzü yap."**
 - 6 saattir olayı olmayan oturum gösterilmez (SessionEnd gelmeyebiliyor; `STALE_S`, backend'de de aynı).
 - Tıklama → Ofis › Gözetim, o oturumun detayı açık.
 
+**Komuta › görsel ekleri (2026-11-04).** Yazı alanında resim düğmesi; Ctrl+V ile yapıştırma ve sürükle-bırak da
+çalışır. En fazla 4 görsel, 8 MB, PNG/JPEG/GIF/WebP (tür içerikten anlaşılır, uzantıdan değil). Görseller gönderilirken
+`POST /api/sohbet/{id}/ek` (base64) ile `config/sohbet_ekler/<sohbet>/` altına yazılır (gitignore'da); mesaj ek adlarını
+taşır, göreve dosya yolları eklenir, Claude'a `--add-dir`, Gemini'ye `--include-directories` ile o klasör açılır.
+Balonda küçük resim, tıklayınca tam boy (`GET .../ek/{ad}`). Sohbet silinince/budanınca ekleri de silinir.
+Yalnız metinsiz görsel gönderilirse metin "Ekteki görsele bak." olur.
+
+**Ana ekran Chiron sohbeti › görsel ekleri (2026-11-04).** Dock'taki Sohbet panelinde (`VoicePanelContent.tsx`) aynı
+düğme/yapıştır/sürükle. `POST /api/voice/text` `{text, images: dataURL[]}` → görseller `config/sohbet_ekler/sesli/`'e
+(son 40 tutulur) → `main._on_text_command` aynı turda `inline_data` part olarak Gemini Live'a yollar. Chiron o turdan
+sonraki 10 dk içinde `delegate_to_pc` çağırırsa `pc_isi` görsel ADLARINI `/api/remote/komuta`'ya geçer, `phone_task`
+onları Komuta sohbetinin klasörüne kopyalar (yol değil ad gelir — uzak istemci keyfi dosya okutamaz). Ortak yardımcı
+`services/imageAttach.ts`. Telefon web arayüzündeki (/m) kutuda görsel yok.
+
 **Ofis › Gözetim — `components/office/gozetim/`.** Backend `backend/core/gozetim.py`, uç `GET /api/office/gozetim`
 (3 sn'de bir). Yerleşim: üst sayı şeridi · sol oturum kartları (bağlam doluluğu, 30 dk aktivite, model, maliyet,
 "DÖNGÜ?" = son 24 izde ≥5 hata) · orta **Yörünge** (kendi küçük Canvas'ı, 30 FPS; ofis açıkken ana sahne durduğu
@@ -663,6 +677,21 @@ Ekrana bakarak düzeltilenler: alt şerit grid satırı kayınca eziliyordu (fle
 [[Onay]]. Ses: `answer_approval`.
 
 Yapılmayan: telefondaki özet (taslak F).
+
+## Onay merkezi (ana ekran)
+
+2026-11-04, kullanıcı isteği: Komuta'daki "Senden bekleyenler" ana ekranda da görünsün, tıklayınca
+pencere açılsın, birleştirme oradan yapılsın. `components/onay/OnayMerkezi.tsx` + `app/onay.css`.
+
+- Kutu sağ kolonda Vision'ın altında, **yalnız bekleyen varsa** görünür (6 sn'de bir `/api/pano` +
+  `/api/sohbet`, sekme gizliyse yoklamaz). Birleştir/onay kartları ve onay bekleyen sohbetler.
+- Kart → pencere (portal, z 70): ne yapıldı, test (çıktı açılır), dosya/satır sayısı, bekçi uyarıları,
+  dosya listesi + diff (`GET /api/pano/{id}/changes`, `pano.changes` → `pano_git.diff_files/diff_patch`,
+  400k karakterde kesilir). Dosyaya tıklayınca diff o dosyaya kayar. "Ana dala al" / "Reddet" (reddet
+  iki tık: kopya silinir, dal kalır). Çakışmada backend başarı döner ama kart `hata` olur — pencere
+  kapanmaz, hatayı gösterir. Esc / dışa tık kapatır (iş sürerken değil).
+- Sohbet satırı pencere açmaz, Komuta'da o sohbeti açar (onay Claude oturumunda verilir).
+- Boyut (aynı gün, "küçült" isteği): 760 px genişlik, en çok 640 px yükseklik; özet iki satır ("Tamamı" açar), diff 260 px (kısa ekranda 200).
 
 ## Küçük parçalar
 

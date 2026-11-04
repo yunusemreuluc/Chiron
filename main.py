@@ -57,6 +57,7 @@ from actions.whatsapp  import send_whatsapp_message, save_whatsapp_contact  # no
 from actions.media     import play_media  # noqa: F401
 from actions.weather   import get_weather_summary  # noqa: F401
 from actions.pc_isi    import check_pc_job, delegate_to_pc  # noqa: F401 — @register_tool yan etkisi için
+from actions import pc_isi
 from actions.onay      import answer_approval  # noqa: F401 — @register_tool yan etkisi için
 from actions.terminal  import open_terminal  # noqa: F401 — @register_tool yan etkisi için
 from actions.volume    import set_volume  # noqa: F401 — @register_tool yan etkisi için
@@ -809,16 +810,34 @@ class ChironLive:
             self._pending_power_task = None
             self._pending_power_action = ""
 
-    def _on_text_command(self, text: str):
+    def _on_text_command(self, text: str, images: list[dict] | None = None):
+        """`images`: yazı kutusuna eklenen görseller ({path, name, mime}; backend/api/voice.py diske yazdı).
+        Aynı turda inline_data olarak gider; Chiron işi PC'ye devrederse pc_isi onları Komuta'ya taşır."""
         if self._paused:
             return
-        self.ui.write_log(f"Siz: {text}")
+        images = images or []
+        shown = text or "(görsel)"
+        if images:
+            shown += f"  · {len(images)} görsel"
+        self.ui.write_log(f"Siz: {shown}")
         if not self._loop or not self.session:
             self.ui.write_log("ERR: Chiron bağlantısı henüz hazır değil.")
             return
+        parts: list[dict] = []
+        for img in images:
+            try:
+                parts.append({"inline_data": {"mime_type": img["mime"], "data": Path(img["path"]).read_bytes()}})
+            except (OSError, KeyError):
+                logger.warning(f"[CHIRON] Ekli görsel okunamadı: {img}")
+        if parts:
+            pc_isi.remember_images([img["name"] for img in images])
+            note = (f"[Kullanıcı bu mesaja {len(parts)} görsel ekledi; yukarıda. Bu konuda PC'ye iş verirsen "
+                    "(delegate_to_pc) görseller işe kendiliğinden eklenir, ayrıca anlatmana gerek yok.]")
+            text = f"{text}\n\n{note}" if text else f"Bu görsele bak.\n\n{note}"
+        parts.append({"text": text})
         asyncio.run_coroutine_threadsafe(
             self.session.send_client_content(
-                turns={"parts": [{"text": text}]},
+                turns={"role": "user", "parts": parts},
                 turn_complete=True
             ),
             self._loop
