@@ -92,6 +92,32 @@ TOOL_DECLARATIONS = [
         }
     },
     {
+        "name": "open_terminal",
+        "description": (
+            "Windows Terminal'de yeni sekme acar, istenen projenin klasorunde, icinde Claude'u baslatir. "
+            "'Terminalde yeni sekme ac ve Claude'a baglan', 'Dilcep'te Claude ac', 'terminalde Chiron'a gec' "
+            "dediginde kullan. Kullanici kendisi terminalde calismak istiyorsa bu; isi senin yapmani istiyorsa "
+            "delegate_to_pc."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "project": {
+                    "type": "STRING",
+                    "description": "Proje adi (Chiron, Dilcep, chiron-mobile...); belirtilmediyse bos birak (ev klasoru)."
+                },
+                "run_claude": {
+                    "type": "BOOLEAN",
+                    "description": "Sekmede Claude baslasin mi. Varsayilan true; sadece 'terminal ac/sekme ac' denirse false."
+                },
+                "continue_last": {
+                    "type": "BOOLEAN",
+                    "description": "'Kaldigi yerden', 'son konusmaya devam', 'onceki oturuma baglan' denirse true."
+                }
+            }
+        }
+    },
+    {
         "name": "get_weather",
         "description": (
             "Anlik hava durumunu ozetler. Kullanici hava durumunu, sicakligi veya yagmur "

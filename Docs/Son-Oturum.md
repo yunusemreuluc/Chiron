@@ -1,7 +1,17 @@
 # Son Oturum
 
 Claude Code oturumları arasındaki köprü. `.claude/hooks/session_start.py` her
-açılışta buradaki **en üstteki** `## Oturum:` bloğunu okuyup context'e enjekte
+açılışta buradaki **en üstteki** `## Oturum: 2026-10-30 (gece) — Kendini geliştirme K-009: terminalde Claude sekmesi
+
+**Ne yapıldı (commit'siz, pano/K-009 worktree):**
+- İ-010 için `open_terminal` aracı: `wt -w 0 new-tab -d <proje> cmd /k claude [--continue]`. Dört yer tamam
+  (araç, `tool_defs.py`, `core/prompt.txt`, [[Terminal]]); `tests/test_terminal.py`, paket 309/309.
+- Gerçek wt ile denenmedi (gece Yunus'un ekranına sekme açmamak için) — komut biçimi belgeden.
+
+**Nerede kalındı / yarın:** Birleşince sesle "Dilcep'te Claude aç" denenmeli. Telefondan açmak için
+`desktop_control` + mobil uygulamaya eylem gerekir (İ-010 `bakıldı`).
+
+## Oturum:` bloğunu okuyup context'e enjekte
 ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
