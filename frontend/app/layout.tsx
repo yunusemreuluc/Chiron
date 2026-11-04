@@ -4,6 +4,7 @@ import './globals.css';
 import './office.css';
 import './gozetim.css';
 import './research.css';
+import './onay.css';
 
 const inter = Inter({
   variable: '--font-inter',

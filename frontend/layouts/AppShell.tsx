@@ -8,6 +8,7 @@ import { BootOverlay } from '@/components/BootOverlay';
 import { BrandBadge } from '@/components/BrandBadge';
 import { LeftPanel } from '@/components/LeftPanel';
 import { OfficeView } from '@/components/office/OfficeView';
+import { OnayKutusu } from '@/components/onay/OnayMerkezi';
 import { ResearchBoard } from '@/components/research/ResearchBoard';
 import { ResearchChip } from '@/components/research/ResearchChip';
 import { HumanoidOverlay } from '@/components/HumanoidOverlay';
@@ -144,6 +145,8 @@ export function AppShell() {
             <TrayControl />
           </div>
           <VisionPanel />
+          {/* Senden bekleyenler (2026-11-04): birleştirme/onay ana ekranda, tıklayınca pencere. */}
+          <OnayKutusu />
         </div>
       </motion.div>
 

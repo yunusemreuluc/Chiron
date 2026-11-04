@@ -133,6 +133,32 @@ def diff_text(repo_or_worktree: Path, base_sha: str, limit: int = DIFF_SCAN_CHAR
     return git(["diff", "--unified=0", "--no-color", f"{base_sha}..HEAD"], repo_or_worktree)[:limit]
 
 
+PATCH_CHARS = 400_000
+
+
+def diff_files(repo_or_worktree: Path, base_sha: str) -> list[dict]:
+    """Değişen dosyalar: yol, eklenen/silinen satır (ikili dosyada None) — onay penceresinin listesi."""
+    out = git(["diff", "--numstat", "--no-color", "-M", f"{base_sha}..HEAD"], repo_or_worktree)
+    files = []
+    for line in out.splitlines():
+        parts = line.split("	", 2)
+        if len(parts) != 3:
+            continue
+        added, removed, path = parts
+        files.append({
+            "path": path,
+            "added": int(added) if added.isdigit() else None,
+            "removed": int(removed) if removed.isdigit() else None,
+        })
+    return files
+
+
+def diff_patch(repo_or_worktree: Path, base_sha: str, limit: int = PATCH_CHARS) -> tuple[str, bool]:
+    """Okunacak diff (3 satır bağlam). Çok büyükse kesilir; ikinci değer kesildi mi."""
+    out = git(["diff", "--no-color", "-M", f"{base_sha}..HEAD"], repo_or_worktree)
+    return (out[:limit], True) if len(out) > limit else (out, False)
+
+
 def has_commits(worktree: Path, base_sha: str) -> bool:
     return bool(git(["rev-list", f"{base_sha}..HEAD"], worktree))
 

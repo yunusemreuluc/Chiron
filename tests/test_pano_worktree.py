@@ -165,6 +165,23 @@ def test_changed_worktree_is_committed_tested_and_waits_for_merge(tmp_path, monk
     assert (repo / "dosya.txt").read_text(encoding="utf-8") == "ilk satır\n"
 
 
+def test_changes_lists_files_and_patch_only_while_waiting_for_merge(tmp_path, monkeypatch):
+    repo = _repo(tmp_path)
+    board, jobs = _pano(tmp_path, monkeypatch)
+    card = board.start(board.create("Değiştir", repo=str(repo), test_cmd=_passing_test())["id"])
+    _finish(board, jobs, card)
+
+    changes = board.changes(card["id"])
+    assert [f["path"] for f in changes["files"]] == ["dosya.txt"]
+    assert changes["files"][0]["added"] >= 1
+    assert "diff --git" in changes["patch"]
+    assert changes["truncated"] is False
+
+    board.merge(card["id"], approved=False)
+    with pytest.raises(PanoError, match="değişikliği yok"):
+        board.changes(card["id"])
+
+
 def test_approved_merge_updates_main_and_cleans_worktree_and_branch(tmp_path, monkeypatch):
     repo = _repo(tmp_path)
     board, jobs = _pano(tmp_path, monkeypatch)
