@@ -41,6 +41,7 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 ## Araçlar (actions/*.py — Gemini'nin çağırdığı fonksiyonlar)
 - [[Open-App]] — uygulama açma
 - [[Terminal]] — Windows Terminal'de proje klasöründe yeni sekme + Claude
+- [[Parlaklik]] — ekran parlaklığı: kıs/aç/yüzde, panelden geri okunur (dizüstü; harici monitör yok)
 - [[Ses-Seviyesi]] — PC ses seviyesi: kıs/aç/yüzde/sessiz, tek uygulama (Spotify), aygıttan geri okunur
 - [[Sys-Info]] — pil/CPU/RAM/disk/saat/ağ
 - [[Ses-Gecisi]] — "Daphne'ye geç": ses değişir, konuşma kaldığı yerden sürer
