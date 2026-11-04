@@ -178,6 +178,7 @@ function OnayPenceresi({ card, onClose, onDone }: { card: PanoCard; onClose: () 
   const [error, setError] = useState('');
   const [confirmReject, setConfirmReject] = useState(false);
   const [showTest, setShowTest] = useState(false);
+  const [showSummary, setShowSummary] = useState(false);
   const diffRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -271,8 +272,13 @@ function OnayPenceresi({ card, onClose, onDone }: { card: PanoCard; onClose: () 
         <div className="onay-modal__body">
           {(card.summary || card.detail) && (
             <section className="onay-sec">
-              <span className="label-micro">Ne yapıldı</span>
-              <p className="onay-sec__text">{card.summary || card.detail}</p>
+              <div className="onay-sec__head">
+                <span className="label-micro">Ne yapıldı</span>
+                <button type="button" className="onay-link" onClick={() => setShowSummary((v) => !v)}>
+                  {showSummary ? 'Kısalt' : 'Tamamı'}
+                </button>
+              </div>
+              <p className={`onay-sec__text ${showSummary ? '' : 'is-clamped'}`}>{card.summary || card.detail}</p>
             </section>
           )}
 
