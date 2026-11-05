@@ -36,6 +36,7 @@ from core.audio_devices import (
     resolve_device_index,
     resolve_input_device,
 )
+from core.live_oturum import is_expected_close, keep_session_alive
 from core.logging_setup import setup_logging
 from core.tool_registry import register_tool, dispatch_tool
 from actions.tool_result import fail, ok
@@ -379,6 +380,8 @@ class ChironLive:
         self.ui.on_reset_command = self._on_reset_command
         self.ui.on_voice_change  = self._on_voice_change
         self._paused             = False
+        self._last_audio_sent    = time.monotonic()
+        self._tool_call_pending  = False
 
     def _on_pause_toggle(self, paused: bool):
         self._paused = paused
@@ -1048,6 +1051,16 @@ class ChironLive:
         while True:
             msg = await self.out_queue.get()
             await self.session.send_realtime_input(media=msg)
+            self._last_audio_sent = time.monotonic()
+
+    async def _send_silence(self, chunk: bytes) -> None:
+        await self.session.send_realtime_input(media={"data": chunk, "mime_type": "audio/pcm"})
+        self._last_audio_sent = time.monotonic()
+
+    def _keepalive_blocked(self) -> bool:
+        # Duraklatılmışken oturum zaten bırakılıyor. Araç çağrısı sürerken giriş
+        # gönderilmiyor: sunucu bazı modellerde bunu 1008 ile reddediyor.
+        return self._paused or self._tool_call_pending
 
     async def _stream_webcam_frames(self):
         """
@@ -1806,15 +1819,21 @@ class ChironLive:
 
                     if response.tool_call:
                         fn_responses = []
-                        for fc in response.tool_call.function_calls:
-                            logger.info(f"[CHIRON] 📞 {fc.name}")
-                            fr = await self._execute_tool(fc)
-                            fn_responses.append(fr)
-                        await self.session.send_tool_response(
-                            function_responses=fn_responses)
+                        self._tool_call_pending = True
+                        try:
+                            for fc in response.tool_call.function_calls:
+                                logger.info(f"[CHIRON] 📞 {fc.name}")
+                                fr = await self._execute_tool(fc)
+                                fn_responses.append(fr)
+                            await self.session.send_tool_response(
+                                function_responses=fn_responses)
+                        finally:
+                            self._tool_call_pending = False
 
         except Exception as e:
-            logger.exception("[CHIRON] Alim hatasi")
+            # Olağan kapanışı run() tek satırla yazıyor; iz yalnız gerçek arızada.
+            if not is_expected_close(e):
+                logger.exception("[CHIRON] Alim hatasi")
             raise
 
     async def _play_audio(self):
@@ -1872,6 +1891,7 @@ class ChironLive:
 
     async def run(self):
         connect_attempts = 0
+        quiet_reconnect = False  # olağan kapanış sonrası: arayüz durumu ve "hazır" satırı değişmesin
         while True:
             # Duraklatılmışsa bağlanma, bekle
             if self._paused:
@@ -1887,7 +1907,8 @@ class ChironLive:
                     http_options={"api_version": "v1alpha"}
                 )
                 logger.info("[CHIRON] 🔌 Bağlanıyor...")
-                self.ui.set_state("THINKING")
+                if not quiet_reconnect:
+                    self.ui.set_state("THINKING")
                 config = self._build_config()
 
                 async with (
@@ -1902,8 +1923,17 @@ class ChironLive:
                     logger.info("[CHIRON] ✅ Bağlandı.")
                     connect_attempts = 0          # başarılı bağlantı → sayaç sıfırla
                     self.ui.set_state("LISTENING")
-                    self.ui.write_log("SYS: Chiron hazır. Dinliyorum...")
+                    if not quiet_reconnect:
+                        self.ui.write_log("SYS: Chiron hazır. Dinliyorum...")
+                    quiet_reconnect = False
+                    self._last_audio_sent = time.monotonic()
+                    self._tool_call_pending = False
 
+                    tg.create_task(keep_session_alive(
+                        self._send_silence,
+                        lambda: self._last_audio_sent,
+                        self._keepalive_blocked,
+                    ))
                     tg.create_task(self._send_realtime())
                     tg.create_task(self._listen_audio())
                     tg.create_task(self._receive_audio())
@@ -1940,6 +1970,14 @@ class ChironLive:
                     await asyncio.sleep(0.3)
                     continue
 
+                if is_expected_close(e):
+                    # Hareketsizlik / süre sınırı: arıza değil, deneme sayacına da yazılmaz.
+                    logger.info("[CHIRON] 🔁 Sunucu oturumu olağan sebeple kapattı, yeniden bağlanıyor.")
+                    connect_attempts = 0
+                    quiet_reconnect = True
+                    await asyncio.sleep(1)
+                    continue
+
                 # Güvenlik valfi: model `thinking_config`i kabul etmiyorsa onu
                 # kapatıp HEMEN tekrar dene. Aksi hâlde bağlantı her seferinde
                 # aynı sebeple düşer ve Chiron hiç açılmaz — muhakeme akışı güzel
@@ -1954,6 +1992,7 @@ class ChironLive:
                     continue
 
                 logger.exception(f"[CHIRON] Baglanti hatasi: {e}")
+                quiet_reconnect = False
                 connect_attempts += 1
                 # İlk birkaç deneme sessiz: yeni girilen API anahtarı Google
                 # tarafında saniyeler içinde aktifleşebilir. Kullanıcıya hemen
