@@ -652,3 +652,53 @@ def orbit_view(state: Any | None = None) -> dict[str, Any]:
     for d in broker.pending():
         decisions.append({**d, "worker_id": by_sid.get(d["session_id"])})
     return {"now": now, "ctx": ctx, "bg": bg, "dev": dev, "runaways": run, "decisions": decisions}
+
+
+def phone_view(full: dict[str, Any], decisions: list[dict[str, Any]], limits: dict[str, Any]) -> dict[str, Any]:
+    """Telefondaki Gözetim özeti (taslak F): `view()` çıktısının hafif hali.
+
+    Telefon her 5 sn yokluyor; `log`, `files`, `research`, transcript yolları gitmez. `decisions`
+    onay kapısındaki (broker) cevap bekleyen sorular — telefon İzin ver/Reddet'i bunlara verir.
+    """
+    totals = full.get("totals") or {}
+    sessions = []
+    for s in full.get("sessions") or []:
+        ctx = s.get("ctx") or {}
+        window = ctx.get("window") or 0
+        sessions.append({
+            "id": s.get("id"),
+            "project": s.get("project") or "",
+            "title": (s.get("title") or "")[:80],
+            "status": s.get("status"),
+            "current": (s.get("current") or "")[:120],
+            "last_ts": s.get("last_ts"),
+            "cost": s.get("cost"),
+            "ctx_pct": round(100 * (ctx.get("used") or 0) / window) if window else None,
+            "subagents": sum(1 for a in s.get("subagents") or [] if a.get("status") in ACTIVE),
+            "waiting": bool(s.get("approvals")),
+        })
+    queue = [{
+        "id": d.get("id"),
+        "project": d.get("project") or "",
+        "tool": d.get("tool") or "",
+        "summary": (d.get("summary") or "")[:160],
+        "detail": (d.get("detail") or "")[:600],
+        "can_always": bool(d.get("can_always")),
+        "ts": d.get("ts"),
+        "deadline": d.get("deadline"),
+    } for d in decisions]
+    windows = {}
+    for key in ("five_hour", "seven_day"):
+        w = limits.get(key) if isinstance(limits, dict) else None
+        if isinstance(w, dict) and isinstance(w.get("used"), (int, float)):
+            windows[key] = {"used": float(w["used"]), "resets_at": w.get("resets_at")}
+    return {
+        "now": full.get("now"),
+        "live": totals.get("sessions_live", len(sessions)),
+        "cost_today": totals.get("cost_today"),
+        "cost_known": bool(totals.get("cost_known")),
+        "limits": windows,
+        "queue": queue,
+        "sessions": sessions,
+        "runaways": len(full.get("runaways") or []),
+    }

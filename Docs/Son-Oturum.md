@@ -4,22 +4,27 @@ Claude Code oturumları arasındaki köprü. `.claude/hooks/session_start.py` he
 açılışta buradaki **en üstteki** `## Oturum:` bloğunu okuyup context'e enjekte
 ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 
+## Oturum: 2026-11-05 (gece 3) — Gözetim: oturuma sor + Sonlandır (devam / geri al)
+
+- Detay penceresine "Sor" kutusu (kaydın özetiyle ayrı araçsız sonnet sorgusu, oturumu bölmez) ve Sonlandır: *Sonra devam et* / *Yapılanları geri al* (Claude Code `file-history` v1 yedeğinden, plan önce gösterilir, şimdiki haller `geri-alinan/`'a kopyalanır). `backend/core/oturum_kontrol.py`, 3 uç, hook `ppid` yazıyor. Ayrıntı [[Arayuz]] § Sor + Sonlandır.
+- 350/350 (yeni `test_oturum_kontrol` 9; `test_onay` `by` kırığı düzeltildi), tsc/eslint temiz, `npm run build` tamam, sahte API ile Playwright ekran görüntüsü. Ayrı inceleyici: 4 gerçek bulgu düzeltildi (bulunamayan süreç ≠ kapalı, pid yeniden kullanımı, ağaçta Chiron, alt ajan sırası). Commit'siz.
+- Çalışan Chiron yeniden başlatılmadı (bu oturum onun içinde) — yeni uçlar yeniden başlatınca devreye girer; gerçek bir oturumda Sonlandır/Geri al denenmedi.
+
+## Oturum: 2026-11-05 (gece 2) — Telefonda Gözetim özeti (taslak F)
+
+- Yeniden başlatma sonrası `powercfg /a`: S0 yok, S3 firmware'de yok → bekleme hiç yok; prizde hazırda bekletme 3 sa'ten 0'a alındı. Kablosuz adb bağlı (hotspot, 192.168.137.236).
+- PC: `GET /api/remote/gozetim` (`gozetim.phone_view`: canlı, bugün $, 5 sa/hafta limiti, bekleyen onaylar, oturumlar; log/dosya/transcript gitmez) + 2 test (test_gozetim 47/47 ilgili). `onay` sonucu artık `by` taşıyor, her karar `chiron.onay` loguna. chiron-mobile: `ui/GozetimScreen.kt` + üst çubukta göz simgesi (rozet = bekleyen onay; yalnız ekran açıkken tazelenir). Telefonda gerçek veriyle ekran görüntüsü + sahte onayla İzin/Reddet denendi. Commit'siz.
+- Telefonu sesle kullanma: chiron-mobile `phone_control` + `PhoneControlService` (İ-012, [[Chiron-Mobil]] § Telefonu sesle kullanma). Kuruldu, erişilebilirlik izni Yunus'ta; denenmedi.
+- Açık: ilk iki sahte onayda telefondan Reddet'e basılmışken/basılmadan "izin" düştü, yeniden üretilemedi — log artık kimden geldiğini yazıyor; gerçek bir soruda gözle. Uç imzası değişince canlı yama uygulanmıyor (FastAPI) — imza değiştirme ya da yeniden başlat.
+
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
 indir. Üç madde yeter; roman değil, köprü.
 
-## Oturum: 2026-11-05 — Kendini geliştirme K-015: pencere yönetimi
+## Oturum: 2026-11-05 (gece) — Dışarıdan kopma + tepside çökme
 
-- Yeni `manage_window` aracı (ctypes user32/dwmapi, bağımlılık yok): "Chrome'a geç", "pencereyi küçült/büyüt",
-  "Spotify'ı kapat", "sola/sağa yasla", "masaüstünü göster", "hangi pencereler açık". Dört yer tamam ([[Pencereler]]);
-  `tests/test_windows.py` 10 test, paket 368/368 (feature/ajan-ofisi birleştikten sonra 392/392). prompt.txt'de "X'e geç" artık intervene_screen yerine manage_window.
-- Gerçek Not Defteri penceresinde yedi eylem doğrulandı; bir denemede öne getirme ön plan kilidine takıldı (dürüst hata).
-- **Yarın:** birleşince sesli canlı deneme ("Chrome'a geç", "bunu sola yasla"); K-014 (zamanlayıcı) ile tool_defs/prompt/main'de komşu satır çakışmasına bak.
-
-## Oturum: 2026-11-04 (gece 2) — Canlı yükleme
-
-- Kod değişikliği yeniden başlatmadan uygulanıyor: `backend/core/canli_yukleme.py` fonksiyonların `__code__`'unu yamalar, durum korunur; arayüz derlenince pencere kendini yeniler. Ayrıntı [[Canli-Yukleme]].
-- 340/340 test, ayrı inceleyici (code-reviewer) 19 bulgu verdi, yüksek/orta olanlar düzeltildi + testlendi. Onay penceresi küçültüldü (760 px).
-- **Çalışan Chiron'a bir kez yeniden başlatma lazım** (izleyici lifespan'de başlıyor); sonrası canlı. Canlı denenmedi. Codex yok.
+- Telefon: MIUI Tailscale'i öldürüyordu → her zaman açık VPN, otomatik başlatma (`cmd appops set <pkg> 10008 allow`), pil kısıtlaması yok, son uygulamalarda kilit. PC: Modern Standby ekran kapanınca Chiron'u donduruyordu → `PlatformAoAcOverride=0` (yeniden başlatma bekliyor).
+- Tepside kapanma: Gemini oturumu "client inactivity" ile kapanınca `stream.close()`, `to_thread` içinde süren `stream.read` varken AUDIOSES.DLL'i çökertiyordu (0xc0000005). `main.py` `_close_stream_when_idle`: okuma/yazma kilit altında, kapanış kilidi bekleyen ayrı iş parçacığında. Commit'siz.
+- Sırada: PC yeniden başlatılınca `powercfg /a`'da S0 olmamalı; dışarıda 1-2 saat sonra telefondan iş verme denemesi.
 
 ## Oturum: 2026-11-04 (gece) — Ana ekranda onay merkezi
 
@@ -74,6 +79,13 @@ indir. Üç madde yeter; roman değil, köprü.
   worktree'si (.pano-worktrees/Chiron-K-008) duruyor — Gözetim'de bayat 'frontend' oturumu oradan.
 
 ## Önceki oturumlar
+
+## Oturum: 2026-11-04 (gece 2) — Canlı yükleme
+
+- Kod değişikliği yeniden başlatmadan uygulanıyor: `backend/core/canli_yukleme.py` fonksiyonların `__code__`'unu yamalar, durum korunur; arayüz derlenince pencere kendini yeniler. Ayrıntı [[Canli-Yukleme]].
+- 340/340 test, ayrı inceleyici (code-reviewer) 19 bulgu verdi, yüksek/orta olanlar düzeltildi + testlendi. Onay penceresi küçültüldü (760 px).
+- **Çalışan Chiron'a bir kez yeniden başlatma lazım** (izleyici lifespan'de başlıyor); sonrası canlı. Canlı denenmedi. Codex yok.
+
 
 
 

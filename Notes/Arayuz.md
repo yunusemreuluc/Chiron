@@ -643,6 +643,20 @@ dosyaya yazınca ÇAKIŞMA), araç karışımı · alt canlı akış, alt ajanla
 detay: akış, alt ajanlar, yazılan dosyalar, **Son cevabı kopyala** (kayıttan, ekrana sığmayan dahil) ve
 **Komuta'da sürdür** (`sohbet.takeover`; terminalde açıksa ikinci tıklamayla).
 
+**Sor + Sonlandır (2026-11-05, `backend/core/oturum_kontrol.py`).** Detayın akış sütununun altında "Sor" kutusu:
+soru çalışan oturuma GİTMEZ — kaydın sonundan özet (görevler, cevaplar, araç satırları, ~40k karakter) ayrı bir
+`claude -p --model sonnet --tools "" --no-session-persistence --setting-sources ""` sorgusuna verilir (araçsız,
+hook'suz → Gözetim'de hayalet oturum yok); `POST /api/office/gozetim/sor/{id}`, konuşma ekranda oturum başına
+tutulur. **Sonlandır** iki yol sunar: *Sonra devam et* (süreç ağacıyla kapanır, dosyalar kalır, Komuta'da sürer) ve
+*Yapılanları geri al* (önce `GET .../geri-al/{id}` planı: GERİ/SİL/ATLA listesi, sonra `POST .../sonlandir/{id}`
+`mode=sil`). Geri alma Claude Code'un kendi yedeğinden: `~/.claude/file-history/<oturum>/<sha256(mutlak yol)[:16]>@v1`
+= oturum öncesi hal; v1 yok + ilk başarılı yazma `toolUseResult.type=="create"` → dosya silinir; ikisi de yoksa
+dokunulmaz. Şimdiki haller `%LOCALAPPDATA%\chiron\geri-alinan\` altına manifest'le kopyalanır. Shell ile yapılanlar
+(git, sed, npm) izlenmez, geri alınmaz. Süreç: hook (`ofis-olay.py`) `ppid` yazar = doğrudan claude.exe;
+`Worker.hook_ppid(_ts)`, süreç o olaydan önce başlamış olmalı (pid yeniden kullanımı), Claude masaüstü uygulaması
+hariç, ağaçta Chiron varsa kapatılmaz. **Süreç bulunamazsa "kapalı" sayılmaz**: son 10 dk'da olayı varsa hiçbir
+şeye dokunulmaz. Kapanınca ofise `SessionEnd` işlenir; detay son haliyle açık kalır ("KAPANDI").
+
 Veri: oturum/araç/onay/araştırma/dosya ısısı `ofis.py` hook olaylarından (`tool_category`, `_radar`,
 `Worker.marks`); token/bağlam/model/maliyet şefin Claude Code kaydından (`transcript_path`), artımlı okuma,
 yanıt kimliğine göre teke indirme (bir yanıt içerik bloğu başına ayrı satır). **Maliyet API liste fiyatıyla
@@ -676,7 +690,7 @@ Ekrana bakarak düzeltilenler: alt şerit grid satırı kayınca eziliyordu (fle
 **Onay:** yörüngede/kuyrukta onay bekleyen oturuma tıklayınca detayın üstünde **onay terminali** — ayrıntı
 [[Onay]]. Ses: `answer_approval`.
 
-Yapılmayan: telefondaki özet (taslak F).
+**Telefonda özet (taslak F, 2026-11-05):** chiron-mobile `ui/GozetimScreen.kt`, üst çubukta göz simgesi. Veri `GET /api/remote/gozetim` (`gozetim.phone_view`, hafif; 2 sn soru varken / 5 sn). Dört kutu: canlı, bugün $, 5 saat, hafta (%75 kehribar, %90 kırmızı — kota freniyle aynı). "Senin sıran": onay kapısındaki sorular, İzin ver / Reddet / (varsa) bu oturumda hep izin ver → `/api/onay/{id}/karar` by=telefon. Oturum satırına dokununca başlık + son hareket.
 
 ## Onay merkezi (ana ekran)
 

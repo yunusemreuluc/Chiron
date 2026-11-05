@@ -18,7 +18,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from backend.api import system as system_api
-from backend.core import apk_teslim, claude_jobs, commands, desktop_control, feature_requests, remote_auth
+from backend.core import apk_teslim, claude_jobs, commands, desktop_control, feature_requests, gozetim, remote_auth
 from backend.core.ofis import WAITING, WORKING, office as office_state
 from backend.core.sohbet import SohbetError, sohbet
 from backend.websocket.manager import manager
@@ -600,6 +600,20 @@ async def komuta_answer(body: KomutaAnswer, response: Response) -> dict:
         response.status_code = 409
         return {"success": False, "message": str(error), "data": {}}
     return {"success": True, "message": "Cevap iletildi.", "data": _komuta_result(chat)}
+
+
+@router.get("/gozetim")
+async def gozetim_phone() -> dict:
+    """Telefondaki Gözetim özeti (taslak F): canlı oturumlar, cevap bekleyen onaylar, Claude limitleri.
+
+    Karar mevcut `/api/onay/{id}/karar` ucuyla verilir (by="telefon"); burası yalnız okur.
+    """
+    from backend.core.onay import broker
+
+    def build() -> dict:
+        return gozetim.phone_view(gozetim.view(), broker.pending(), claude_jobs.jobs.limits())
+
+    return {"success": True, "message": "", "data": await asyncio.to_thread(build)}
 
 
 # ── Telefondan Claude Code'a iş (Faz 1, 2026-10-03) ──────────────────────────

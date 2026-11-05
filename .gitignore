@@ -8,6 +8,7 @@ __pycache__/
 .swift-home/
 
 config/api_keys.json
+config/api_keys.json.*
 memory/memory.json
 memory/phone_book.json
 # Gerçek konuşma günlüğü — tarih/saat damgalı diyalogların tamamı burada.

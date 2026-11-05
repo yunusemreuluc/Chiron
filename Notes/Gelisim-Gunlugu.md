@@ -23,6 +23,22 @@ tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 - **Kaynak:** https://devblogs.microsoft.com/oldnewthing/20071008-00/?p=24863 ·
   https://learn.microsoft.com/en-us/windows/win32/gdi/positioning-objects-on-a-multiple-display-setup
 
+## 2026-11-04 — "10 dakika sonra çayı hatırlat"
+- **Ne yaptım:** `set_timer` aracı ([[Zamanlayici]], `actions/zamanlayici.py`): sesle zamanlayıcı/kısa hatırlatıcı
+  kurar (dakika/saniye ya da "saat 15:30"), kalan süreyi söyler, ada göre iptal eder; dolunca main.py
+  `_watch_timers` Chiron'a sesle söyletir ("çay zamanı").
+- **Neden daha iyi:** "Hatırlat" deyince `add_reminder` yalnız tarayıcıda To-Do açıyordu — zamanı gelince kimse
+  haber vermiyordu. Şimdi çay, ocak, pomodoro, "toplantıya 10 dakika" tek cümle; Chiron konuşurken dolsa bile
+  kaybolmaz, sırası gelince söylenir.
+- **Ne öğrendim:** İyi sesli zamanlayıcının özü ad: dolunca adı söylemek, sorma/iptali ada göre yapmak (Alexa'nın
+  adlı zamanlayıcıları). Birden çok zamanlayıcı varken ad verilmeden iptal istenirse tahmin etmek yerine sormak
+  daha dürüst. Kodda: araştırma panosunun "liste + bekçi" haber yolu yeni proaktif özellikler için hazır kalıp;
+  bekçi `_proactive_checks_allowed` kapalıyken listeden almadığı için haber kaybolmuyor. Türkçe `-lık/-lik` ekinde
+  "saat" istisna. Zamanlayıcılar bellekte — kalıcı hatırlatma ve telefondan kurma sıradaki adaylar.
+  `test_onay::test_hook_outputs...` hâlâ önceden kırık, dokunmadım.
+- **Kaynak:** https://developer.amazon.com/docs/alexa-voice-service/enable-named-timers-and-reminders.html ·
+  https://www.techhive.com/article/578364/how-to-make-the-most-of-your-alexa-timers.html
+
 ## 2026-11-04 — "Parlaklığı kıs", "ekranı yüzde kırk yap"
 - **Ne yaptım:** PC'deki sesli Chiron'a `set_brightness` aracı ([[Parlaklik]], `actions/brightness.py`): dizüstü
   ekranının parlaklığını okur, yüzdeye ayarlar, 10'ar puan (ya da söylenen kadar) kısar/açar. Söylenen yüzde

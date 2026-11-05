@@ -36,6 +36,7 @@ import { IMAGE_TYPES, MAX_IMAGES, toAttachments, type Attachment } from '@/servi
 import { useOfficeStore, type WorkerStatus } from '@/stores/officeStore';
 import type { CrewId } from './station/StationScene';
 import { ago, basename } from './format';
+import { Rich } from './Rich';
 
 // Komuta ekranı (2026-10-27). Kullanıcı isteği: "sana terminalde nasıl iş veriyorsam Chiron'da
 // da öyle olsun" + "istasyon gözümün önünde olsun". Tek ekran: solda ekip ve sohbetler, ortada
@@ -677,32 +678,6 @@ function ChatPane({
         )}
         {canTalk && <p className="komuta-foot-note">Aynı oturum sürer · bekçi ve kota freni açık</p>}
       </footer>
-    </>
-  );
-}
-
-/** Ajan cevabındaki hafif Markdown: ```kod bloğu```, `satır içi kod`, **kalın**. HTML üretmez
- *  (innerHTML yok) — metin React düğümü olarak kalır. */
-function Rich({ text }: { text: string }) {
-  return (
-    <>
-      {text.split(/(```[\s\S]*?```)/g).map((part, i) => {
-        if (part.startsWith('```') && part.endsWith('```') && part.length >= 6) {
-          const body = part.slice(3, -3).replace(/^[\w+-]*\n/, '');
-          return (
-            <pre key={i} className="komuta-code">
-              {body}
-            </pre>
-          );
-        }
-        return part.split(/(`[^`\n]+`|\*\*[^*\n]+\*\*)/g).map((bit, j) => {
-          if (bit.startsWith('`') && bit.endsWith('`') && bit.length > 2)
-            return <code key={`${i}-${j}`}>{bit.slice(1, -1)}</code>;
-          if (bit.startsWith('**') && bit.endsWith('**') && bit.length > 4)
-            return <strong key={`${i}-${j}`}>{bit.slice(2, -2)}</strong>;
-          return bit;
-        });
-      })}
     </>
   );
 }

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
@@ -14,6 +15,7 @@ from backend.core.onay import broker
 from backend.core.remote_auth import is_remote_scope
 
 router = APIRouter(prefix="/api/onay", tags=["onay"])
+logger = logging.getLogger("chiron.onay")
 
 
 class Decision(BaseModel):
@@ -61,6 +63,8 @@ async def cancel(rid: str, request: Request) -> dict:
 @router.post("/{rid}/karar")
 async def decide(rid: str, body: Decision) -> dict:
     ok, why = broker.decide(rid, body.behavior, body.message, body.always, body.by)
+    # İz: izin kod çalıştırır — kim, nereden, ne dedi (2026-11-05, telefonda açıklanamayan bir "izin" görüldü).
+    logger.info("Onay kararı %s: %s always=%s by=%s sonuç=%s", rid, body.behavior, body.always, body.by, ok or why)
     return {"success": ok, "message": why or "Karar iletildi.", "data": {}}
 
 

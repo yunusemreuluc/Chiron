@@ -58,7 +58,9 @@ def test_deny_carries_message_and_terminal_release():
     b = OnayBroker()
     rid = b.add(REQ)["id"]
     b.decide(rid, "red", message="önce testleri çalıştır")
-    assert b.wait(rid, 1) == {"state": "red", "message": "önce testleri çalıştır"}
+    out = b.wait(rid, 1)
+    assert (out["state"], out["message"]) == ("red", "önce testleri çalıştır")
+    assert "by" in out  # kararın kimden geldiği (ekran/telefon/ses) loga yazılır
     rid2 = b.add(REQ)["id"]
     b.decide(rid2, "terminal")
     assert b.wait(rid2, 1)["state"] == "terminal"
