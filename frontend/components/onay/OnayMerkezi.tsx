@@ -31,7 +31,9 @@ function usePending() {
   const refresh = useCallback(
     () =>
       Promise.all([fetchPano(), fetchChats()]).then(([pano, list]) => {
-        if (pano) setCards(pano.cards.filter((c) => c.status === 'birlestir' || c.status === 'onay'));
+        // Kendini geliştirme kartı kendi birleşir; "senden bekleyenler"e yalnız hassas dosyaya dokunduysa girer.
+        const selfMerging = (c: PanoCard) => c.title.startsWith('Gelişim:') && !c.oto_engel;
+        if (pano) setCards(pano.cards.filter((c) => (c.status === 'birlestir' || c.status === 'onay') && !selfMerging(c)));
         if (list) setChats(list.chats.filter((c) => c.status === 'onay'));
       }),
     [],

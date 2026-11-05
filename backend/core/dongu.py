@@ -25,9 +25,13 @@ Kendini geliştirme (2026-10-30, Yunus: "kendi kendini geliştirsin, öğrensin,
 7/24 çalışsın, yaptıklarını ve öğrendiklerini bana söylesin"): `gelisim` açıksa ve kuyrukta iş yoksa döngü
 Chiron'un kendi deposuna bir PROJE kartı açar (`GELISIM_PREFIX`). Kart ayrı kopyada araştırır, TEK küçük
 iyileştirme yapar, test eder, `Notes/Gelisim-Gunlugu.md`'ye ne yaptığını/neden daha iyi olduğunu/ne öğrendiğini
-yazar. Birleştirme YİNE Yunus'un onayıyla (otomatik birleştirme yok). Frenler: GELISIM_ARALIK, GELISIM_GUNLUK,
-onay bekleyen en fazla GELISIM_BEKLEYEN kart, Claude kotası yalnız rahatken (ok/info). Kart birleştirme
-beklemeye ya da hataya düşünce `gelisim_haber`e girer; sesli Chiron bunu söyler (main.py _watch_gelisim).
+yazar. Frenler: GELISIM_ARALIK, GELISIM_GUNLUK, Claude kotası yalnız rahatken (ok/info), kart başına bütçe.
+
+Onaysız (2026-11-06, Yunus: "benden onay istemesin, yapsın, commit ve push yapsın"): eski hali onay bekleyen 2
+kartta günlerce duruyordu (30.10–04.11 arası hiç kart yok). Şimdi test geçen kart kendi kendine birleşir ve gönderilir
+(`Pano.auto_merge`, işçi `_oto_is`). Kart `onay` isterse reddedilir, `hata`ya düşerse bir kez yeniden denenir, olmazsa
+bırakılır; döngü hiçbir kartta kilitlenmez. Yalnız hassas dosyaya dokunan kart Yunus'u bekler (`oto_engel`).
+Sonuç `gelisim_haber`e girer; sesli Chiron söyler (main.py _watch_gelisim).
 """
 
 from __future__ import annotations
@@ -42,7 +46,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from backend.core.claude_jobs import MAX_PARALLEL
-from backend.core.pano import Pano, PanoError, pano
+from backend.core.pano import GELISIM_PREFIX, Pano, PanoError, pano
 
 logger = logging.getLogger("chiron.dongu")
 
@@ -58,38 +62,68 @@ RAPOR_SAATI = 8  # yerel saat
 SKIP_SECONDS = 30 * 60  # başlatılamayan kart bu kadar süre denenmez
 MAX_EVENTS = 40
 
-GELISIM_PREFIX = "Gelişim:"
 GELISIM_ARALIK = 2 * 3600  # iki geliştirme kartı arası en az
 GELISIM_GUNLUK = 6
-GELISIM_BEKLEYEN = 2  # onay/birleştirme bekleyen bu kadar geliştirme varken yenisi açılmaz (çakışma birikmesin)
+GELISIM_BEKLEYEN = 2  # birleşmeyi bekleyen bu kadar geliştirme varken yenisi açılmaz (çakışma birikmesin)
 GELISIM_KOTA = ("ok", "info", "")  # Yunus'un kendi işine pay kalsın: kota azalırken geliştirme açılmaz
 GELISIM_HABER = 10
+OTO_DENEME = 1  # hataya düşen kart bir kez yeniden denenir, sonra bırakılır
+OTO_BEKLE = 5 * 60  # ana klasör izin vermediyse bu kadar sonra yeniden
+OTO_PUSH_BEKLE = 10 * 60
+# Görev kısa ve okuma listesi dar (2026-11-06): eski metin 7 notu okutuyordu, bağlam kart boyunca her turda yeniden
+# ödeniyor. Açık istekler ve eski başlıklar hazır veriliyor, büyük notlar yalnız gerekince parça parça okunuyor.
 GELISIM_TASK = """\
-Sen Chiron'sun ve bu iş KENDİNİ GELİŞTİRME işi: Yunus seni 7/24 kendini geliştirmen, öğrenmen ve arayüzünü daha
-kullanışlı hale getirmen için bıraktı. Çalıştığın kopya Chiron'un kendi deposu.
+Sen Chiron'sun; bu iş KENDİNİ GELİŞTİRME işi. Çalıştığın kopya Chiron'un kendi deposu. Yunus sonucu sesle duyacak.
 
-1. Önce oku: Notes/Gelisim-Gunlugu.md (daha önce ne yaptın, ne öğrendin — tekrar etme), Notes/Istek-Listesi.md
-   (Yunus'un istekleri — `yeni`/`bakıldı` olanlar önceliklidir), Docs/CHIRON_UI_ROADMAP.md, Docs/YAPILACAKLAR.md,
-   Notes/Arayuz.md, Notes/Tasarim-Kurallari.md, Notes/Bilinen-Tuzaklar.md.
-2. TEK, küçük ve somut bir iyileştirme seç (en fazla ~300 satır değişiklik). Öncelik: Yunus'un gündelik
-   kullanımında hissedeceği kullanışlılık (arayüz, sesli kullanım, telefon/PC akışı), sonra güvenilirlik.
-   Para/ödeme, gizli anahtar, güvenlik ayarı, bekçi kuralları, kota frenleri ve bu geliştirme döngüsünün
-   kendisi YASAK alan — onlara dokunma.
-3. Araştır: seçtiğin konuda iyi örnekleri ve yöntemi web'de ara (WebSearch/WebFetch), kaynağı not et.
-4. Uygula. Var olan desene uy, yeni bağımlılık ekleme. Arayüzde (frontend/) değişiklik yaptıysan tipleri
-   elle dikkatle kontrol et; bu kopyada node_modules yok, derleme birleştirmeden sonra yapılacak.
-5. Testleri koş ({test}); kalan test varsa düzelt. Yeni davranışa test ekle.
-6. Notes/Gelisim-Gunlugu.md'nin EN ÜSTÜNE (başlığın altına) yeni bir kayıt ekle:
+1. TEK, küçük, somut bir iyileştirme seç (en fazla ~300 satır). Öncelik: aşağıdaki açık istekler; sonra
+   `logs/chiron.log`da tekrar eden gerçek hatalar (`grep ERROR`, son satırlar); sonra Yunus'un günlük kullanımda
+   hissedeceği kullanışlılık. Son kayıtlar yeni sesli araçsa bu kez var olanı düzelt ya da arayüzü iyileştir.
+   YASAK: ödeme, anahtar, güvenlik ayarı, bekçi, kota frenleri, bu döngü, yeni bağımlılık. Dokunursan birleşmez.
+2. Tutumlu çalış: dosyayı baştan sona okuma, `grep -n` ile bul, gereken parçayı oku; çıktıları `| tail` ile kes.
+   Notes/Arayuz.md ve Notes/Bilinen-Tuzaklar.md çok büyük, yalnız konunun bölümünü oku. Hedef ~25 araç çağrısı.
+   Web'de en fazla bir kısa arama yap. Alt ajan açma.
+3. Uygula, var olan desene uy. Yeni araç dört yere yazılır: @register_tool, tool_defs.py, core/prompt.txt,
+   Notes/Araclar/ sayfası. Arayüzün tiplerini Chiron denetler; node_modules kopyada yok.
+4. Yeni davranışa test ekle, en sonda BİR kez koş: {test} 2>&1 | tail -5. Testin geçerse Chiron birleştirip gönderir.
+5. Docs/Son-Oturum.md ve Docs/Acik-Konular.md'ye dokunma. Notes/Gelisim-Gunlugu.md'de başlıkların en üstüne ekle:
    ## <tarih> — <kısa başlık>
-   - **Ne yaptım:** ...
-   - **Neden daha iyi:** ... (Yunus için somut fark)
-   - **Ne öğrendim:** ... (araştırmadan ya da koddan, bir sonraki geliştirmede işe yarayacak)
-   - **Kaynak:** ...
-7. Son mesajın Yunus'a sesle okunacak: 2-3 kısa Türkçe cümle, birinci ağızdan — ne yaptın, neden daha iyi,
-   ne öğrendin. Dosya yolu, kod, Claude adı geçmesin.
+   - **Ne yaptım:** / **Neden daha iyi:** (somut fark) / **Ne öğrendim:** / **Kaynak:**
+6. Son mesajın sesle okunacak: 2-3 kısa Türkçe cümle, birinci ağızdan. Dosya yolu, kod, Claude adı yok.
 
-Son geliştirmeler (bunları tekrar etme):
+Açık istekler:
+{istekler}
+
+Daha önce yapılanlar (tekrar etme):
+{gunluk}
 {recent}"""
+
+
+def acik_istekler(repo: Path, limit: int = 5) -> str:
+    """İstek listesinin açık maddeleri, kısa. Dosya büyüyor; kart hepsini okumasın."""
+    try:
+        text = (repo / "Notes" / "Istek-Listesi.md").read_text(encoding="utf-8")
+    except OSError:
+        return "- (okunamadı)"
+    rows = []
+    for block in text.split("\n### ")[1:]:
+        lines = block.splitlines()
+        durum = next((ln for ln in lines if ln.startswith("**Durum:**")), "")
+        if "yeni" not in durum and "bakıldı" not in durum:
+            continue
+        said = next((ln.strip() for ln in lines if ln.startswith("- ")), "")
+        said = said.split("·")[1].strip() if said.count("·") >= 1 else said
+        rows.append(f"- {lines[0].strip()[:60]}: {said[:80]}")
+    return "\n".join(rows[-limit:]) or "- (yok)"
+
+
+def gunluk_basliklari(repo: Path, limit: int = 10) -> str:
+    """Geliştirme günlüğünün son başlıkları (en yeni üstte)."""
+    try:
+        text = (repo / "Notes" / "Gelisim-Gunlugu.md").read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    return "\n".join(f"- {ln[3:].strip()[:70]}" for ln in text.splitlines() if ln.startswith("## "))[: limit * 75]
+
 
 BUSY = ("calisiyor", "planlaniyor", "dogrulaniyor")
 # Raporda "Yunus'u bekliyor" sayılanlar
@@ -138,6 +172,8 @@ class Dongu:
             "gelisim_sayi": 0,
             "gelisim_durum": {},  # kart → son görülen durum (haber için)
             "gelisim_haber": [],  # söylenmeyi bekleyen geliştirme sonuçları
+            "gelisim_deneme": {},  # kart → otomatik yeniden deneme sayısı
+            "gelisim_push": None,  # birleşti ama gönderilemedi: {"repo", "dal"}
         }
         self._load()
 
@@ -258,10 +294,12 @@ class Dongu:
             if now >= next_report_at(self.state["son_rapor"] or now - 1):
                 self._report(cards, snapshot.get("agents") or {}, now)
             self._track_gelisim(cards, now)
+            self._oto_kurtar(cards, snapshot.get("agents") or {}, now)
             self._step(cards, snapshot.get("agents") or {}, now)
             if self.state["durum"] == "bekliyor":
                 self._maybe_gelisim(cards, snapshot.get("agents") or {}, now)
             self._save()
+        self._oto_baslat(cards, now)
 
     def _step(self, cards: list[dict[str, Any]], agents: dict[str, Any], now: float) -> None:
         busy = [c for c in cards if c["status"] in BUSY]
@@ -328,14 +366,129 @@ class Dongu:
                 continue
             alive.add(card["id"])
             status = card["status"]
-            if seen.get(card["id"]) != status and status in ("birlestir", "hata", "bitti"):
-                text = (card.get("error") if status == "hata" else card.get("summary")) or ""
-                self.state["gelisim_haber"] = (
-                    self.state["gelisim_haber"]
-                    + [{"id": card["id"], "baslik": card["title"], "durum": status, "metin": text.strip()[:600], "at": now}]
-                )[-GELISIM_HABER:]
-            seen[card["id"]] = status
+            # Haber yalnız sonuçta: birleşti, ya da kararı Yunus'a kaldı. Yeniden denenecek hata sessiz.
+            key = "engel" if status == "birlestir" and card.get("oto_engel") else status
+            if seen.get(card["id"]) != key and (key in ("engel", "bitti") or (key == "hata" and not self.state["gelisim"])):
+                text = {"engel": card.get("oto_engel"), "hata": card.get("error")}.get(key, card.get("summary")) or ""
+                self._haber(card, "birlestir" if key == "engel" else status, text, now)
+            seen[card["id"]] = key
         self.state["gelisim_durum"] = {k: v for k, v in seen.items() if k in alive}
+
+    def _haber(self, card: dict[str, Any], durum: str, text: str, now: float) -> None:
+        self.state["gelisim_haber"] = (
+            self.state["gelisim_haber"]
+            + [{"id": card["id"], "baslik": card["title"], "durum": durum, "metin": text.strip()[:600], "at": now}]
+        )[-GELISIM_HABER:]
+
+    def _oto_kurtar(self, cards: list[dict[str, Any]], agents: dict[str, Any], now: float) -> None:
+        """Kart Yunus'a takılmasın: `onay` reddedilir (riskli adım yapılmadan biter), `hata` bir kez yeniden denenir."""
+        if not self.state["gelisim"]:
+            return
+        tries = self.state.setdefault("gelisim_deneme", {})
+        for card in cards:
+            if not card["title"].startswith(GELISIM_PREFIX):
+                continue
+            try:
+                if card["status"] == "onay":
+                    self.board.answer(card["id"], False)
+                    self._event(f"{card['id']} onay istedi, sormadan reddedildi: {card.get('approval') or ''}"[:200])
+                elif card["status"] == "hata":
+                    budget = "budget" in (card.get("error") or "")  # aynı bütçeye yeniden çarpmasın
+                    if tries.get(card["id"], 0) >= OTO_DENEME or budget:
+                        self.board.give_up(card["id"])
+                        tries.pop(card["id"], None)
+                        self._event(f"{card['id']} bırakıldı: {(card.get('error') or '')[:120]}")
+                        self._haber(card, "hata", card.get("error") or "", now)
+                    elif (agents.get("claude") or {}).get("level", "") in GELISIM_KOTA:
+                        tries[card["id"]] = tries.get(card["id"], 0) + 1
+                        self.board.start(card["id"])
+                        self.state["baslatilan"] += 1
+                        self._event(f"{card['id']} yeniden deneniyor.")
+            except Exception:
+                logger.exception("Geliştirme kartı kurtarılamadı: %s", card["id"])
+
+    def _oto_baslat(self, cards: list[dict[str, Any]], now: float) -> None:
+        """Test geçmiş kartı birleştirmeyi ya da bekleyen gönderimi başlatır. Test sürebilir: kilit dışında, tek işçi."""
+        with self._lock:
+            if not self.state["gelisim"] or getattr(self, "_oto_mesgul", False):
+                return
+            later = self.__dict__.setdefault("_oto_sonra", {})
+            card_id = next(
+                (
+                    c["id"]
+                    for c in cards
+                    if c["title"].startswith(GELISIM_PREFIX)
+                    and c["status"] == "birlestir"
+                    and not c.get("oto_engel")
+                    and later.get(c["id"], 0) <= now
+                ),
+                None,
+            )
+            push_due = self.state.get("gelisim_push") and later.get("push", 0) <= now
+            if not card_id and not push_due:
+                return
+            self._oto_mesgul = True
+        if getattr(self.board, "_background", True):
+            threading.Thread(target=self._oto_is, args=(card_id,), name="gelisim-birlestir", daemon=True).start()
+        else:
+            self._oto_is(card_id)
+
+    def _oto_is(self, card_id: str | None) -> None:
+        try:
+            if card_id:
+                try:
+                    result = self.board.auto_merge(card_id)
+                except Exception as error:
+                    logger.exception("Otomatik birleştirme başarısız: %s", card_id)
+                    result = {"durum": "bekliyor", "neden": str(error)}
+                with self._lock:
+                    self._oto_sonuc(card_id, result)
+                    self._save()
+            self._oto_push()
+        finally:
+            with self._lock:
+                self._oto_mesgul = False
+            self.wake()
+
+    def _oto_sonuc(self, card_id: str, result: dict[str, Any]) -> None:
+        durum, neden = result.get("durum"), str(result.get("neden") or "")
+        later = self.__dict__.setdefault("_oto_sonra", {})
+        if durum == "birlesti":
+            self.state["gelisim_push"] = {"repo": result["repo"], "dal": result["dal"]}
+            self.state.setdefault("gelisim_deneme", {}).pop(card_id, None)
+            later.pop("push", None)
+            self._event(f"{card_id} birleşti: {result.get('sha')}")
+        elif durum == "bekliyor":
+            if later.get(card_id, 0) == 0:  # her denemede günlüğe yazmasın
+                self._event(f"{card_id} birleşmeyi bekliyor: {neden[:160]}")
+            later[card_id] = self._clock() + OTO_BEKLE
+        elif durum in ("engel", "cakisma", "test"):
+            self._event(f"{card_id} birleşmedi ({durum}): {neden[:160]}")
+        else:  # kartın kopyası yok ya da durumu değişti: her tikte denenmesin
+            later[card_id] = self._clock() + OTO_BEKLE
+
+    def _oto_push(self) -> None:
+        with self._lock:
+            target = self.state.get("gelisim_push")
+        if not target:
+            return
+        from backend.core import pano_git
+
+        try:
+            pano_git.push(Path(target["repo"]), target["dal"])
+        except Exception as error:
+            with self._lock:
+                later = self.__dict__.setdefault("_oto_sonra", {})
+                if not later.get("push"):
+                    self._event(f"Gönderilemedi, yeniden denenecek: {str(error)[:160]}")
+                later["push"] = self._clock() + OTO_PUSH_BEKLE
+                self._save()
+            return
+        with self._lock:
+            self.state["gelisim_push"] = None
+            self.__dict__.setdefault("_oto_sonra", {}).pop("push", None)
+            self._event(f"{target['dal']} gönderildi.")
+            self._save()
 
     def _maybe_gelisim(self, cards: list[dict[str, Any]], agents: dict[str, Any], now: float) -> None:
         """Kuyruk boşken Chiron'un kendi deposuna bir geliştirme kartı açar (frenler sınıf belgesinde)."""
@@ -345,11 +498,14 @@ class Dongu:
         if self.state["gelisim_gun"] != today:
             self.state.update(gelisim_gun=today, gelisim_sayi=0)
         mine = [c for c in cards if c["title"].startswith(GELISIM_PREFIX)]
-        waiting = [c for c in mine if c["status"] in ("birlestir", "onay", "hata")]
+        waiting = [c for c in mine if c["status"] in ("birlestir", "onay")]
+        blocked = [c for c in waiting if c.get("oto_engel")]
         why = None
-        if len(waiting) >= GELISIM_BEKLEYEN:
-            why = f"Onayını bekleyen {len(waiting)} geliştirme var; birleştirince devam ediyorum."
-        elif any(c["status"] not in ("bitti", "iptal", "birlestir", "onay", "hata") for c in mine):
+        if len(blocked) >= GELISIM_BEKLEYEN:
+            why = f"{len(blocked)} geliştirme hassas dosyaya dokunduğu için senin kararını bekliyor."
+        elif len(waiting) >= GELISIM_BEKLEYEN:
+            why = f"{len(waiting)} geliştirme birleşmeyi bekliyor; ana klasör müsait olunca devam ediyorum."
+        elif any(c["status"] not in ("bitti", "iptal", "birlestir", "onay") for c in mine):
             return
         elif self.state["gelisim_sayi"] >= GELISIM_GUNLUK:
             why = f"Bugün {GELISIM_GUNLUK} geliştirme yaptım; yarın devam."
@@ -366,12 +522,15 @@ class Dongu:
         repo = Path(__file__).resolve().parents[2]
         test = pano_git.suggest_test(repo)
         recent = "\n".join(
-            f"- {c['title'][len(GELISIM_PREFIX):].strip()}: {(c.get('summary') or c.get('error') or '').strip()[:140]}"
-            for c in sorted(mine, key=lambda c: c["created"])[-6:]
-        ) or "- (henüz yok)"
+            f"- {(c.get('summary') or c.get('error') or '').strip()[:110]}"
+            for c in sorted(mine, key=lambda c: c["created"])[-3:]
+        )
         title = f"{GELISIM_PREFIX} {datetime.fromtimestamp(now).strftime('%d.%m %H:%M')} kendini geliştirme"
+        detail = GELISIM_TASK.format(
+            test=test or "testler", istekler=acik_istekler(repo), gunluk=gunluk_basliklari(repo), recent=recent
+        )
         try:
-            card = self.board.create(title, GELISIM_TASK.format(test=test or "testler", recent=recent), str(repo), test)
+            card = self.board.create(title, detail, str(repo), test)
         except Exception as error:
             self._event(f"Geliştirme kartı açılamadı: {error}")
             self.state["neden"] = f"Geliştirme kartı açılamadı: {error}"

@@ -1,0 +1,4 @@
+# Üstüne kayıt eklenen notlar: iki dal aynı anda eklerse çakışma değil, ikisi de kalsın.
+# Kendini geliştirme kartları bunlar yüzünden birleşemiyordu (K-014, K-015).
+Notes/Gelisim-Gunlugu.md merge=union
+Docs/Son-Oturum.md merge=union

@@ -676,7 +676,7 @@ TOOL_DECLARATIONS = [
         "name": "self_improvement",
         "description": (
             "Kendini geliştirme döngüsü: açıkken Chiron kuyruk boşken kendine küçük bir iyileştirme seçer, araştırır, "
-            "ayrı kopyada uygular, test eder, ne yaptığını ve ne öğrendiğini söyler; birleştirme kullanıcı onayıyla. "
+            "ayrı kopyada uygular, test eder, ne yaptığını ve ne öğrendiğini söyler; testler geçerse kendi birleştirip gönderir. "
             "'Kendini geliştir', '7/24 kendini geliştir' → start; 'kendini geliştirmeyi durdur' → stop; "
             "'ne geliştirdin', 'geliştirme ne durumda' → status."
         ),
