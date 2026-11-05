@@ -22,7 +22,8 @@ kuyruğun geçmişinden düşmüşse (KEEP_JOBS) kart görevi baştan verilir.
 Proje kartı (adım 3, 2026-10-26): kartta `repo` varsa iş o deponun ayrı bir worktree'sinde
 yapılır (bkz. `pano_git.py`). Claude bitirince kart `dogrulaniyor`a geçer: Chiron değişikliği
 commit'ler, test komutunu KENDİSİ koşar. Test geçerse `birlestir` (Yunus onaylar), kalırsa
-`hata` (Yeniden dene aynı oturumu test çıktısıyla sürdürür). Otomatik birleştirme yok.
+`hata` (Yeniden dene aynı oturumu test çıktısıyla sürdürür). Otomatik birleştirme yalnız `Gelişim:` kartlarında
+(2026-11-06, bkz. `auto_merge`); onların da hassas dosyaya dokunanı Yunus'u bekler.
 
     calisiyor ──bitti──> dogrulaniyor ──test geçti──> birlestir ──Birleştir──> bitti
                                      └──test kaldı──> hata          └──Reddet──> iptal
@@ -70,6 +71,37 @@ MAX_CARDS = 200
 MAX_HISTORY = 20
 MAX_TEST_CMD = 500
 
+GELISIM_PREFIX = "Gelişim:"
+# Kendini geliştirme kartı bunlara dokunursa kendi kendini birleştiremez: kendi frenini, bekçisini, onay yolunu,
+# anahtarını ya da bağımlılığını sessizce değiştiremesin. Görev metnindeki yasak bununla mekanik olarak korunur.
+AUTO_FORBIDDEN = re.compile(
+    r"^(backend/core/(bekci|dongu|pano|pano_git|onay|oturum_kontrol|claude_jobs|canli_yukleme)\.py"
+    r"|backend/api/(pano|onay)\.py"
+    r"|config/|\.claude/|\.github/|\.git|requirements|package(-lock)?\.json$|frontend/package(-lock)?\.json$)",
+    re.I,
+)
+
+
+class PanoBlocked(Exception):
+    """Birleştirme şimdilik yapılamadı, hiçbir şey değişmedi; sonra yeniden denenir."""
+
+
+def auto_block_reason(test: dict[str, Any], hits: list[dict[str, Any]], changes: list[tuple[str, str]]) -> str:
+    """Kart kendi kendine birleşemezse nedeni; birleşebilirse boş metin."""
+    if not test.get("ok"):
+        return "Geçen test sonucu yok."
+    risky = sorted({str(h.get("ad") or h.get("kural")) for h in hits if h.get("seviye") == "yuksek"})
+    if risky:
+        return f"Bekçi uyardı: {', '.join(risky)}."
+    forbidden = [path for _, path in changes if AUTO_FORBIDDEN.match(path.replace("\\", "/"))]
+    if forbidden:
+        return f"Hassas dosyaya dokunuyor: {', '.join(forbidden[:4])}."
+    deleted = [path for status, path in changes if status == "D" and path.replace("\\", "/").startswith("tests/")]
+    if deleted:
+        return f"Test dosyası silmiş: {', '.join(deleted[:4])}."
+    return ""
+
+
 RESUME_PAUSED = "Durdurulmuştun. Kaldığın yerden devam et ve işi bitir."
 RESUME_FAILED = "Önceki deneme şu hatayla bitti: {error}. Sebebini bul, kaldığın yerden düzelterek devam et."
 APPROVED = "Onaylandı: {approval}. Bu adımı yap ve işi bitir."
@@ -77,7 +109,7 @@ REJECTED = "Onaylanmadı: {approval}. Bu adımı YAPMA; o ana kadar yapılanı �
 WORKTREE_NOTE = """\
 Çalışma klasörün bu kartın git worktree'si: {worktree} (dal {branch}; ana klasör {repo}).
 - Yalnızca bu klasörde çalış, ana klasöre dokunma.
-- git commit, push ya da merge YAPMA: değişikliği Chiron commit'leyip test edecek, birleştirmeyi Yunus onaylayacak.
+- git commit, push ya da merge YAPMA: değişikliği Chiron commit'leyip test edecek, birleştirme ondan sonra.
 - Test komutu: {test}. Bitirmeden önce kendin de çalıştır."""
 LEADER_NOTE = """\
 Sen Chiron'sun: Yunus'un ajan ekibinin lideri. Bu oturum SALT OKUNUR; hiçbir dosyayı değiştirme,
@@ -479,7 +511,70 @@ class Pano:
             self._commit()
             return self._public(card)
 
-    def merge(self, card_id: str, approved: bool) -> dict[str, Any]:
+    def auto_merge(self, card_id: str) -> dict[str, Any]:
+        """Kendini geliştirme kartını sormadan birleştirir (2026-11-06). Kilit dışında test koşar; döngünün işçisinden.
+
+        Sıra: engel denetimi → ana dalı kopyaya al → ilerlediyse testi birleşecek halin üstünde yeniden koş →
+        birleştir. Dönen `durum`: birlesti | bekliyor (sonra yeniden) | engel (Yunus'a kaldı) | cakisma | test | yok."""
+        with self._lock:
+            card = self._require(card_id)
+            if card["status"] != "birlestir" or not card.get("worktree"):
+                return {"durum": "yok"}
+            if card.get("oto_engel"):
+                return {"durum": "engel", "neden": card["oto_engel"]}
+            worktree, repo, base = Path(card["worktree"]), Path(card["repo"]), card["base_branch"]
+            test_cmd, test, hits = card["test_cmd"], dict(card.get("test") or {}), list(card.get("bekci") or [])
+        try:
+            changes = pano_git.card_changes(worktree, base)
+            reason = auto_block_reason(test, hits, changes)
+            if reason:
+                self._auto_note(card_id, oto_engel=reason)
+                return {"durum": "engel", "neden": reason}
+            moved = pano_git.integrate_base(worktree, base)
+            result = None
+            if moved:
+                result = pano_git.run_test(worktree, test_cmd)
+                if result.ok and any(p.replace("\\", "/").startswith("frontend/") for _, p in changes):
+                    result = pano_git.typecheck_frontend(worktree, repo) or result
+                pano_git.reset_after_test(worktree)
+        except pano_git.MergeConflict as error:
+            self._auto_note(
+                card_id,
+                status="hata",
+                error=f"{error} Bu sefer worktree'de `git merge {base}` çalıştırıp çakışmaları çöz "
+                "(bu birleştirmeye izin var), sonra testleri koş.",
+            )
+            return {"durum": "cakisma", "neden": str(error)}
+        except GitError as error:
+            return {"durum": "bekliyor", "neden": str(error)}
+        if result:
+            record = {"ok": result.ok, "code": result.code, "tail": result.tail, "cmd": result.cmd, "at": _now()}
+            if not result.ok:
+                self._auto_note(card_id, status="hata", test=record, error=f"Test kaldı ({result.cmd}):\n{result.tail}")
+                return {"durum": "test", "neden": "Ana dalla birleşince test kaldı."}
+            self._auto_note(card_id, test=record)
+        try:
+            data = self.merge(card_id, True, keep_dirty=True)
+        except PanoBlocked as error:
+            return {"durum": "bekliyor", "neden": str(error)}
+        return {"durum": "birlesti", "sha": data.get("merged"), "repo": str(repo), "dal": base}
+
+    def _auto_note(self, card_id: str, **values: Any) -> None:
+        with self._lock:
+            card = self._find(card_id)
+            if card:
+                card.update(values, updated=_now())
+                self._save()
+
+    def give_up(self, card_id: str) -> None:
+        """Kendini geliştirme kartından vazgeçer: döngü bir kartta kilitlenmesin. Kopya silinir, iş dalda kalır."""
+        with self._lock:
+            card = self._require(card_id)
+            self._drop_worktree(card, force=True)
+            card.update(status="iptal", job_id=None, updated=_now())
+            self._commit()
+
+    def merge(self, card_id: str, approved: bool, *, keep_dirty: bool = False) -> dict[str, Any]:
         """Test geçmiş kartı ana dala birleştir ya da reddet (çalışma kopyası silinir, dal kalır)."""
         with self._lock:
             card = self._require(card_id)
@@ -492,7 +587,11 @@ class Pano:
                 self._commit()
                 return self._public(card)
             try:
-                sha = pano_git.merge(repo, card["branch"], card["base_branch"], self._commit_message(card, merge=True))
+                sha = pano_git.merge(
+                    repo, card["branch"], card["base_branch"], self._commit_message(card, merge=True), keep_dirty=keep_dirty
+                )
+            except pano_git.MergeBlocked as error:
+                raise PanoBlocked(str(error)) from error
             except GitError as error:
                 if str(error).startswith("Birleştirmede çakışma"):
                     # Claude çözsün: "Yeniden dene" aynı oturumu bu notla sürdürür.
@@ -563,6 +662,7 @@ class Pano:
                 if not card or card["status"] != "dogrulaniyor":
                     return
                 worktree, base_sha, test_cmd = Path(card["worktree"]), card["base_sha"], card["test_cmd"]
+                repo = Path(card["repo"])
                 message = self._commit_message(card)
             try:
                 pano_git.commit_all(worktree, message)
@@ -571,6 +671,11 @@ class Pano:
                 # Bekçi'nin ikinci katmanı: hook'u olmayan Codex/Gemini'yi de görür.
                 guard = bekci.scan_diff(pano_git.diff_text(worktree, base_sha)) if changed else []
                 result = pano_git.run_test(worktree, test_cmd) if changed and test_cmd else None
+                # Arayüz değiştiyse tip denetimi de: testler frontend'i görmüyor.
+                if changed and (not result or result.ok) and "frontend/" in pano_git.git(
+                    ["diff", "--name-only", f"{base_sha}..HEAD"], worktree
+                ):
+                    result = pano_git.typecheck_frontend(worktree, repo) or result
                 if result:
                     pano_git.reset_after_test(worktree)
                 failure = None
@@ -648,6 +753,11 @@ class Pano:
             )
         return text
 
+    @staticmethod
+    def _job_origin(card: dict[str, Any]) -> str:
+        """Kendini geliştirme kartı hafif oturumda koşar (bkz. claude_jobs.GELISIM_ORIGIN)."""
+        return claude_jobs.GELISIM_ORIGIN if card["title"].startswith(GELISIM_PREFIX) else "pano"
+
     def _submit(self, card: dict[str, Any], note: str | None, kind: str) -> None:
         if card.get("agent", "claude") == "claude":
             self._guard_claude()
@@ -655,7 +765,7 @@ class Pano:
         if note and card["session_job"]:
             try:
                 job = self.jobs.submit(
-                    note, resume_of=card["session_job"], origin="pano", engine=card.get("agent", "claude")
+                    note, resume_of=card["session_job"], origin=self._job_origin(card), engine=card.get("agent", "claude")
                 )
             except ValueError as error:
                 # Oturum geçmişten düşmüş olabilir; kuyruk doluysa ise baştan vermek de olmaz.
@@ -669,7 +779,7 @@ class Pano:
             try:
                 # Gemini kopyasız: deponun kendisinde, salt okunur.
                 cwd = card.get("worktree") or (card.get("repo") if card.get("agent") == "gemini" else None)
-                job = self.jobs.submit(task, origin="pano", cwd=cwd, engine=card.get("agent", "claude"))
+                job = self.jobs.submit(task, origin=self._job_origin(card), cwd=cwd, engine=card.get("agent", "claude"))
             except ValueError as error:
                 raise PanoError(str(error)) from error
         card.update(

@@ -701,7 +701,7 @@ class ChironLive:
         state = (data.get("data") or {}).get("dongu") or {}
         if action == "start":
             return ok("Kendini geliştirme açık. Kuyruk boşken iki saatte bir kendime bir iyileştirme seçip "
-                      "araştırıp uyguluyorum; her birini sana söyleyip birleştirmek için onayını bekleyeceğim.")
+                      "araştırıp uyguluyorum; testler geçerse sormadan birleştirip gönderiyorum, sana ne yaptığımı söylüyorum.")
         if action == "stop":
             return ok("Kendini geliştirmeyi kapattım. Çalışan iş varsa bitirilir.")
         on = "açık" if state.get("gelisim") else "kapalı"
@@ -1198,14 +1198,14 @@ class ChironLive:
             for item in news:
                 text = " ".join(str(item.get("metin") or "").split())
                 if item.get("durum") == "hata":
-                    hint = ("Kendini geliştirme denemen tamamlanamadı. Ne denediğini ve neden olmadığını tek cümlede "
-                            "söyle; Komuta'dan yeniden denenebileceğini ekle.")
+                    hint = ("Kendini geliştirme denemen iki kez olmadı, bıraktın, sıradakine geçiyorsun. Ne denediğini ve "
+                            "neden olmadığını tek cümlede söyle; ondan bir şey isteme.")
                 elif item.get("durum") == "birlestir":
-                    hint = ("Kendini geliştirdin, testler geçti. Ne yaptığını, neden daha iyi olduğunu ve ne öğrendiğini "
-                            "2-3 kısa cümlede birinci ağızdan söyle; sonunda birleştirmek için onayını Komuta'dan "
-                            "vermesini iste.")
+                    hint = ("Yaptığın geliştirme hassas bir dosyaya dokunduğu için kendi kendine birleşmedi; özetteki "
+                            "nedeni tek cümlede söyle ve kararını Komuta'dan vermesini iste.")
                 else:
-                    hint = "Kendini geliştirme işin bitti. Sonucunu tek kısa cümlede söyle."
+                    hint = ("Kendini geliştirdin, testler geçti, birleştirip gönderdin. Ne yaptığını, neden daha iyi "
+                            "olduğunu ve ne öğrendiğini 2-3 kısa cümlede birinci ağızdan söyle; onay isteme.")
                 await self._send_proactive_system_message(
                     f"[SİSTEM] Kendini geliştirme sonucu (kullanıcının sözü değil). {hint} Claude'dan söz etme. "
                     f"Özet: {text[:600]}"

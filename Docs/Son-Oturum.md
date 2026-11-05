@@ -4,6 +4,12 @@ Claude Code oturumları arasındaki köprü. `.claude/hooks/session_start.py` he
 açılışta buradaki **en üstteki** `## Oturum:` bloğunu okuyup context'e enjekte
 ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 
+## Oturum: 2026-11-06 — Kendini geliştirme onaysız ve hafif; Obsidian tokenı ölçüldü
+
+- Kök neden: onay bekleyen 2 kart döngüyü kilitliyordu (30.10–04.11 kart yok), her kart `Son-Oturum`a yazıp çakışıyordu. Şimdi test geçen `Gelişim:` kartı kendi birleşir ve gönderir; hassas dosyaya dokunan Yunus'u bekler. Ayrıntı [[Ajan-Ofisi]] § Onaysız birleştirme. K-014 (zamanlayıcı), K-015 (pencere) elle birleştirildi.
+- Token: kart açılışı 53,5k → 20,7k (hafif oturum), görev 7 not okutmuyor. Etkileşimli oturumlarda metin girdisinin ~%34'ü Obsidian'a bağlıydı (mesaj başına ~5k karakter hook + not okuma); vault `context-mode` session yapıldı, geri almak: `beyin_v3_cli preferences --context-mode turn`.
+- **Sırada:** ilk gerçek kartı izle (K-016 eski kuralla başladı); Gözetim hafif oturumu görmüyor, istenirse ayrı iş. Codex yok, çapraz inceleme yapılmadı.
+
 ## Oturum: 2026-11-05 (gece 3) — Gözetim: oturuma sor + Sonlandır (devam / geri al)
 
 - Detay penceresine "Sor" kutusu (kaydın özetiyle ayrı araçsız sonnet sorgusu, oturumu bölmez) ve Sonlandır: *Sonra devam et* / *Yapılanları geri al* (Claude Code `file-history` v1 yedeğinden, plan önce gösterilir, şimdiki haller `geri-alinan/`'a kopyalanır). `backend/core/oturum_kontrol.py`, 3 uç, hook `ppid` yazıyor. Ayrıntı [[Arayuz]] § Sor + Sonlandır.

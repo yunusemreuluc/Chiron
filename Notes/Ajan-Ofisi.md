@@ -302,16 +302,37 @@ Yunus: "kendi kendini geliştirsin, öğrensin, arayüzü daha kullanışlı ols
 öğrendiklerini bana söylesin". `dongu.state.gelisim` açıkken (Komuta API `POST /api/pano/gelisim`, sesle
 `self_improvement` aracı) kuyruk boş kalınca döngü Chiron'un kendi deposuna `Gelişim:` başlıklı proje kartı açar.
 
-- **Kart ne yapar** (`GELISIM_TASK`): [[Gelisim-Gunlugu]], [[Istek-Listesi]], yol haritası ve tasarım kurallarını
-  okur; TEK küçük iyileştirme seçer (öncelik Yunus'un istekleri ve kullanışlılık), web'de araştırır, ayrı kopyada
-  uygular, test eder, günlüğe "ne yaptım / neden daha iyi / ne öğrendim / kaynak" yazar. Son mesajı Yunus'a okunur.
-- **Yasak alan:** ödeme, anahtar, güvenlik ayarı, bekçi kuralları, kota frenleri, döngünün kendisi.
-- **Frenler:** iki kart arası 2 saat, günde 6, onay/hata bekleyen 2 geliştirme varken yenisi yok (birikip
-  çakışmasın), Claude kotası yalnız `ok`/`info` iken (Yunus'un işine pay). Birleştirme her zaman Yunus'un onayıyla.
-- **Haber:** kart `birlestir`/`hata`/`bitti` olunca `gelisim_haber`e girer; sesli Chiron dakikada bir
+- **Kart ne yapar** (`GELISIM_TASK`): açık istekleri ve eski başlıkları hazır alır (Python çıkarır), TEK küçük
+  iyileştirme seçer (istek → logdaki tekrar eden hata → kullanışlılık), ayrı kopyada uygular, test eder, günlüğe
+  "ne yaptım / neden daha iyi / ne öğrendim / kaynak" yazar. Son mesajı Yunus'a okunur.
+- **Yasak alan:** ödeme, anahtar, güvenlik ayarı, bekçi, kota frenleri, döngünün kendisi, yeni bağımlılık.
+- **Frenler:** iki kart arası 2 saat, günde 6, birleşmeyi bekleyen 2 geliştirme varken yenisi yok, Claude kotası
+  yalnız `ok`/`info` iken, kart başına `--max-budget-usd 4`.
+- **Haber:** birleşince, bırakılınca ya da kararı Yunus'a kalınca `gelisim_haber`e girer; sesli Chiron dakikada bir
   `GET /api/pano/gelisim/haber` ile alır ve söyler (`_watch_gelisim`). Sabah raporunda da görünür.
-- **Sınır:** kopyada node_modules yok — arayüz değişikliğinin tip denetimi birleştirmeden sonraki derlemede
-  (desktop.py açılışta derliyor). Testler: `tests/test_dongu.py` § gelişim.
+
+**Onaysız birleştirme (2026-11-06, Yunus: "benden onay istemesin, yapsın, commit ve push yapsın").** Eski kural
+döngüyü kilitliyordu: onay bekleyen 2 kart yeni kartı durduruyor, 30.10–04.11 arası tek kart açılmamış. Üstelik her
+kart `Son-Oturum.md`'ye yazdığı için birleştirme çakışıyor, çözmek için oturum `--resume` edilip önbellek yeniden
+yazılıyordu (K-015: $8; temiz kartlar $0,5–1,5). Akış (`Pano.auto_merge`, işçi `Dongu._oto_is`):
+
+1. Engel denetimi (`auto_block_reason`): geçen test yoksa, bekçi `yuksek` uyardıysa, `AUTO_FORBIDDEN` yoluna
+   dokunduysa ya da test dosyası sildiyse kart birleşmez, `oto_engel` yazılır, Yunus'a söylenir. Tek insan kapısı bu.
+2. Ana dal kopyaya alınır (`integrate_base`); ilerlediyse test + tip denetimi birleşecek halin üstünde yeniden koşar.
+3. `merge(keep_dirty=True)`: başka oturumun yarım işi varken de dener. Kart dalı ana dalı içerdiği için gerçek çakışma
+   olamaz; git yarım işin dosyasına dokunacak birleştirmeyi kendi reddeder, 5 dk sonra yeniden. `merge --abort` çağrılmaz.
+4. `git push origin <dal>` (asla zorlamaz). Olmazsa `gelisim_push`ta kalır, 10 dk'da bir yeniden.
+
+Takılma yok: `onay` isteyen kart sormadan reddedilir; `hata` bir kez yeniden denenir, olmazsa `give_up` (kopya silinir,
+iş `pano/K-xxx` dalında kalır). Normal proje kartları eski kuralda: Yunus birleştirir.
+
+**Hafif oturum (`claude_jobs.GELISIM_ORIGIN`).** Ölçüm 2026-11-06: açılış bağlamı 53,5k token, kartın işine yaramıyordu.
+`--strict-mcp-config` + `--setting-sources local` → 20,7k; 27 araç, bekçi `--settings`ten gelir (log satırıyla doğrulandı).
+Bedel: proje `CLAUDE.md`'si yüklenmez (gereken kural görev metninde), oturum Gözetim'de görünmez (ofis-olay hook'u kullanıcı
+ayarında), kart panoda görünür.
+
+**Tip denetimi:** arayüze dokunan proje kartında `typecheck_frontend`. Kopyalar `.pano-worktrees/node_modules` bağlantısından
+paket çözer (kopyanın dışında, `worktree remove` değmez). Testler: `tests/test_gelisim_oto.py` (gerçek depo + uzak depo).
 
 ## Komuta ekranı ve sohbet (2026-10-27)
 

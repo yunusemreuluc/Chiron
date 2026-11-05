@@ -81,7 +81,7 @@ class GelisimSwitch(BaseModel):
 
 @router.post("/gelisim")
 async def switch_gelisim(body: GelisimSwitch) -> dict:
-    """Kendini geliştirmeyi aç/kapat (açmak 7/24 döngüyü de açar). Birleştirme yine Yunus'un onayıyla."""
+    """Kendini geliştirmeyi aç/kapat (açmak 7/24 döngüyü de açar). Test geçen kart kendi birleşir, bkz. Pano.auto_merge."""
     state = await asyncio.to_thread(dongu.set_gelisim, body.acik)
     return _ok({"dongu": state}, "Kendini geliştirme açık." if body.acik else "Kendini geliştirme kapandı.")
 

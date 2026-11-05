@@ -54,6 +54,7 @@ export interface PanoCard {
   test?: CardTest | null;
   diff?: string;
   merged?: string | null;
+  oto_engel?: string; // kendini geliştirme kartı kendi birleşemediyse nedeni
   // Lider ajan (adım 4)
   agent?: CardAgent;
   parent?: string | null;
