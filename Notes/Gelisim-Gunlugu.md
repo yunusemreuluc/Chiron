@@ -8,6 +8,22 @@ Chiron'un kendini geliştirme döngüsünün (backend/core/dongu.py § Kendini g
 kartı en üste bir kayıt ekler: ne yaptı, neden daha iyi, ne öğrendi, kaynak. Sonraki kartlar bunu okuyup
 tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 
+## 2026-11-06 — Mikrofon sustuyken oturum iki dakikada bir düşmesin
+- **Ne yaptım:** Hiç ses gitmeyen 20 saniyenin ardından canlı oturuma 40 ms sıfır ses gönderiliyor (`core/live_oturum.py`,
+  mikrofondan okumuyor). Yine de hareketsizlik ya da süre sınırıyla kapanırsa ERROR yazmıyorum, deneme sayacına ve
+  "Chiron hazır" satırına dokunmadan sessizce yeniden bağlanıyorum. Kota, hizmet kesintisi gibi gerçek arızalar eskisi gibi.
+- **Neden daha iyi:** 2026-11-06'nın ilk iki saatinde 118 hata kaydı vardı (iki dakikada bir çift); her döngü ~60 satır
+  iz, mikrofonu yeniden açma ve **canlı oturumun belleğinin sıfırlanması** demekti, yeni oturuma yalnız diskteki son
+  konuşma notu geçiyor. Sessizlik tutarsa mikrofonu birkaç dakika kapatınca oturum aynı kalır. Süre sınırı kapanışı da
+  artık hata gibi görünmüyor.
+- **Ne öğrendim:** Sessizliğin sunucunun sayacını sıfırladığı **doğrulanmadı**: belge de, gerçek oturum denemesi de yok
+  (kartta anahtar kullanmadım). Doğrulama: mikrofon kapalıyken günlükte "olağan sebeple kapattı" satırı iki dakikada bir
+  sürüyorsa sessizlik işe yaramıyor, ama o durumda da gürültü kesilmiş olur. Araç çağrısı sürerken giriş göndermek bazı
+  modellerde 1008 ürettiği bildirildiği için o sırada sessizlik de göndermiyorum. Sebep olarak "mikrofon kapalı" da
+  çıkarım: 120 sn'lik tam aralıktan ve tek gönderim kapısından; günlükte mikrofon durumu yazmıyor.
+- **Kaynak:** `logs/chiron.log` · https://discuss.ai.google.dev/t/gemini-3-8-live-1011-1008-session-drops-runaway-audio-and-output-transcription-with-unspoken-text/190881 ·
+  https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/live-api/troubleshooting?hl=it
+
 ## 2026-11-06 — "Müziği durdur", "sonraki şarkı", "ne çalıyor?"
 - **Ne yaptım:** PC'deki sesli Chiron'a `control_media` aracı ([[Medya-Kontrol]], `actions/medya_kontrol.py`): açık
   medyayı durdurur, devam ettirir, sonraki/önceki parçaya geçer, ne çaldığını söyler; istenirse tek uygulamaya
