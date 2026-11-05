@@ -14,6 +14,7 @@ ve import ikinci bir iş kuyruğu kurar — o da diskteki süren işleri "yarıd
 from __future__ import annotations
 
 import threading
+import time
 
 import requests
 
@@ -32,6 +33,27 @@ FINISHED = ("done", "needs_approval", "failed", "timeout", "interrupted", "cance
 # Yalnız bu süreçte, bellekte: Chiron yeniden başlarsa söylenmemiş sonuç Komuta'da kalır.
 _pending: set[str] = set()
 _lock = threading.Lock()
+
+# Sohbet kutusuna son eklenen görseller (main._on_text_command): bu süre içinde verilen PC işine eklenir.
+IMAGE_TTL = 10 * 60
+_images: list[str] = []
+_images_at = 0.0
+
+
+def remember_images(names: list[str]) -> None:
+    global _images, _images_at
+    with _lock:
+        _images = list(names)[:4]
+        _images_at = time.time()
+
+
+def _take_images() -> list[str]:
+    """Son görselleri bir kez verir (ikinci iş aynı görseli yeniden taşımaz)."""
+    global _images
+    with _lock:
+        names = _images if time.time() - _images_at <= IMAGE_TTL else []
+        _images = []
+    return names
 
 
 def finished_announcements() -> list[str]:
@@ -89,7 +111,11 @@ def delegate_to_pc(task: str = "", new_topic: bool = False) -> dict:
     if len(task) > MAX_TASK_CHARS:
         return fail(f"İş en fazla {MAX_TASK_CHARS} karakter olabilir.")
     try:
-        response = requests.post(KOMUTA_URL, json={"text": task, "new_topic": bool(new_topic)}, timeout=15)
+        body: dict = {"text": task, "new_topic": bool(new_topic)}
+        images = _take_images()
+        if images:
+            body["images"] = images
+        response = requests.post(KOMUTA_URL, json=body, timeout=15)
         data = response.json()
     except Exception as error:  # backend kapalı, port meşgul…
         return fail(f"İş verilemedi: Chiron'un arka ucuna ulaşılamadı ({error.__class__.__name__}).")

@@ -1,17 +1,7 @@
 # Son Oturum
 
 Claude Code oturumları arasındaki köprü. `.claude/hooks/session_start.py` her
-açılışta buradaki **en üstteki** `## Oturum: 2026-10-30 (gece) — Kendini geliştirme K-009: terminalde Claude sekmesi
-
-**Ne yapıldı (commit'siz, pano/K-009 worktree):**
-- İ-010 için `open_terminal` aracı: `wt -w 0 new-tab -d <proje> cmd /k claude [--continue]`. Dört yer tamam
-  (araç, `tool_defs.py`, `core/prompt.txt`, [[Terminal]]); `tests/test_terminal.py`, paket 309/309.
-- Gerçek wt ile denenmedi (gece Yunus'un ekranına sekme açmamak için) — komut biçimi belgeden.
-
-**Nerede kalındı / yarın:** Birleşince sesle "Dilcep'te Claude aç" denenmeli. Telefondan açmak için
-`desktop_control` + mobil uygulamaya eylem gerekir (İ-010 `bakıldı`).
-
-## Oturum:` bloğunu okuyup context'e enjekte
+açılışta buradaki **en üstteki** `## Oturum:` bloğunu okuyup context'e enjekte
 ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 
 Oturum biterken: yeni bloğu en üste yaz, eskisini `## Önceki oturumlar` altına
@@ -20,10 +10,37 @@ indir. Üç madde yeter; roman değil, köprü.
 ## Oturum: 2026-11-04 (öğle) — Kendini geliştirme K-014: sesli zamanlayıcı
 
 - `set_timer` aracı: "10 dakika sonra çayı hatırlat", "saat 15:30'da toplantı", "ne kadar kaldı", iptal; dolunca
-  `_watch_timers` sesle söyletir. Dört yer tamam ([[Zamanlayici]]); `tests/test_zamanlayici.py` 7 test, paket
-  357/358 (`test_onay` hook testi önceden kırık).
+  `_watch_timers` sesle söyletir. Dört yer tamam ([[Zamanlayici]]); `tests/test_zamanlayici.py` 7 test. feature/ajan-ofisi
+  birleştirilince (parlaklık, canlı yükleme vb.) çakışma çözüldü: paket 388 + 1 aralıklı hata
+  (`test_read_screen_text` geçici dosya; tek başına geçiyor).
 - Canlı ses oturumunda denenmedi (worktree). **Yarın:** birleşince "1 dakika sonra hatırlat" ile canlı deneme;
   kalıcılık (yeniden başlatmada kaybolmasın) ve telefondan kurma sıradaki adaylar.
+
+## Oturum: 2026-11-04 (gece 2) — Canlı yükleme
+
+- Kod değişikliği yeniden başlatmadan uygulanıyor: `backend/core/canli_yukleme.py` fonksiyonların `__code__`'unu yamalar, durum korunur; arayüz derlenince pencere kendini yeniler. Ayrıntı [[Canli-Yukleme]].
+- 340/340 test, ayrı inceleyici (code-reviewer) 19 bulgu verdi, yüksek/orta olanlar düzeltildi + testlendi. Onay penceresi küçültüldü (760 px).
+- **Çalışan Chiron'a bir kez yeniden başlatma lazım** (izleyici lifespan'de başlıyor); sonrası canlı. Canlı denenmedi. Codex yok.
+
+## Oturum: 2026-11-04 (gece) — Ana ekranda onay merkezi
+
+- "Senden bekleyenler" ana ekranda (sağ kolon); karta tıklayınca pencere: özet, test, bekçi, dosya listesi + diff, "Ana dala al"/"Reddet". Yeni uç `GET /api/pano/{id}/changes`. Ayrıntı `Notes/Arayuz.md` § Onay merkezi.
+- Pano testleri 44/44, tsc + eslint temiz, `npm run build` tamam. Ekran görüntüsüyle denendi (diff, sahte cevapla); çalışan Chiron yeniden başlatılmadı — `/changes` yeniden başlatınca devreye girer. K-015 birleştirilmedi, karar Yunus'ta.
+- Codex yok, çapraz inceleme yapılmadı.
+
+## Oturum: 2026-11-04 — Komuta sohbetine görsel ekleme
+
+- Komuta'da resim düğmesi + yapıştır + sürükle-bırak; ek `config/sohbet_ekler/`'e yazılıp yolu göreve ekleniyor (Claude `--add-dir`, Gemini `--include-directories`). Ayrıntı `Notes/Arayuz.md`.
+- 318/318 test, `npm run build` tamam. Çalışan Chiron yeniden başlatılmadı (oturum onun içinde koşuyordu) — yeni uçlar yeniden başlatınca devreye girer; canlı denenmedi.
+- Ana ekrandaki Chiron sohbet paneline de görsel eklendi: Gemini Live görseli aynı turda görür, PC'ye iş verirse görsel Komuta işine taşınır. 320/320.
+- Telefondaki Komuta (chiron-mobile) için görsel ekleme yok, istenirse ayrı iş. Codex yok, çapraz inceleme yapılmadı.
+
+## Oturum: 2026-11-04 (sabah 2) — Kendini geliştirme K-013: ekran parlaklığı
+
+- Yeni `set_brightness` aracı (WMI, PowerShell, bağımlılık yok): "parlaklığı kıs", "yüzde kırk yap", "parlaklık kaç".
+  Dört yer tamam ([[Parlaklik]]); `tests/test_brightness.py` 7 test, paket 357/358. `test_onay` kırığı Chiron oturumunda gelen `CHIRON_CLAUDE_JOB`'tan; test düzeltildi (cd5c3d5), 358/358.
+- Gerçek panelde okuma ve %99→%100 yazıp geri okuma doğrulandı. Telefondan PC ses/parlaklık mobil enum'a eylem ister (chiron-mobile).
+- **Yarın:** birleşince sesli canlı deneme ("parlaklığı kıs"); harici monitör (DDC/CI) istenirse ayrı iş.
 
 ## Oturum: 2026-11-04 (sabah) — Kendini geliştirme K-012: uygulama başına ses
 

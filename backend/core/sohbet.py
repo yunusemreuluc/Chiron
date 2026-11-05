@@ -21,6 +21,7 @@ import logging
 import os
 import re
 import secrets
+import shutil
 import threading
 import time
 from pathlib import Path
@@ -33,6 +34,19 @@ logger = logging.getLogger("chiron.sohbet")
 BASE_DIR = Path(__file__).resolve().parents[2]
 STORE_PATH = BASE_DIR / "config" / "sohbet.json"
 PROJECTS_DIR = Path.home() / ".claude" / "projects"
+ATTACH_DIR = BASE_DIR / "config" / "sohbet_ekler"
+
+# Görsel ekleri (2026-11-04): Komuta'ya yapıştırılan/seçilen resim diske yazılır, ajana yolu verilir;
+# Claude `--add-dir`, Gemini `--include-directories` ile o klasörü okur.
+MAX_IMAGES = 4
+MAX_IMAGE_BYTES = 8 * 1024 * 1024
+IMAGE_NOTE_ROOM = 1000  # görev metnine eklenen yol notu için pay
+IMAGE_NAME = re.compile(r"[0-9a-f]{12}\.(png|jpg|gif|webp)")
+IMAGE_ONLY_TEXT = "Ekteki görsele bak."
+# Ana ekrandaki Chiron sohbetine (sesli asistan, Gemini Live) eklenen görseller burada durur; Chiron işi
+# Komuta'ya devrederse (delegate_to_pc → phone_task) aynı görseller o sohbetin klasörüne kopyalanır.
+VOICE_DIR_NAME = "sesli"
+VOICE_KEEP = 40  # sesli klasörde tutulan en fazla görsel (eskiler silinir)
 
 AGENTS = ("claude", "gemini")
 MAX_CHATS = 30
@@ -89,8 +103,10 @@ class Sohbet:
         projects_dir: Path = PROJECTS_DIR,
         session_active: Callable[[str], bool] | None = None,
         clock: Callable[[], float] = _now,
+        attach_dir: Path | None = None,
     ) -> None:
         self.store_path = store_path
+        self.attach_dir = attach_dir or (ATTACH_DIR if store_path == STORE_PATH else store_path.parent / "sohbet_ekler")
         self.jobs = jobs or claude_jobs.jobs
         self.projects_dir = projects_dir
         self._session_active = session_active
@@ -222,10 +238,71 @@ class Sohbet:
             self._save()
         return self.get(chat["id"])
 
-    def send(self, chat_id: str, text: str, via: str = "pc") -> dict[str, Any]:
+    # ── Görsel ekleri ────────────────────────────────────────────────────
+    def save_image(self, chat_id: str, data: bytes) -> dict[str, Any]:
+        """Görseli sohbetin ek klasörüne yazar; türü içerikten anlaşılır (uzantıya güvenilmez)."""
+        if not data:
+            raise SohbetError("Görsel boş.")
+        if len(data) > MAX_IMAGE_BYTES:
+            raise SohbetError(f"Görsel en fazla {MAX_IMAGE_BYTES // (1024 * 1024)} MB olabilir.")
+        ext = _image_ext(data)
+        if not ext:
+            raise SohbetError("Yalnız PNG, JPEG, GIF ya da WebP görsel eklenebilir.")
+        with self._lock:
+            self._find(chat_id)
+        folder = self.attach_dir / chat_id
+        folder.mkdir(parents=True, exist_ok=True)
+        name = f"{secrets.token_hex(6)}.{ext}"
+        (folder / name).write_bytes(data)
+        return {"name": name, "size": len(data)}
+
+    def save_voice_image(self, data: bytes) -> tuple[Path, str]:
+        """Sesli sohbete eklenen görseli yazar. Döner: (yol, mime)."""
+        if not data:
+            raise SohbetError("Görsel boş.")
+        if len(data) > MAX_IMAGE_BYTES:
+            raise SohbetError(f"Görsel en fazla {MAX_IMAGE_BYTES // (1024 * 1024)} MB olabilir.")
+        ext = _image_ext(data)
+        if not ext:
+            raise SohbetError("Yalnız PNG, JPEG, GIF ya da WebP görsel eklenebilir.")
+        folder = self.attach_dir / VOICE_DIR_NAME
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / f"{secrets.token_hex(6)}.{ext}"
+        path.write_bytes(data)
+        try:
+            old = sorted(folder.iterdir(), key=lambda p: p.stat().st_mtime, reverse=True)[VOICE_KEEP:]
+            for stale in old:
+                stale.unlink(missing_ok=True)
+        except OSError:
+            pass
+        return path, _MIME[ext]
+
+    def voice_image_path(self, name: str) -> Path:
+        if not IMAGE_NAME.fullmatch(name or ""):
+            raise SohbetError("Geçersiz görsel.")
+        path = self.attach_dir / VOICE_DIR_NAME / name
+        if not path.is_file():
+            raise SohbetError("Görsel bulunamadı.")
+        return path
+
+    def image_path(self, chat_id: str, name: str) -> Path:
+        if not re.fullmatch(r"[0-9a-f]{8}", chat_id or "") or not IMAGE_NAME.fullmatch(name or ""):
+            raise SohbetError("Geçersiz görsel.")
+        path = self.attach_dir / chat_id / name
+        if not path.is_file():
+            raise SohbetError("Görsel bulunamadı.")
+        return path
+
+    def send(self, chat_id: str, text: str, via: str = "pc", images: list[str] | None = None) -> dict[str, Any]:
         """`via="telefon"`: mesaj telefondan (Komuta ekranı ya da sesli Chiron) — sonuç telefona
-        bildirilir, ajan cevabını sesli okunacak gibi yazar."""
+        bildirilir, ajan cevabını sesli okunacak gibi yazar. `images`: `save_image` ile yüklenmiş ek adları."""
         text = (text or "").strip()
+        images = list(dict.fromkeys(images or []))
+        if len(images) > MAX_IMAGES:
+            raise SohbetError(f"Bir mesaja en fazla {MAX_IMAGES} görsel eklenir.")
+        paths = [self.image_path(chat_id, name) for name in images]
+        if not text and paths:
+            text = IMAGE_ONLY_TEXT
         if not text:
             raise SohbetError("Mesaj boş.")
         if len(text) > MAX_TEXT:
@@ -236,6 +313,12 @@ class Sohbet:
             if any(m.get("status") in LIVE for m in chat["messages"]):
                 raise SohbetError("Ajan hâlâ önceki mesajında; bitince yaz ya da durdur.")
             task = text if chat["agent"] == "claude" else self._gemini_task(chat, text)
+            extra: dict[str, Any] = {}
+            if paths:
+                task += "\n\n[Ekli görseller — her birini dosya okuma aracınla aç ve bak]\n" + "\n".join(
+                    f"- {p}" for p in paths
+                )
+                extra = {"add_dirs": [str(paths[0].parent)], "max_chars": MAX_TEXT + IMAGE_NOTE_ROOM}
             try:
                 job = self.jobs.submit(
                     task,
@@ -243,13 +326,17 @@ class Sohbet:
                     cwd=chat.get("cwd"),
                     engine=chat["agent"],
                     session_id=chat.get("session_id") if chat["agent"] == "claude" else None,
+                    **extra,
                 )
             except ValueError as error:
                 raise SohbetError(str(error)) from error
             now = self.clock()
             if chat["title"] == "Yeni sohbet":
                 chat["title"] = " ".join(text.split())[:MAX_TITLE]
-            chat["messages"].append({"role": "ben", "text": text, "at": now, "via": via})
+            mine: dict[str, Any] = {"role": "ben", "text": text, "at": now, "via": via}
+            if images:
+                mine["images"] = images
+            chat["messages"].append(mine)
             chat["messages"].append(
                 {"role": "ajan", "text": "", "at": now, "job_id": job.id, "status": "sirada", "steps": [], "last_step": ""}
             )
@@ -269,7 +356,9 @@ class Sohbet:
         return self.send(chat_id, APPROVE_TEXT if approved else REJECT_TEXT, via)
 
     # ── Telefondan sesli iş (2026-10-29) ────────────────────────────────
-    def phone_task(self, text: str, new_topic: bool = False, via: str = "telefon") -> dict[str, Any]:
+    def phone_task(
+        self, text: str, new_topic: bool = False, via: str = "telefon", voice_images: list[str] | None = None
+    ) -> dict[str, Any]:
         """Sesli Chiron'un verdiği iş (telefondaki ya da PC'deki): Komuta'daki son Claude sohbetine yazılır,
         yani konuşulan işin devamı olur. `new_topic` ya da hiç sohbet yoksa yeni sohbet açılır.
         Son sohbet meşgulse hata — Chiron "önceki iş sürüyor" der, yeni konu diye açtırabilir."""
@@ -285,7 +374,12 @@ class Sohbet:
                     step = live.get("last_step") or "başlıyor"
                     raise SohbetError(f"'{target['title']}' sohbetinde önceki iş hâlâ sürüyor ({step}).")
             chat_id = target["id"] if target else self.create("claude")["id"]
-        return self.send(chat_id, text, via=via)
+        # Sesli sohbetteki görseller: yalnız ad gelir (yol değil), sesli klasörden bu sohbete kopyalanır.
+        names = [
+            self.save_image(chat_id, self.voice_image_path(name).read_bytes())["name"]
+            for name in list(dict.fromkeys(voice_images or []))[:MAX_IMAGES]
+        ]
+        return self.send(chat_id, text, via=via, images=names)
 
     def work_context(self) -> str:
         """Sesli Chiron'un (PC ve telefon) sistem komutuna giren son iş: `phone_task`'ın yazacağı sohbet.
@@ -387,6 +481,7 @@ class Sohbet:
                 raise SohbetError("Ajan çalışırken silinmez; önce durdur.")
             del self._chats[chat_id]
             self._save()
+        self._drop_images(chat_id)
 
     def _trim(self) -> None:
         idle = sorted(
@@ -395,6 +490,11 @@ class Sohbet:
         )
         for chat in idle[: max(0, len(self._chats) - MAX_CHATS)]:
             self._chats.pop(chat["id"], None)
+            self._drop_images(chat["id"])
+
+    def _drop_images(self, chat_id: str) -> None:
+        if re.fullmatch(r"[0-9a-f]{8}", chat_id or ""):
+            shutil.rmtree(self.attach_dir / chat_id, ignore_errors=True)
 
     @staticmethod
     def _gemini_task(chat: dict[str, Any], text: str) -> str:
@@ -522,6 +622,21 @@ def _read_session(path: Path) -> dict[str, Any] | None:
         if not info["last_prompt"] and rec.get("type") == "last-prompt" and rec.get("lastPrompt"):
             info["last_prompt"] = " ".join(str(rec["lastPrompt"]).split())
     return info
+
+
+_MIME = {"png": "image/png", "jpg": "image/jpeg", "gif": "image/gif", "webp": "image/webp"}
+
+
+def _image_ext(data: bytes) -> str:
+    if data.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if data.startswith(b"\xff\xd8\xff"):
+        return "jpg"
+    if data[:6] in (b"GIF87a", b"GIF89a"):
+        return "gif"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "webp"
+    return ""
 
 
 def _json(raw: bytes) -> dict[str, Any] | None:

@@ -2,7 +2,8 @@
 // Taban adres, zarf tipi ve hata yutma: services/apiClient.ts.
 import { fetchData, post } from './apiClient';
 
-export const sendTextCommand = (text: string) => post('/api/voice/text', { text });
+/** `images`: data URL'ler; Gemini Live'a aynı turda gider (backend/api/voice.py). */
+export const sendTextCommand = (text: string, images: string[] = []) => post('/api/voice/text', { text, images });
 export const setMuted = (value: boolean) => post('/api/voice/mute', { value });
 export const setPaused = (value: boolean) => post('/api/voice/pause', { value });
 export const resetSession = () => post('/api/voice/reset');

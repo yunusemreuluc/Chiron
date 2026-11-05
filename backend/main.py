@@ -19,8 +19,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
-from backend.api import automation, memory, office, onay, pano, remote, research, settings, sohbet, system, vision, voice
+from backend.api import automation, canli, memory, office, onay, pano, remote, research, settings, sohbet, system, vision, voice
 from backend.core import claude_jobs
+from backend.core.canli_yukleme import reloader as live_reloader
 from backend.core.dongu import dongu
 from backend.core.config import CORS_ORIGINS
 from backend.core.ofis import OfficeWatcher, office as office_state
@@ -57,7 +58,13 @@ async def lifespan(_: FastAPI):
     watcher.start()
     # 7/24 döngü (Ajan İstasyonu adım 8): thread hep ayakta, kapalıyken tik hiçbir şey yapmaz.
     dongu.start()
+    # Canlı yükleme (2026-11-04): kod değişikliği yeniden başlatmadan çalışan sürece yamalanır,
+    # arayüz yeniden derlenince pencere kendini yeniler (bkz. backend/core/canli_yukleme.py).
+    loop = asyncio.get_running_loop()
+    live_reloader.on_event = lambda event, data: manager.broadcast_threadsafe(WSEvent(event=event, data=data))
+    live_reloader.start(app, schedule=loop.call_soon_threadsafe)
     yield
+    live_reloader.stop()
     dongu.stop()
     watcher.stop()
     # Telefondan verilen Claude işi Chiron'la birlikte kapanır (süreç ağacıyla).
@@ -78,7 +85,7 @@ app.add_middleware(
 # katman en dışta çalışır. Bkz. backend/core/remote_auth.py.
 app.add_middleware(RemoteAccessMiddleware)
 
-for router_module in (voice, system, settings, vision, memory, automation, remote, office, pano, sohbet, research, onay):
+for router_module in (voice, system, settings, vision, memory, automation, remote, office, pano, sohbet, research, onay, canli):
     app.include_router(router_module.router)
 
 app.include_router(websocket_router)

@@ -69,3 +69,9 @@ Durum değerleri: `yeni` → `bakıldı` → `yapıldı` / `yapılmayacak`. Duru
   - Ayrıntı: Kullanıcı 'Del uygulamasında hesap kısmını daha detaylı yap' talebini iletti. delegate_to_claude aracıyla başlatma ve onaylama aşamaları teknik bir hata (uyumsuzluk) nedeniyle tekrar tekrar başarısız oldu. Kullanıcı bu özelliği kullanmak istediği için istek listesine eklenmesi talep edildi. İdeal durumda onay mekanizmasının sorunsuz çalışması beklenir.
 <!-- ids: 0a1f6c61-38f8-4560-819b-1fa674f3c16f -->
 
+### İ-012 · SIM kart şifresi kaldırma ayarı bulma
+**Durum:** yeni · **Sayı:** 1 · **Bildirildi:** hayır
+- 2026-11-03 17:43 · "telefonda sim kart şifresini kaldırma ayarını bulmak" · denenen: uygun araç yok · Xiaomi 22101316G, 0.1.0
+  - Ayrıntı: Kullanıcı, telefon ayarlarında SIM kart şifresini kaldırmaya yönelik ayarı bulmamı istedi ancak mevcut araçlar bu işlemi doğrudan desteklemiyor. İdeal olarak, ilgili ayar menüsüne yönlendirme veya doğrudan işlemi gerçekleştirme yeteneği olmalı.
+<!-- ids: 3e63653a-6cbf-46e1-9a31-6458df84fe13 -->
+

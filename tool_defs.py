@@ -806,6 +806,32 @@ TOOL_DECLARATIONS = [
         }
     },
     {
+        "name": "set_brightness",
+        "description": (
+            "Ekran parlakligini okur ya da ayarlar (dizustu paneli). "
+            "'Parlakligi kis', 'ekrani karart', 'parlakligi ac', 'parlakligi yuzde kirk yap', 'parlaklik kac' "
+            "dediginde kullan. Donen yuzde panelden okunan gercek degerdir; kullaniciya onu soyle."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "action": {
+                    "type": "STRING",
+                    "description": "get | set | up | down."
+                },
+                "level": {
+                    "type": "NUMBER",
+                    "description": "action=set icin hedef yuzde (5-100; ekran kararmasin diye 5'in alti 5 olur)."
+                },
+                "step": {
+                    "type": "NUMBER",
+                    "description": "up/down icin kac puan (varsayilan 10; 'biraz' 5, 'cok' 20)."
+                }
+            },
+            "required": ["action"]
+        }
+    },
+    {
         "name": "set_timer",
         "description": (
             "Sesli zamanlayici ve kisa hatirlatici (en fazla 24 saat ileri). Dolunca Chiron kendisi sesle haber verir. "

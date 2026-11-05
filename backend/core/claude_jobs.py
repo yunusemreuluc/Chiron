@@ -188,6 +188,7 @@ class Job:
     cwd: str | None = None  # Claude'un açıldığı klasör; boşsa WORK_DIR (pano kartının worktree'si)
     engine: str = "claude"  # claude | codex | gemini
     mode: str = "auto"  # Claude izin modu: auto | plan (salt okunur, lider ajan)
+    add_dirs: list[str] = field(default_factory=list)  # okunabilecek ek klasörler (sohbete eklenen görseller)
     bekci: list[dict[str, Any]] = field(default_factory=list)  # bekçinin uyarıları (yalnız Claude işleri)
     trail: list[str] = field(default_factory=list)  # araç adımları, sırayla (en fazla MAX_TRAIL)
 
@@ -459,14 +460,19 @@ class ClaudeJobs:
         engine: str = "claude",
         mode: str = "auto",
         session_id: str | None = None,
+        add_dirs: list[str] | None = None,
+        max_chars: int = MAX_TASK_CHARS,
     ) -> Job:
         """`resume_of`: bir önceki işin oturumunu sürdürür. `session_id`: oturumu kimliğiyle sürdürür
         (sohbet ve terminalden devralınan oturum; `cwd` oturumun açıldığı klasör olmalı)."""
         task = task.strip()
         if not task:
             raise ValueError("Görev boş.")
-        if len(task) > MAX_TASK_CHARS:
-            raise ValueError(f"Görev en fazla {MAX_TASK_CHARS} karakter olabilir.")
+        if len(task) > max_chars:
+            raise ValueError(f"Görev en fazla {max_chars} karakter olabilir.")
+        add_dirs = [d for d in (add_dirs or []) if Path(d).is_dir()]
+        if engine == "codex" and add_dirs:
+            raise ValueError("Bu ajana görsel verilemiyor.")
         if origin not in ORIGINS:
             raise ValueError("Bilinmeyen iş kaynağı.")
         if cwd is not None and not Path(cwd).is_dir():
@@ -493,6 +499,7 @@ class ClaudeJobs:
             job = Job(
                 id=secrets.token_hex(4), task=task, resume_of=resume_of, origin=origin,
                 notified=origin not in PHONE_ORIGINS, cwd=cwd, engine=engine, mode=mode,
+                add_dirs=add_dirs,
             )
             if parent:
                 job.session_id = parent.session_id
@@ -665,6 +672,8 @@ class ClaudeJobs:
             # Başlarken oturum kimliği yalnız sürdürülen işte dolu (yenisinde olaylardan gelir).
             if job.session_id:
                 args += ["--resume", job.session_id]
+            for extra in job.add_dirs:
+                args += ["--add-dir", extra]
         else:
             node = shutil.which("node")
             script = CODEX_JS if job.engine == "codex" else GEMINI_JS
@@ -682,6 +691,8 @@ class ClaudeJobs:
                     node, str(script), "--skip-trust", "-m", GEMINI_MODEL,
                     "--approval-mode", "plan", "-o", "text", "-p", "Görev standart girişte; onu yap.",
                 ]
+                for extra in job.add_dirs:
+                    args += ["--include-directories", extra]
         env = dict(os.environ)
         # Chiron bir Claude oturumundan başlatıldıysa iç içe oturum işareti taşınmasın.
         env.pop("CLAUDECODE", None)

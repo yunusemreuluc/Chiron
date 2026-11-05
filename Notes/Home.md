@@ -16,6 +16,7 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 - [[Tasarim-Kurallari]] — arayüz stili, animasyon, renk, bileşen adları (kod yorumlarındaki
   `CLAUDE.md § ...` atıfları buraya bakar)
 - [[Bilinen-Tuzaklar]] — zamana mal olmuş tuzaklar, arayüzde dürüstlük, nasıl doğrulanır
+- [[Canli-Yukleme]] — kod değişikliği yeniden başlatmadan çalışan sürece yamalanır; neyin restart istediği
 - [[Yerel-Model]] — Ollama denendi ve **kaldırıldı**; ölçümler duruyor (num_ctx, Türkçe, VRAM)
 - `CLAUDE.md` — yalın karar kitabı: Obsidian-önce iş akışı, rol, performans hedefi
 - `Docs/Son-Oturum.md` + `Docs/Acik-Konular.md` — oturumlar arası süreklilik;
@@ -41,6 +42,7 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 ## Araçlar (actions/*.py — Gemini'nin çağırdığı fonksiyonlar)
 - [[Open-App]] — uygulama açma
 - [[Terminal]] — Windows Terminal'de proje klasöründe yeni sekme + Claude
+- [[Parlaklik]] — ekran parlaklığı: kıs/aç/yüzde, panelden geri okunur (dizüstü; harici monitör yok)
 - [[Ses-Seviyesi]] — PC ses seviyesi: kıs/aç/yüzde/sessiz, tek uygulama (Spotify), aygıttan geri okunur
 - [[Zamanlayici]] — sesli zamanlayıcı/kısa hatırlatıcı: "10 dakika sonra çayı hatırlat", dolunca sesle haber
 - [[Sys-Info]] — pil/CPU/RAM/disk/saat/ağ

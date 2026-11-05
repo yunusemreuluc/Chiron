@@ -266,6 +266,22 @@ class Pano:
         self._kick_verifications()
         return data
 
+    def changes(self, card_id: str) -> dict[str, Any]:
+        """Birleştirme bekleyen kartın değişiklikleri: dosya listesi + diff (ana ekrandaki onay penceresi).
+
+        Worktree yalnız okunur; git komutları kilit dışında koşar (birleştirme gibi yazma yok)."""
+        with self._lock:
+            card = self._require(card_id)
+            if card["status"] != "birlestir" or not card.get("worktree") or not card.get("base_sha"):
+                raise PanoError("Bu kartın gösterilecek değişikliği yok.")
+            worktree, base_sha = Path(card["worktree"]), card["base_sha"]
+        try:
+            files = pano_git.diff_files(worktree, base_sha)
+            patch, truncated = pano_git.diff_patch(worktree, base_sha)
+        except GitError as error:
+            raise PanoError(str(error)) from error
+        return {"files": files, "patch": patch, "truncated": truncated}
+
     # ── Yazma ────────────────────────────────────────────────────────────
     def create(
         self,

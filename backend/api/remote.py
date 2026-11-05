@@ -555,6 +555,7 @@ async def download_apk(apk_id: str, response: Response):
 class KomutaTask(BaseModel):
     text: str = Field(max_length=claude_jobs.MAX_TASK_CHARS)
     new_topic: bool = False  # öncekiyle ilgisiz iş: yeni sohbet aç
+    images: list[str] = Field(default_factory=list, max_length=4)  # sesli sohbete eklenmiş görsel ADLARI
 
 
 class KomutaAnswer(BaseModel):
@@ -572,7 +573,7 @@ async def komuta_task(body: KomutaTask, request: Request, response: Response) ->
     # Uzak = telefon (sonucu telefona bildirilir); yerel = PC'deki sesli Chiron (actions/pc_isi.py).
     via = "telefon" if is_remote(request) else "pc"
     try:
-        chat = await asyncio.to_thread(sohbet.phone_task, body.text, body.new_topic, via)
+        chat = await asyncio.to_thread(sohbet.phone_task, body.text, body.new_topic, via, body.images)
     except SohbetError as error:
         response.status_code = 409
         return {"success": False, "message": str(error), "data": {}}

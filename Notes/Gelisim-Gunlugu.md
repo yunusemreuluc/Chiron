@@ -24,6 +24,20 @@ tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 - **Kaynak:** https://developer.amazon.com/docs/alexa-voice-service/enable-named-timers-and-reminders.html ·
   https://www.techhive.com/article/578364/how-to-make-the-most-of-your-alexa-timers.html
 
+## 2026-11-04 — "Parlaklığı kıs", "ekranı yüzde kırk yap"
+- **Ne yaptım:** PC'deki sesli Chiron'a `set_brightness` aracı ([[Parlaklik]], `actions/brightness.py`): dizüstü
+  ekranının parlaklığını okur, yüzdeye ayarlar, 10'ar puan (ya da söylenen kadar) kısar/açar. Söylenen yüzde
+  panelden geri okunan değer.
+- **Neden daha iyi:** Sesi sesle ayarlayabiliyordum ama ekranı değil; gece ya da sunumda Yunus klavyeye uzanıyordu.
+  Artık "parlaklığı kıs" tek cümle. Ekran tamamen kararmasın diye yüzde 5'in altına inmiyor ve bunu söylüyor.
+- **Ne öğrendim:** Parlaklık için COM vtable'a gerek yok: WMI `WmiMonitorBrightnessMethods.WmiSetBrightness`
+  yönetici izni istemeden çalışıyor (bu dizüstünde denendi). Panel değeri gecikmeli bildirebiliyor ve her yüzdeyi
+  desteklemeyebiliyor — yazıp birkaç kez geri okumak gerek. Harici monitörde bu sınıf yok, DDC/CI (dxva2) gerekir.
+  Önceki kaydın "telefondan PC'de Spotify'ı kıs" adayı mobil uygulamadaki eylem listesini (enum) değiştirmeyi
+  istiyor — bu depodan yapılamıyor, chiron-mobile işi. `test_onay` hook testi hâlâ kırık (onay/bekçi alanı, dokunmadım).
+- **Kaynak:** https://learn.microsoft.com/en-us/windows/win32/wmicoreprov/wmisetbrightness-method-in-class-wmimonitorbrightnessmethods ·
+  https://devblogs.microsoft.com/scripting/use-powershell-to-report-and-set-monitor-brightness/
+
 ## 2026-11-04 — "Spotify'ı kıs, YouTube kalsın"
 - **Ne yaptım:** `set_volume`'a `app` parametresi ([[Ses-Seviyesi]]): tek bir uygulamanın sesini okur, yüzdeye
   ayarlar, kısar/açar, sessize alır — Windows'un Ses Karıştırıcısı'ndaki uygulama kaydırıcısı. Önceki kaydın

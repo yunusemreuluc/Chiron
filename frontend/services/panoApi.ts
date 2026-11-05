@@ -172,3 +172,13 @@ export const mergeCard = (id: string, approved: boolean) =>
 
 export const deleteCard = (id: string) =>
   request<{ id: string }>(`/api/pano/${encodeURIComponent(id)}`, { method: 'DELETE' });
+
+/** Birleştirme bekleyen kartın değişiklikleri (onay penceresi). `added/removed` ikili dosyada null. */
+export interface CardChanges {
+  files: { path: string; added: number | null; removed: number | null }[];
+  patch: string;
+  truncated: boolean;
+}
+
+export const fetchCardChanges = (id: string) =>
+  request<CardChanges>(`/api/pano/${encodeURIComponent(id)}/changes`);
