@@ -11,21 +11,33 @@ import {
   LuSquareTerminal,
   LuOrbit,
   LuRows3,
+  LuSendHorizontal,
+  LuCircleStop,
+  LuPause,
+  LuRotateCcw,
+  LuLoaderCircle,
 } from 'react-icons/lu';
 import {
+  askSession,
   decide,
   endRunaway,
+  endSession,
+  fetchRevertPlan,
   fetchGozetim,
   fetchLastReply,
   hueMap,
+  type AskTurn,
   type Decision,
+  type EndResult,
   type GozetimSession,
+  type RevertPlan,
   type GozetimView,
   type MarkCat,
   type Runaway,
 } from '@/services/gozetimApi';
 import { fetchWorkerDetail } from '@/services/officeApi';
 import { takeOver } from '@/services/sohbetApi';
+import { Rich } from '../Rich';
 import { useNavigationStore } from '@/stores/navigationStore';
 import { STATUS_LABEL, useOfficeStore, type WorkerDetail } from '@/stores/officeStore';
 import { ago, basename, clock, duration, tokens } from '../format';
@@ -74,6 +86,7 @@ function useNow(): number {
 export function Gozetim() {
   const [view, setView] = useState<GozetimView | null>(null);
   const [offline, setOffline] = useState(false);
+  const [seen, setSeen] = useState<Record<string, GozetimSession>>({});
   const [mode, setMode] = useState<'yorunge' | 'serit'>(() => {
     try {
       return (localStorage.getItem('gozetim.mode') as 'yorunge' | 'serit') || 'yorunge';
@@ -90,6 +103,12 @@ export function Gozetim() {
       void fetchGozetim().then((v) => {
         if (v) {
           setView(v);
+          // Sonlandırılan oturum listeden düşer; açık detay sonucu gösterebilsin diye son hali tutulur.
+          setSeen((prev) => {
+            const next = { ...prev };
+            for (const s of v.sessions) next[s.id] = s;
+            return next;
+          });
           setOffline(false);
         } else setOffline(true);
       }),
@@ -111,7 +130,8 @@ export function Gozetim() {
   };
 
   const hues = useMemo(() => hueMap((view?.sessions ?? []).map((s) => s.id)), [view]);
-  const focused = view?.sessions.find((s) => s.id === focus) ?? null;
+  const live = view?.sessions.find((s) => s.id === focus) ?? null;
+  const focused = live ?? (focus ? (seen[focus] ?? null) : null);
 
   if (!view) {
     return (
@@ -401,8 +421,9 @@ export function Gozetim() {
           <SessionDetail
             key={focused.id}
             s={focused}
-            hue={hues[focused.id]}
+            hue={hues[focused.id] ?? 'var(--color-primary)'}
             now={now}
+            gone={!live}
             onClose={() => setFocus(null)}
             decisions={view.decisions.filter((d) => d.worker_id === focused.id)}
           />
@@ -774,16 +795,309 @@ export function ApprovalTerminal({ d, now }: { d: Decision; now: number }) {
   );
 }
 
+// "Ne yapıyorsun?" sohbeti (2026-11-05). Çalışan oturuma mesaj GİTMEZ: backend kaydın özetini ayrı,
+// araçsız bir Claude'a sorar (oturum_kontrol.ask) — oturum bölünmez, kaydına yazılmaz.
+// Konuşma pencere kapanıp açılınca kalsın diye modül düzeyinde, oturum başına tutulur.
+const ASK_CHATS = new Map<string, AskTurn[]>();
+const ASK_HINTS = ['Şu an ne yapıyorsun?', 'Neleri değiştirdin?', 'Ne kadar kaldı?'];
+
+function AskBox({ workerId, project }: { workerId: string; project: string }) {
+  const [turns, setTurns] = useState<AskTurn[]>(() => ASK_CHATS.get(workerId) ?? []);
+  const [text, setText] = useState('');
+  const [pending, setPending] = useState<string | null>(null);
+  const [err, setErr] = useState('');
+  const tail = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    tail.current?.scrollIntoView({ block: 'end', behavior: 'smooth' });
+  }, [turns.length, pending]);
+
+  const send = async (raw: string) => {
+    const q = raw.trim();
+    if (!q || pending) return;
+    setText('');
+    setErr('');
+    setPending(q);
+    const res = await askSession(workerId, q, ASK_CHATS.get(workerId) ?? []);
+    setPending(null);
+    if (res.success && res.data?.answer) {
+      const next = [...(ASK_CHATS.get(workerId) ?? []), { q, a: res.data.answer }];
+      ASK_CHATS.set(workerId, next);
+      setTurns(next);
+    } else {
+      setErr(res.message || 'Cevap alınamadı.');
+      setText(q);
+    }
+  };
+
+  return (
+    <section className="gz-ask" aria-label={`${project} oturumuna sor`}>
+      <div className="gz-row">
+        <span className="label-micro">Sor</span>
+        <span className="gz-sub">kaydından cevaplar · oturumu bölmez</span>
+      </div>
+      {(turns.length > 0 || pending) && (
+        <div className="gz-ask__thread">
+          {turns.map((t, i) => (
+            <div key={i} className="gz-ask__turn">
+              <div className="gz-ask__q">{t.q}</div>
+              <div className="gz-ask__a">
+                <Rich text={t.a} />
+              </div>
+            </div>
+          ))}
+          {pending && (
+            <motion.div
+              className="gz-ask__turn"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="gz-ask__q">{pending}</div>
+              <div className="gz-ask__a is-wait">
+                <LuLoaderCircle size={13} className="gz-spin" /> kaydına bakıyor…
+              </div>
+            </motion.div>
+          )}
+          <div ref={tail} />
+        </div>
+      )}
+      {turns.length === 0 && !pending && (
+        <div className="gz-ask__hints">
+          {ASK_HINTS.map((h) => (
+            <button key={h} type="button" className="gz-chip" onClick={() => void send(h)}>
+              {h}
+            </button>
+          ))}
+        </div>
+      )}
+      {err && <div className="gz-hint is-err">{err}</div>}
+      <form
+        className="gz-ask__bar"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void send(text);
+        }}
+      >
+        <label htmlFor={`gz-ask-${workerId}`} className="gz-sr">
+          Oturuma sor
+        </label>
+        <input
+          id={`gz-ask-${workerId}`}
+          value={text}
+          maxLength={2000}
+          disabled={!!pending}
+          onChange={(e) => setText(e.target.value)}
+          placeholder={`${project} ne yapıyor? Sor…`}
+          autoComplete="off"
+        />
+        <button
+          type="submit"
+          className="gz-icon is-send"
+          aria-label="Sor"
+          disabled={!text.trim() || !!pending}
+        >
+          <LuSendHorizontal size={15} />
+        </button>
+      </form>
+    </section>
+  );
+}
+
+// Sonlandır (2026-11-05). İki yol: "Sonra devam et" — süreç kapanır, dosyalar kalır, Komuta'da
+// sürdürülebilir. "Yapılanları geri al" — önce plan gösterilir (hangi dosya döner, hangisi silinir),
+// ikinci tıkla uygulanır. Backend dosyaların o anki halini geri-alinan/ altına kopyalar.
+type EndStep = 'kapali' | 'secim' | 'plan' | 'calisiyor' | 'bitti';
+type EndOutcome = { mode: 'devam' | 'sil'; ok: boolean; msg: string; data?: EndResult };
+
+// Düğme listeden düşmüş oturumda da açık: listeden düşmek sürecin kapandığı anlamına gelmez.
+function EndPanel({
+  s,
+  gone,
+  onContinue,
+}: {
+  s: GozetimSession;
+  gone: boolean;
+  onContinue: () => void;
+}) {
+  const [step, setStep] = useState<EndStep>('kapali');
+  const [plan, setPlan] = useState<RevertPlan | null>(null);
+  const [result, setResult] = useState<EndOutcome | null>(null);
+
+  const openPlan = async () => {
+    setStep('plan');
+    setPlan(null);
+    const p = await fetchRevertPlan(s.id);
+    setPlan(p ?? { ok: false, why: 'Plan alınamadı.', alive: false, items: [] });
+  };
+
+  const run = async (mode: 'devam' | 'sil') => {
+    setStep('calisiyor');
+    const res = await endSession(s.id, mode);
+    setResult({ mode, ok: res.success, msg: res.message, data: res.data });
+    setStep('bitti');
+  };
+
+  const counts = useMemo(() => {
+    const c = { geri: 0, sil: 0, atla: 0, ayni: 0 };
+    for (const i of plan?.items ?? []) c[i.action] += 1;
+    return c;
+  }, [plan]);
+  const changes = counts.geri + counts.sil;
+
+  if (step === 'bitti' && result) {
+    const d = result.data;
+    return (
+      <motion.div className="gz-end" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
+        <div className={`gz-end__done ${result.ok ? '' : 'is-err'}`}>
+          {!result.ok && !d?.stopped
+            ? result.msg || 'Sonlandırılamadı.'
+            : !result.ok
+              ? `Oturum kapandı ama bazı dosyalar geri alınamadı · ${d?.geri ?? 0} döndü · ${d?.sil ?? 0} silindi · ${d?.hata ?? 0} hata. ${result.msg}`
+              : result.mode === 'devam'
+                ? 'Oturum kapandı. Yaptıkları duruyor; kaldığı yerden sürdürebilirsin.'
+                : `Oturum kapandı · ${d?.geri ?? 0} dosya eski haline döndü · ${d?.sil ?? 0} dosya silindi${
+                    d?.skipped ? ` · ${d.skipped} atlandı` : ''
+                  }.`}
+        </div>
+        {result.mode === 'sil' && d?.undo_dir && (
+          <div className="gz-hint gz-mono gz-ellipsis" title={d.undo_dir}>
+            Şimdiki halleri: {d.undo_dir}
+          </div>
+        )}
+        {result.ok && result.mode === 'devam' && s.session_id && (
+          <button type="button" className="gz-btn" onClick={onContinue}>
+            <LuSquareTerminal size={14} /> Komuta&apos;da sürdür
+          </button>
+        )}
+      </motion.div>
+    );
+  }
+
+  if (step === 'kapali') {
+    return (
+      <button
+        type="button"
+        className="gz-btn is-stop"
+        onClick={() => setStep('secim')}
+        title={gone ? 'Listeden düştü; süreci hâlâ açıksa kapatılır' : undefined}
+      >
+        <LuCircleStop size={14} /> Sonlandır
+      </button>
+    );
+  }
+
+  return (
+    <motion.div
+      className="gz-end"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+      role="group"
+      aria-label="Oturumu sonlandır"
+    >
+      <div className="gz-row">
+        <span className="label-micro gz-end__title">Sonlandır</span>
+        <button
+          type="button"
+          className="gz-link"
+          onClick={() => setStep('kapali')}
+          disabled={step === 'calisiyor'}
+        >
+          Vazgeç
+        </button>
+      </div>
+
+      {step === 'secim' && (
+        <>
+          <button type="button" className="gz-end__opt" onClick={() => void run('devam')}>
+            <LuPause size={16} />
+            <span>
+              <strong>Sonra devam et</strong>
+              <span className="gz-sub">
+                Durur, yaptıkları kalır. Komuta&apos;da kaldığı yerden sürer.
+              </span>
+            </span>
+          </button>
+          <button type="button" className="gz-end__opt is-danger" onClick={() => void openPlan()}>
+            <LuRotateCcw size={16} />
+            <span>
+              <strong>Yapılanları geri al</strong>
+              <span className="gz-sub">Durur, dokunduğu dosyalar oturum öncesine döner.</span>
+            </span>
+          </button>
+        </>
+      )}
+
+      {step === 'plan' && !plan && (
+        <div className="gz-sub">
+          <LuLoaderCircle size={13} className="gz-spin" /> Dosyalara bakılıyor…
+        </div>
+      )}
+      {step === 'plan' && plan && (
+        <>
+          {!plan.ok ? (
+            <div className="gz-hint is-err">{plan.why}</div>
+          ) : changes === 0 ? (
+            <div className="gz-sub">Geri alınacak dosya yok — hepsi oturum öncesi halinde.</div>
+          ) : (
+            <>
+              <div className="gz-end__sum">
+                {counts.geri > 0 && <span>{counts.geri} dosya eski haline döner</span>}
+                {counts.sil > 0 && <span className="is-del">{counts.sil} yeni dosya silinir</span>}
+                {counts.atla > 0 && (
+                  <span className="is-skip">{counts.atla} atlanır (yedeği yok)</span>
+                )}
+              </div>
+              <div className="gz-end__files">
+                {plan.items
+                  .filter((i) => i.action !== 'ayni')
+                  .map((i) => (
+                    <div key={i.path} className={`gz-end__file is-${i.action}`} title={i.path}>
+                      <span className="gz-pill">
+                        {i.action === 'geri' ? 'GERİ' : i.action === 'sil' ? 'SİL' : 'ATLA'}
+                      </span>
+                      <span className="gz-mono gz-ellipsis">{basename(i.path)}</span>
+                    </div>
+                  ))}
+              </div>
+            </>
+          )}
+          <div className="gz-hint">
+            Shell ile yapılanlar (git, npm, sed) geri alınmaz. Dosyaların şimdiki hali yedeklenir.
+          </div>
+          <button
+            type="button"
+            className="gz-btn is-danger"
+            disabled={!plan.ok}
+            onClick={() => void run(changes > 0 ? 'sil' : 'devam')}
+          >
+            <LuCircleStop size={14} />
+            {changes > 0 ? 'Durdur ve geri al' : 'Yalnız durdur'}
+          </button>
+        </>
+      )}
+
+      {step === 'calisiyor' && (
+        <div className="gz-sub">
+          <LuLoaderCircle size={13} className="gz-spin" /> Kapatılıyor…
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 function SessionDetail({
   s,
   hue,
   now,
+  gone,
   onClose,
   decisions,
 }: {
   s: GozetimSession;
   hue: string;
   now: number;
+  gone: boolean;
   onClose: () => void;
   decisions: Decision[];
 }) {
@@ -834,7 +1148,7 @@ function SessionDetail({
   // Oturum hâlâ terminalde açıkken iki taraf aynı kayda yazar — ikinci tıklamayla onay.
   const take = async () => {
     if (!s.session_id) return;
-    const open = s.status !== 'bosta';
+    const open = !gone && s.status !== 'bosta';
     if (open && !confirmTake) {
       setConfirmTake(true);
       return;
@@ -880,8 +1194,9 @@ function SessionDetail({
           <div className="gz-detail__title">
             <div className="gz-row" style={{ justifyContent: 'flex-start', gap: 10 }}>
               <strong>{s.project}</strong>
-              <span className={`gz-tag ${statusClass(s.status)}`}>
-                {STATUS_LABEL[s.status].toLocaleUpperCase('tr-TR')} · {duration(now - s.started)}
+              <span className={`gz-tag ${gone ? 'is-idle' : statusClass(s.status)}`}>
+                {gone ? 'KAPANDI' : STATUS_LABEL[s.status].toLocaleUpperCase('tr-TR')} ·{' '}
+                {duration(now - s.started)}
               </span>
             </div>
             <div className="gz-sub gz-ellipsis">
@@ -927,6 +1242,7 @@ function SessionDetail({
                 </div>
               ))}
             </div>
+            <AskBox workerId={s.id} project={s.project} />
           </div>
           <aside className="gz-detail__side">
             <div>
@@ -988,6 +1304,7 @@ function SessionDetail({
                 </div>
               )}
               {note && <div className="gz-hint">{note}</div>}
+              <EndPanel s={s} gone={gone} onContinue={() => void take()} />
             </div>
           </aside>
         </div>

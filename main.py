@@ -229,6 +229,27 @@ class WebcamStreamer:
 CONTROL_TOKEN_RE = re.compile(r"<ctrl\d+>", re.IGNORECASE)
 
 
+def _close_stream_when_idle(stream, lock: threading.Lock) -> None:
+    """PyAudio akışını, üzerinde süren read/write bitince kapatır.
+
+    `asyncio.to_thread(stream.read, ...)` görevi iptal edilince coroutine biter ama
+    iş parçacığı PortAudio içinde beklemeye devam eder. O anda `stream.close()`
+    çağırmak AUDIOSES.DLL'de erişim hatasıyla (0xc0000005) bütün süreci düşürüyordu
+    (2026-11-05 00:15, Gemini "client inactivity" ile oturumu kapatınca). Her okuma/
+    yazma `lock` altında yapılıyor; kapanış da aynı kilidi bekleyen ayrı bir iş
+    parçacığında: event loop'u bekletmez, kapanışta thread havuzu kapanmış olsa da çalışır.
+    """
+    def _close():
+        with lock:
+            for step in (stream.stop_stream, stream.close):
+                try:
+                    step()
+                except Exception:
+                    logger.debug("[CHIRON] Ses akışı kapatılırken hata", exc_info=True)
+
+    threading.Thread(target=_close, name="chiron-audio-close", daemon=True).start()
+
+
 class _ConversationReset(Exception):
     """Kullanıcı 'sohbeti sıfırla' dediğinde run() döngüsünü kırıp yeni oturum açtırır."""
 
@@ -1592,10 +1613,15 @@ class ChironLive:
             from core.snap_detector import SnapDetector
 
             snap_detector = SnapDetector(SEND_SAMPLE_RATE, required=int(snap_setting))
+        stream_lock = threading.Lock()
+
+        def _read_chunk():
+            with stream_lock:
+                return stream.read(CHUNK_SIZE, exception_on_overflow=False)
+
         try:
             while True:
-                raw = await asyncio.to_thread(
-                    stream.read, CHUNK_SIZE, exception_on_overflow=False)
+                raw = await asyncio.to_thread(_read_chunk)
                 # Seviye göstergesi de gönderilen sesten hesaplanıyor, ham
                 # tampondan değil: dalga formu Chiron'un GERÇEKTEN duyduğu şeyi
                 # göstermeli.
@@ -1641,7 +1667,7 @@ class ChironLive:
             logger.exception("[CHIRON] Mikrofon hatasi")
             raise
         finally:
-            stream.close()
+            _close_stream_when_idle(stream, stream_lock)
 
     def _flush_reasoning(self, buffer: list[str], force: bool = False) -> None:
         """Biriken düşünce metnini Timeline'a yayınlar.
@@ -1807,6 +1833,12 @@ class ChironLive:
             rate=RECV_SAMPLE_RATE, output=True,
             **open_kwargs,
         )
+        stream_lock = threading.Lock()
+
+        def _write_chunk(data):
+            with stream_lock:
+                stream.write(data)
+
         try:
             while True:
                 chunk = await self.audio_in_queue.get()
@@ -1828,13 +1860,13 @@ class ChironLive:
                 # biçimini bekliyor ve çıktı da o biçimde.
                 speaking_overlay.set_speaking(True)
                 speaking_overlay.push_level(self._mic_level(chunk))
-                await asyncio.to_thread(stream.write, chunk)
+                await asyncio.to_thread(_write_chunk, chunk)
         except Exception as e:
             logger.exception("[CHIRON] Ses calma hatasi")
             raise
         finally:
             self.set_speaking(False)
-            stream.close()
+            _close_stream_when_idle(stream, stream_lock)
 
     async def run(self):
         connect_attempts = 0

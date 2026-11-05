@@ -290,6 +290,9 @@ class Worker:
     # Gözetim (2026-11-04): şefin Claude Code kaydı (token/bağlam/maliyet oradan okunur) ve
     # şerit görünümü için araç izleri — (ts, kategori). Kategori: okuma|duzenle|shell|web|ajan|mcp|diger|onay|hata
     transcript_path: str | None = None
+    # Hook'un üst süreci (ofis-olay.py "ppid") — Gözetim'de Sonlandır claude.exe'yi buradan bulur.
+    hook_ppid: int | None = None
+    hook_ppid_ts: float | None = None  # o pid'i yazan olayın zamanı (pid yeniden kullanımına karşı)
     marks: deque = field(default_factory=lambda: deque(maxlen=MARKS_LEN))
 
     def summary(self) -> dict[str, Any]:
@@ -447,6 +450,8 @@ class OfficeState:
         # Alt ajan olaylarında da ana kaydın yolu gelir ama emin olmak için yalnız şefin kendi olayı yazar.
         if rec.get("transcript_path") and not rec.get("agent_id"):
             w.transcript_path = rec["transcript_path"]
+        if rec.get("ppid") and not rec.get("agent_id"):
+            w.hook_ppid, w.hook_ppid_ts = int(rec["ppid"]), rec["ts"]
         return w
 
     def _add_worker(self, w: Worker) -> None:

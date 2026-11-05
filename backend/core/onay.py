@@ -143,7 +143,7 @@ class OnayBroker:
 
     @staticmethod
     def _result(req: Request) -> dict[str, Any]:
-        out: dict[str, Any] = {"state": req.state}
+        out: dict[str, Any] = {"state": req.state, "by": getattr(req, "by", "")}
         if req.state == "izin" and req.always and req.suggestions:
             out["updated_permissions"] = req.suggestions
         if req.state == "red":

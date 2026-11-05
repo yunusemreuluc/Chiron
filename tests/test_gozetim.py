@@ -171,3 +171,34 @@ def test_runaway_end_refuses_unlisted_or_reused_pid():
     w._items = [{"pid": me.pid, "create_time": me.create_time() + 50, "name": "python.exe"}]
     ok, why = w.end(me.pid, me.create_time() + 50)
     assert ok is False and "başka bir süreç" in why
+
+
+def test_phone_view_trims_and_keeps_queue():
+    full = {
+        "now": 100.0,
+        "totals": {"sessions_live": 1, "cost_today": 3.5, "cost_known": True},
+        "sessions": [{
+            "id": "claude:a", "project": "Dilcep", "title": "t" * 200, "status": "calisiyor",
+            "current": "Edit", "last_ts": 99.0, "cost": 1.2, "ctx": {"used": 250, "window": 1000},
+            "subagents": [{"status": "calisiyor"}, {"status": "bitti"}], "approvals": [{"id": "x"}],
+            "transcript_path": "C:/gizli.jsonl", "files_written": ["a.py"],
+        }],
+        "log": [{"text": "x"}], "files": [], "research": [], "runaways": [{"pid": 1}],
+    }
+    decisions = [{"id": "r1", "project": "Dilcep", "tool": "Bash", "summary": "npm test", "detail": "d" * 900,
+                  "can_always": True, "ts": 98.0, "deadline": 160.0, "cwd": "C:/x", "session_id": "s"}]
+    limits = {"status": "allowed", "five_hour": {"used": 0.8, "resets_at": 200.0}, "seven_day": {"used": "?"}}
+    out = gozetim.phone_view(full, decisions, limits)
+    assert out["live"] == 1 and out["cost_today"] == 3.5 and out["runaways"] == 1
+    s = out["sessions"][0]
+    assert s["ctx_pct"] == 25 and s["subagents"] == 1 and s["waiting"] is True
+    assert len(s["title"]) == 80 and "transcript_path" not in s and "files_written" not in s
+    q = out["queue"][0]
+    assert q["id"] == "r1" and len(q["detail"]) == 600 and "cwd" not in q
+    assert out["limits"] == {"five_hour": {"used": 0.8, "resets_at": 200.0}}
+    assert "log" not in out
+
+
+def test_phone_view_empty():
+    out = gozetim.phone_view({}, [], {})
+    assert out["live"] == 0 and out["sessions"] == [] and out["queue"] == [] and out["limits"] == {}
