@@ -62,6 +62,7 @@ from actions.onay      import answer_approval  # noqa: F401 — @register_tool y
 from actions.terminal  import open_terminal  # noqa: F401 — @register_tool yan etkisi için
 from actions.volume    import set_volume  # noqa: F401 — @register_tool yan etkisi için
 from actions.brightness import set_brightness  # noqa: F401 — @register_tool yan etkisi için
+from actions import zamanlayici  # @register_tool yan etkisi + _watch_timers
 from actions.ocr import HAS_EASYOCR, lines_to_text
 from actions.screen_vision import analyze_screen  # noqa: F401
 from actions.screen_control import intervene_screen  # noqa: F401
@@ -1168,6 +1169,16 @@ class ChironLive:
             for text in arastirma_panosu.pop_announcements():
                 await self._send_proactive_system_message(text)
 
+    async def _watch_timers(self):
+        """Sesle kurulan zamanlayıcı dolunca sesli haber (2026-11-04, K-014). Yerel liste, ağ yok — saniyede bir
+        bakmak ucuz. Chiron konuşurken/duraklatılmışken söylemez; zamanlayıcı listede kalır, sonraki uygun anda gider."""
+        while True:
+            await asyncio.sleep(1)
+            if not zamanlayici.has_timers() or not self._proactive_checks_allowed():
+                continue
+            for text in zamanlayici.pop_due():
+                await self._send_proactive_system_message(text)
+
     async def _watch_gelisim(self):
         """Kendini geliştirme sonuçlarını söyler (2026-10-30, Yunus: "yaptıklarını bana söylesin").
         Döngü haberi yerel API'de biriktirir; Chiron konuşmuyorken dakikada bir alınır."""
@@ -1904,6 +1915,7 @@ class ChironLive:
                     tg.create_task(self._watch_pc_jobs())
                     tg.create_task(self._watch_onay())
                     tg.create_task(self._watch_research())
+                    tg.create_task(self._watch_timers())
                     tg.create_task(self._watch_gelisim())
                     tg.create_task(self._watch_daily_briefing())
                     if self._handoff_note:

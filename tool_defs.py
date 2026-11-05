@@ -832,6 +832,43 @@ TOOL_DECLARATIONS = [
         }
     },
     {
+        "name": "set_timer",
+        "description": (
+            "Sesli zamanlayici ve kisa hatirlatici (en fazla 24 saat ileri). Dolunca Chiron kendisi sesle haber verir. "
+            "'10 dakika sonra cayi hatirlat', '25 dakikalik zamanlayici kur', 'saat 15:30'da toplantiyi hatirlat', "
+            "'ne kadar kaldi', 'zamanlayiciyi iptal et' dediginde kullan. Yarin ve sonrasi icin add_reminder/takvim."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "action": {
+                    "type": "STRING",
+                    "description": "set (kur) | list (kalan sureler) | cancel (iptal)."
+                },
+                "minutes": {
+                    "type": "NUMBER",
+                    "description": "set icin kac dakika sonra ('yarim saat' → 30, '1 saat' → 60)."
+                },
+                "seconds": {
+                    "type": "NUMBER",
+                    "description": "set icin ek saniye ('30 saniye' → seconds=30)."
+                },
+                "at": {
+                    "type": "STRING",
+                    "description": "set icin saat, 24 saat SS:DD ('saat 3'te' ogleden sonraysa 15:00). Gecmisse yarin o saat."
+                },
+                "label": {
+                    "type": "STRING",
+                    "description": (
+                        "Kisa ad: 'cayi hatirlat' → cay, 'toplantiyi hatirlat' → toplanti. Dolunca bu ad soylenir; "
+                        "cancel'da hangi zamanlayici (hepsi icin 'hepsi'). Ad yoksa bos birak."
+                    )
+                }
+            },
+            "required": ["action"]
+        }
+    },
+    {
         "name": "get_youtube_channel_report",
         "description": (
             "YouTube kanalinin public istatistiklerini ve son videolarin performansini raporlar. "
