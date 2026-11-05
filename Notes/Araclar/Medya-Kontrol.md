@@ -39,4 +39,9 @@ iki oturum (nadir) ikisi birden komut alır. Telefon yolu hâlâ kör medya tuş
 testler bunu göremez. Canlı deneme için kullanıcının medyasına dokunmadan: PowerShell'de sessiz WAV'lı
 `MediaPlayer` + `MediaPlaybackList` kendi oturumunu açar (`powershell.exe`), komutlar yalnız ona gönderilir.
 
+**Doğrulanan / doğrulanmayan:** durdur, devam, sonraki, önceki sessiz deneme oturumunda oturumun kendi durumuyla ölçüldü
+(Playing/Paused, sıra 0→1→0). Spotify ve YouTube'da gerçek başlık geçişi denenmedi. İlk tanı denemesinde Yunus'un Chrome
+oturumu Paused'a geçti: komut gönderilmemişti, Yunus bilgisayar başındaydı, ama deneme oturumunun etkisi kesin dışlanamadı.
+Gerçek bir video açıkken yeni oturum açmak yerine o video duraklatılmışken dene.
+
 Testler: `tests/test_medya_kontrol.py`.
