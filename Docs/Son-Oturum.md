@@ -4,6 +4,12 @@ Claude Code oturumları arasındaki köprü. `.claude/hooks/session_start.py` he
 açılışta buradaki **en üstteki** `## Oturum:` bloğunu okuyup context'e enjekte
 ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 
+## Oturum: 2026-11-06 — K-016 kendini geliştirme: sesle medya kontrolü
+
+- `control_media` ([[Medya-Kontrol]]): durdur/devam/sonraki/önceki/ne çalıyor; Windows medya oturumu API'si, sonuç geri okunur. Commit'siz, pano birleştirecek.
+- Sessiz deneme oturumunda uçtan uca ölçüldü (Spotify/YouTube'da gerçek başlık geçişi denenmedi). Deneme sırasında Yunus'un Chrome videosu duraklatılmış göründü: komut gönderilmedi, Yunus o an bilgisayar başındaydı ama deneme oturumunun etkisi kesin dışlanamadı.
+- Sıradaki aday: telefon yolunu (`desktop_control` kör medya tuşu) bu araca bağlamak.
+
 ## Oturum: 2026-11-05 (gece 3) — Gözetim: oturuma sor + Sonlandır (devam / geri al)
 
 - Detay penceresine "Sor" kutusu (kaydın özetiyle ayrı araçsız sonnet sorgusu, oturumu bölmez) ve Sonlandır: *Sonra devam et* / *Yapılanları geri al* (Claude Code `file-history` v1 yedeğinden, plan önce gösterilir, şimdiki haller `geri-alinan/`'a kopyalanır). `backend/core/oturum_kontrol.py`, 3 uç, hook `ppid` yazıyor. Ayrıntı [[Arayuz]] § Sor + Sonlandır.
