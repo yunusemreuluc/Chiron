@@ -92,6 +92,30 @@ TOOL_DECLARATIONS = [
         }
     },
     {
+        "name": "manage_window",
+        "description": (
+            "Acik pencereleri yonetir: one getirir, kucultur, tam ekran yapar, eski boyutuna alir, kapatir, "
+            "ekranin sol/sag yarisina yaslar, masaustunu gosterir, acik pencereleri listeler. "
+            "'Chrome'a gec', 'pencereyi kucult', 'Spotify'i kapat', 'bunu sola yasla', 'masaustunu goster', "
+            "'hangi pencereler acik' dediginde kullan. Uygulama acmak icin open_app."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "action": {
+                    "type": "STRING",
+                    "description": "list | focus | minimize | maximize | restore | close | left | right | show_desktop."
+                },
+                "app": {
+                    "type": "STRING",
+                    "description": "Surec adi ya da baslik parcasi (chrome, spotify, code, explorer, 'tarayici'). "
+                                   "'Bu pencere' denirse bos birak: ondeki pencere."
+                }
+            },
+            "required": ["action"]
+        }
+    },
+    {
         "name": "open_terminal",
         "description": (
             "Windows Terminal'de yeni sekme acar, istenen projenin klasorunde, icinde Claude'u baslatir. "
