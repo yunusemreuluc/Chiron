@@ -316,8 +316,10 @@ döngüyü kilitliyordu: onay bekleyen 2 kart yeni kartı durduruyor, 30.10–04
 kart `Son-Oturum.md`'ye yazdığı için birleştirme çakışıyor, çözmek için oturum `--resume` edilip önbellek yeniden
 yazılıyordu (K-015: $8; temiz kartlar $0,5–1,5). Akış (`Pano.auto_merge`, işçi `Dongu._oto_is`):
 
-1. Engel denetimi (`auto_block_reason`): geçen test yoksa, bekçi `yuksek` uyardıysa, `AUTO_FORBIDDEN` yoluna
-   dokunduysa ya da test dosyası sildiyse kart birleşmez, `oto_engel` yazılır, Yunus'a söylenir. Tek insan kapısı bu.
+1. Engel denetimi (`auto_block_reason`): geçen test yoksa, birleşecek kodda bekçi `yuksek` uyardıysa (`diff` katmanı),
+   `AUTO_FORBIDDEN` yoluna dokunduysa ya da test dosyası sildiyse kart birleşmez, `oto_engel` yazılır, Yunus'a söylenir.
+   Tek insan kapısı bu; saatte bir yeniden değerlendirilir. Çalışırken komuta verilen uyarı (`arac` katmanı) engel değil:
+   K-016 kendi sürecini `Stop-Process -Force` ile kapatınca "toplu silme" sayılmıştı.
 2. Ana dal kopyaya alınır (`integrate_base`); ilerlediyse test + tip denetimi birleşecek halin üstünde yeniden koşar.
 3. `merge(keep_dirty=True)`: başka oturumun yarım işi varken de dener. Kart dalı ana dalı içerdiği için gerçek çakışma
    olamaz; git yarım işin dosyasına dokunacak birleştirmeyi kendi reddeder, 5 dk sonra yeniden. `merge --abort` çağrılmaz.

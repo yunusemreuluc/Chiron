@@ -187,6 +187,34 @@ def test_sensitive_file_waits_for_yunus(setup):
     assert s.loop.take_news() == []  # bir kez söylenir
 
 
+def test_stale_block_clears_itself_and_card_merges(setup):
+    """Engel saatte bir yeniden değerlendirilir: kural değiştiyse kart Yunus'u beklemeden birleşir."""
+    s = setup
+    card, _ = _run_card(s)
+    s.board.get(card)
+    s.board._find(card)["oto_engel"] = "Eski kuralın engeli."
+    _ticks(s)
+    data = s.board.get(card)
+    assert data["status"] == "bitti" and not data["oto_engel"]
+    assert (s.repo / "b.txt").exists()
+
+
+def test_block_recheck_is_rate_limited(setup):
+    s = setup
+    card, _ = _run_card(s, name="backend/core/dongu.py", text="# x\n")
+    _ticks(s)
+    calls = []
+    original = s.board.auto_merge
+    s.board.auto_merge = lambda cid: calls.append(cid) or original(cid)
+    _ticks(s)
+    assert calls == []
+    s.clock.ts += dongu_mod.OTO_ENGEL_BEKLE + 1
+    _ticks(s)
+    assert calls == [card] and s.board.get(card)["status"] == "birlestir"
+    events = [e["metin"] for e in s.loop.public()["olaylar"] if "birleşmedi" in e["metin"]]
+    assert len(events) == 1  # günlüğü doldurmaz
+
+
 def test_real_conflict_goes_back_to_agent(setup):
     s = setup
     card, _ = _run_card(s, name="a.txt", text="kartın hali\n")
@@ -252,8 +280,10 @@ def test_block_reasons():
     ok = {"ok": True}
     assert auto_block_reason(ok, [], [("M", "actions/x.py"), ("A", "tests/test_x.py")]) == ""
     assert "test" in auto_block_reason({}, [], []).lower()
-    assert "Bekçi" in auto_block_reason(ok, [{"seviye": "yuksek", "ad": "Gizli"}], [])
-    assert auto_block_reason(ok, [{"seviye": "orta", "ad": "x"}], []) == ""
+    assert "Bekçi" in auto_block_reason(ok, [{"seviye": "yuksek", "ad": "Gizli", "katman": "diff"}], [])
+    assert auto_block_reason(ok, [{"seviye": "orta", "ad": "x", "katman": "diff"}], []) == ""
+    # Çalışırken kopyada verilen komut uyarısı birleşmeyi durdurmaz (K-016'nın yanlış alarmı).
+    assert auto_block_reason(ok, [{"seviye": "yuksek", "ad": "Toplu silme", "katman": "arac"}], []) == ""
     assert "silmiş" in auto_block_reason(ok, [], [("D", "tests/test_x.py")])
     for path in ("backend/core/dongu.py", "backend/core/bekci.py", "config/api_keys.json", ".claude/settings.json",
                  ".gitignore", ".github/workflows/x.yml", "requirements.txt", "frontend/package.json"):

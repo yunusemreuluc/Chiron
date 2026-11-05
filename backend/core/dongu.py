@@ -70,6 +70,7 @@ GELISIM_HABER = 10
 OTO_DENEME = 1  # hataya düşen kart bir kez yeniden denenir, sonra bırakılır
 OTO_BEKLE = 5 * 60  # ana klasör izin vermediyse bu kadar sonra yeniden
 OTO_PUSH_BEKLE = 10 * 60
+OTO_ENGEL_BEKLE = 60 * 60  # hassas kart Yunus'u bekler ama engel saatte bir yeniden değerlendirilir
 # Görev kısa ve okuma listesi dar (2026-11-06): eski metin 7 notu okutuyordu, bağlam kart boyunca her turda yeniden
 # ödeniyor. Açık istekler ve eski başlıklar hazır veriliyor, büyük notlar yalnız gerekince parça parça okunuyor.
 GELISIM_TASK = """\
@@ -419,7 +420,6 @@ class Dongu:
                     for c in cards
                     if c["title"].startswith(GELISIM_PREFIX)
                     and c["status"] == "birlestir"
-                    and not c.get("oto_engel")
                     and later.get(c["id"], 0) <= now
                 ),
                 None,
@@ -462,7 +462,11 @@ class Dongu:
             if later.get(card_id, 0) == 0:  # her denemede günlüğe yazmasın
                 self._event(f"{card_id} birleşmeyi bekliyor: {neden[:160]}")
             later[card_id] = self._clock() + OTO_BEKLE
-        elif durum in ("engel", "cakisma", "test"):
+        elif durum == "engel":
+            if later.get(card_id, 0) == 0:  # saatlik yeniden bakış günlüğü doldurmasın
+                self._event(f"{card_id} birleşmedi ({durum}): {neden[:160]}")
+            later[card_id] = self._clock() + OTO_ENGEL_BEKLE
+        elif durum in ("cakisma", "test"):
             self._event(f"{card_id} birleşmedi ({durum}): {neden[:160]}")
         else:  # kartın kopyası yok ya da durumu değişti: her tikte denenmesin
             later[card_id] = self._clock() + OTO_BEKLE
