@@ -175,6 +175,17 @@ async def stop_card(card_id: str, response: Response) -> dict:
     return await _run(response, lambda: pano.stop(card_id), "Kart sonlandırıldı.")
 
 
+@router.get("/{card_id}/changes")
+async def card_changes(card_id: str, response: Response) -> dict:
+    """Birleştirme bekleyen kartın dosya listesi ve diff'i — onay penceresi okur, değiştirmez."""
+    try:
+        data = await asyncio.to_thread(pano.changes, card_id)
+    except PanoError as error:
+        response.status_code = 409
+        return {"success": False, "message": str(error), "data": {}}
+    return _ok(data)
+
+
 @router.post("/{card_id}/merge")
 async def merge_card(card_id: str, body: CardAnswer, response: Response) -> dict:
     """Test geçmiş kartı ana dala birleştir (approved) ya da reddet."""

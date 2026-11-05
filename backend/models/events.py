@@ -39,6 +39,8 @@ EventType = Literal[
     "office_update",  # Ajan Ofisi anlık görüntüsü (backend/core/ofis.py)
     "research_update",  # araştırma panosu: ilerleme / bitti / hata (actions/arastirma_panosu.py)
     "research_show",  # araştırma panosunu aç/kapat (show_research_board)
+    "code_reload",  # canlı yükleme: bir Python dosyası çalışan sürece yamalandı (backend/core/canli_yukleme.py)
+    "ui_updated",  # canlı yükleme: frontend/out yeniden derlendi, pencere kendini yenilesin
 ]
 
 

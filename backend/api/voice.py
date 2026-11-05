@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import asyncio
+import base64
+import binascii
+
 from fastapi import APIRouter, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from backend.core import commands
+from backend.core.sohbet import SohbetError, sohbet
 
 router = APIRouter(prefix="/api/voice", tags=["voice"])
 
@@ -26,7 +31,9 @@ async def voice_status() -> dict:
 
 
 class TextCommand(BaseModel):
-    text: str
+    text: str = ""
+    # Görseller (2026-11-04): data URL / base64. Gemini Live'a aynı turda inline_data olarak gider.
+    images: list[str] = Field(default_factory=list, max_length=4)
 
 
 @router.post("/text")
@@ -42,11 +49,22 @@ async def send_text(command: TextCommand, request: Request) -> dict:
     kapanıyor.
     """
     text = command.text.strip()
-    if not text:
+    if not text and not command.images:
         return {"success": False, "message": "boş metin", "data": {}}
+    images = []
+    for raw in command.images:
+        body = raw.split(",", 1)[1] if raw.startswith("data:") else raw
+        try:
+            data = base64.b64decode(body, validate=True)
+            path, mime = await asyncio.to_thread(sohbet.save_voice_image, data)
+        except (binascii.Error, ValueError):
+            return {"success": False, "message": "Görsel okunamadı.", "data": {}}
+        except SohbetError as error:
+            return {"success": False, "message": str(error), "data": {}}
+        images.append({"path": str(path), "name": path.name, "mime": mime})
     remote = bool(getattr(request.state, "remote", False))
     commands.dispatch("remote_mode", {"value": remote, "quiet_if_unchanged": True})
-    if not commands.dispatch("text", {"text": text}):
+    if not commands.dispatch("text", {"text": text, "images": images}):
         return {"success": False, "message": "Sesli asistan çalışmıyor.", "data": {}}
     return {"success": True, "message": "gönderildi", "data": {}}
 

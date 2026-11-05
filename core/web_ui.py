@@ -170,7 +170,7 @@ class WebUI:
 
         # ── ChironLive'ın doldurduğu geri çağırma yuvaları ────────────────────
         # (ChironLive.__init__ bunlara kendi metotlarını atıyor.)
-        self.on_text_command: Callable[[str], None] | None = None
+        self.on_text_command: Callable[..., None] | None = None
         self.on_pause_toggle: Callable[[bool], None] | None = None
         self.on_effects_state_change: Callable[[bool], None] | None = None
         self.on_webcam_toggle: Callable[[bool], None] | None = None
@@ -250,13 +250,17 @@ class WebUI:
 
     def _handle_text(self, payload: dict) -> None:
         text = str(payload.get("text", "")).strip()
-        if not text or not self.on_text_command:
+        images = [i for i in payload.get("images") or [] if isinstance(i, dict) and i.get("path")]
+        if (not text and not images) or not self.on_text_command:
             return
         # NOT: "Siz: ..." satırını BURADA yazmıyoruz — ChironLive._on_text_command
         # zaten yazıyor. İkisi birden yazınca satır sohbette iki kez görünüyordu.
         # ChironLive.on_text_command içeride asyncio'ya köprü kuruyor; yine de
         # HTTP isteğini bekletmemek için ayrı thread'de çağrılıyor.
-        threading.Thread(target=self.on_text_command, args=(text,), daemon=True).start()
+        if images:
+            threading.Thread(target=self.on_text_command, args=(text, images), daemon=True).start()
+        else:
+            threading.Thread(target=self.on_text_command, args=(text,), daemon=True).start()
 
     def _handle_mute(self, payload: dict) -> None:
         self._user_muted = bool(payload.get("value", False))

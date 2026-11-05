@@ -16,6 +16,7 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 - [[Tasarim-Kurallari]] — arayüz stili, animasyon, renk, bileşen adları (kod yorumlarındaki
   `CLAUDE.md § ...` atıfları buraya bakar)
 - [[Bilinen-Tuzaklar]] — zamana mal olmuş tuzaklar, arayüzde dürüstlük, nasıl doğrulanır
+- [[Canli-Yukleme]] — kod değişikliği yeniden başlatmadan çalışan sürece yamalanır; neyin restart istediği
 - [[Yerel-Model]] — Ollama denendi ve **kaldırıldı**; ölçümler duruyor (num_ctx, Türkçe, VRAM)
 - `CLAUDE.md` — yalın karar kitabı: Obsidian-önce iş akışı, rol, performans hedefi
 - `Docs/Son-Oturum.md` + `Docs/Acik-Konular.md` — oturumlar arası süreklilik;

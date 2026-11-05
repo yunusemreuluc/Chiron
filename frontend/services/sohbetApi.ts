@@ -1,4 +1,4 @@
-import { fetchData, post, request } from './apiClient';
+import { apiBase, fetchData, post, request } from './apiClient';
 
 // Sohbet uçları (backend/api/sohbet.py). Her mesaj aynı Claude oturumunu sürdürür;
 // işi claude_jobs koşar (bekçi, kota freni, süre sınırı aynen geçerli).
@@ -17,6 +17,7 @@ export interface ChatMessage {
   approval?: string;
   cost_usd?: number | null;
   bekci?: string[];
+  images?: string[];
 }
 
 export interface ChatSummary {
@@ -55,8 +56,15 @@ export const fetchChat = (id: string) => fetchData<{ chat: Chat }>(`/api/sohbet/
 
 export const createChat = (agent: ChatAgent, title = '') => post<{ chat: Chat }>('/api/sohbet', { agent, title });
 
-export const sendMessage = (id: string, text: string) =>
-  post<{ chat: Chat }>(`/api/sohbet/${encodeURIComponent(id)}/mesaj`, { text });
+export const sendMessage = (id: string, text: string, images: string[] = []) =>
+  post<{ chat: Chat }>(`/api/sohbet/${encodeURIComponent(id)}/mesaj`, { text, images });
+
+/** Görsel eki: data URL (base64) olarak yüklenir, dönen `name` mesajla gönderilir. */
+export const uploadImage = (id: string, dataUrl: string) =>
+  post<{ name: string; size: number }>(`/api/sohbet/${encodeURIComponent(id)}/ek`, { data: dataUrl });
+
+export const imageUrl = (id: string, name: string) =>
+  `${apiBase()}/api/sohbet/${encodeURIComponent(id)}/ek/${encodeURIComponent(name)}`;
 
 export const answerChat = (id: string, approved: boolean) =>
   post<{ chat: Chat }>(`/api/sohbet/${encodeURIComponent(id)}/onay`, { approved });

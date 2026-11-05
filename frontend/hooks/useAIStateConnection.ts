@@ -7,6 +7,7 @@ import { useHumanoidStore } from '@/stores/humanoidStore';
 import { useMicStore } from '@/stores/micStore';
 import { useOfficeStore, type OfficeSnapshot } from '@/stores/officeStore';
 import { useResearchStore, type ResearchRun } from '@/stores/researchStore';
+import { useLiveReloadStore, type CodeReload } from '@/stores/liveReloadStore';
 import {
   useVisionStore,
   type Detection,
@@ -209,6 +210,15 @@ export function useAIStateConnection() {
               break;
             case 'research_show':
               useResearchStore.getState().setOpen(Boolean(data.open));
+              break;
+            // ── Canlı yükleme (2026-11-04) — backend/core/canli_yukleme.py ──
+            case 'code_reload':
+              if (typeof data.module === 'string' && Array.isArray(data.applied)) {
+                useLiveReloadStore.getState().pushReload(data as CodeReload);
+              }
+              break;
+            case 'ui_updated':
+              useLiveReloadStore.getState().markUiUpdated();
               break;
             default:
               // panel_focus/user_activity — henüz arayüzde karşılığı yok.
