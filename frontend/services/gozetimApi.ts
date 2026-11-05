@@ -102,6 +102,43 @@ export const fetchLastReply = (workerId: string) =>
 export const endRunaway = (pid: number, createTime: number) =>
   post(`/api/office/gozetim/kacak/${pid}/sonlandir`, { create_time: createTime });
 
+// Oturum kontrolü (2026-11-05, backend/core/oturum_kontrol.py): "ne yapıyorsun?" yan sorgusu,
+// Sonlandır (devam: değişiklikler kalır / sil: dosyalar oturum öncesine döner).
+export interface AskTurn {
+  q: string;
+  a: string;
+}
+export const askSession = (workerId: string, question: string, history: AskTurn[]) =>
+  post<{ answer: string }>(`/api/office/gozetim/sor/${encodeURIComponent(workerId)}`, {
+    question,
+    history: history.slice(-6),
+  });
+
+export interface RevertItem {
+  path: string;
+  /** geri: oturum öncesine döner · sil: oturumun oluşturduğu dosya · ayni: değişmemiş · atla: yedek yok */
+  action: 'geri' | 'sil' | 'ayni' | 'atla';
+}
+export interface RevertPlan {
+  ok: boolean;
+  why: string;
+  alive: boolean;
+  items: RevertItem[];
+}
+export const fetchRevertPlan = (workerId: string) =>
+  fetchData<RevertPlan>(`/api/office/gozetim/geri-al/${encodeURIComponent(workerId)}`);
+
+export interface EndResult {
+  stopped: boolean;
+  geri?: number;
+  sil?: number;
+  hata?: number;
+  skipped?: number;
+  undo_dir?: string;
+}
+export const endSession = (workerId: string, mode: 'devam' | 'sil') =>
+  post<EndResult>(`/api/office/gozetim/sonlandir/${encodeURIComponent(workerId)}`, { mode });
+
 /** Oturum rengi — her oturum kendi tonunda (yörüngedeki küçük çekirdek, kart kenarı, şerit adı aynı renk).
  *  Çekirdeğin durum renkleriyle (buz mavisi, turkuaz konuşma, kehribar otomasyon, mor hafıza) çakışmayacak tonlar. */
 // Buz mavisine yakın camgöbekleri (#6fd3ff, #a6f0ff) ilk denemede ana çekirdekle karışıyordu — çıkarıldı.

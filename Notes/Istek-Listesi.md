@@ -70,8 +70,9 @@ Durum değerleri: `yeni` → `bakıldı` → `yapıldı` / `yapılmayacak`. Duru
 <!-- ids: 0a1f6c61-38f8-4560-819b-1fa674f3c16f -->
 
 ### İ-012 · SIM kart şifresi kaldırma ayarı bulma
-**Durum:** yeni · **Sayı:** 1 · **Bildirildi:** hayır
+**Durum:** bakıldı · **Sayı:** 1 · **Bildirildi:** hayır
 - 2026-11-03 17:43 · "telefonda sim kart şifresini kaldırma ayarını bulmak" · denenen: uygun araç yok · Xiaomi 22101316G, 0.1.0
   - Ayrıntı: Kullanıcı, telefon ayarlarında SIM kart şifresini kaldırmaya yönelik ayarı bulmamı istedi ancak mevcut araçlar bu işlemi doğrudan desteklemiyor. İdeal olarak, ilgili ayar menüsüne yönlendirme veya doğrudan işlemi gerçekleştirme yeteneği olmalı.
+  - 2026-11-05 · chiron-mobile'a `phone_control` eklendi ([[Chiron-Mobil]] § Telefonu sesle kullanma): ayar sayfası açma (sim_lock dahil), ekran okuma, dokunma, kaydırma, yazma. Erişilebilirlik izni açılıp telefonda denenince `yapıldı`.
 <!-- ids: 3e63653a-6cbf-46e1-9a31-6458df84fe13 -->
 

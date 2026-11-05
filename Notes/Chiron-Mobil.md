@@ -275,3 +275,22 @@ yalnız Wi-Fi'da açık (Xiaomi her Wi-Fi değişiminde kapatıp yeni port veriy
 - Arabada mesaj okuma ve kilitli ekranda navigasyonu doğrula.
 - WhatsApp otomatik gönderme erişilebilirlik servisi güncellemede kapanmış — kullanıcı açacak.
 - **Faz 3 — ortak hafıza:** telefon ve PC aynı `memory.json`'u görsün.
+
+
+## Telefonu sesle kullanma — `phone_control` (2026-11-05)
+
+Yunus: "ayarlar kısmına hakim değil, şunu bul demiştim yetkim yok dedi; telefonda her şeye hakim olsun". Eskiden
+erişilebilirlik yalnız WhatsApp'ta "gönder"e basıyordu. Yeni: `tools/PhoneControlService.kt` (bütün paketler,
+jest izni; olay dinlemez, yalnız ön plan paketini tutar) + `tools/PhoneControl.kt` + `ToolDeclarations`/`SystemPrompt`/
+Ayarlar izin satırı.
+
+- Eylemler: `read` (numaralı öğe listesi, en çok 90), `tap`/`long_press` (index ya da yazı; tıklanmıyorsa ataya çıkar,
+  olmazsa jest), `type` (ACTION_SET_TEXT), `enter` (IME), `scroll_down/up` (en büyük kaydırılabilir, yoksa parmak
+  kaydırma), `back/home/recents/notifications/quick_settings`, `open_settings` (≈30 sayfa; `sim_lock` IccLock →
+  yoksa Güvenlik). Her eylemden 0,9 sn sonra ekran yeniden okunup döner.
+- Güvenlik: banka/ödeme/cüzdan/şifre paketleri tamamen kapalı (`blockedReason`); riskli yazı (sil, öde, gönder,
+  sıfırla, onayla, …) iki adım — `confirm_id` ancak `AudioIO.lastUserVoiceAt` istekten sonraysa geçer (model kendi
+  onaylayamaz); şifre alanı okunmaz/yazılmaz; sonuç `UntrustedInput`'u işaretler.
+- İzin adb ile açılamadı (Claude Code güvenlik denetimi `settings put secure` reddetti) → kullanıcı elle açar:
+  Erişilebilirlik → İndirilen uygulamalar → "Chiron telefon kontrolü".
+- Durum: derlendi, kuruldu (commit'siz); gerçek cihazda denenmedi.
