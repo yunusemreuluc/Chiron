@@ -1,7 +1,8 @@
 """Pano kartının çalışma kopyası: git worktree, commit, test, birleştirme (Ajan İstasyonu adım 3, 2026-10-26).
 
 Kullanıcı kararı (2026-10-25): her iş ayrı kopyada yapılır, test geçmezse "bitti" sayılmaz,
-ana dala birleştirmeyi Yunus onaylar. Otomatik birleştirme YOK.
+ana dala birleştirmeyi Yunus onaylar. Tek istisna kendini geliştirme kartları (2026-11-06, Yunus: "benden onay
+istemesin, yapsın, commit ve push yapsın"): koşullar `Pano.auto_merge`'de.
 
 Akış (bir kart için):
     create_worktree  → <WORKTREE_ROOT>/<repo>-<kart>, dal `pano/<kart>`, ana dalın o anki ucundan
@@ -21,6 +22,7 @@ biri zaten Claude'a auto izinle iş verebiliyor; ek bir yetki açılmıyor.
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import shutil
@@ -44,6 +46,15 @@ _NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 
 class GitError(RuntimeError):
     """Kullanıcıya gösterilecek git/test hatası."""
+
+
+class MergeBlocked(GitError):
+    """Ana klasör bu birleştirmeye şimdilik izin vermiyor (kayıtsız değişiklik, başka dal, ilerlemiş ana dal).
+    Hiçbir şey değişmedi; sonra yeniden denenir."""
+
+
+class MergeConflict(GitError):
+    """Ana dal kartın kopyasına alınamadı: gerçek çakışma, birinin çözmesi gerek."""
 
 
 @dataclass
@@ -213,12 +224,26 @@ def reset_after_test(worktree: Path) -> None:
     git(["clean", "-fdq"], worktree)
 
 
-def merge(repo: Path, branch: str, base_branch: str, message: str) -> str:
+def merge(repo: Path, branch: str, base_branch: str, message: str, *, keep_dirty: bool = False) -> str:
     """Ana klasörde birleştirir, birleşme commit'inin kısa sha'sını döner.
 
     Ana klasör kartın açıldığı dalda olmalı ve izlenen dosyalarda commit'lenmemiş değişiklik
     olmamalı — Yunus'un yarım işinin üstüne birleştirme yapılmaz. Çakışmada birleştirme geri alınır.
+
+    `keep_dirty` (kendini geliştirme, 2026-11-06): başka oturumun yarım işi varken de dener. Ön koşul: kart dalı
+    ana dalı içeriyor, yani gerçek çakışma olamaz. Git, yarım işin olduğu dosyaya dokunacak birleştirmeyi kendisi
+    reddeder ve hiçbir şeyi değiştirmez; `merge --abort` bilerek çağrılmaz, yarım işi bozabilir.
     """
+    if keep_dirty:
+        if current_branch(repo) != base_branch:
+            raise MergeBlocked(f"Ana klasör şu an başka dalda; '{base_branch}' dalına dönünce birleşecek.")
+        if not is_ancestor(repo, base_branch, branch):
+            raise MergeBlocked("Ana dal ilerlemiş; önce kopyaya alınacak.")
+        try:
+            git(["merge", "--no-ff", "-m", message, branch], repo)
+        except GitError as error:
+            raise MergeBlocked(f"Ana klasördeki yarım iş bu birleştirmeye izin vermiyor. ({error})") from error
+        return git(["rev-parse", "--short", "HEAD"], repo)
     if current_branch(repo) != base_branch:
         raise GitError(f"Ana klasör şu an başka dalda; kart '{base_branch}' dalından açılmıştı.")
     dirty = [line for line in git(["status", "--porcelain"], repo).splitlines() if not line.startswith("??")]
@@ -235,6 +260,91 @@ def merge(repo: Path, branch: str, base_branch: str, message: str) -> str:
             f"Birleştirmede çakışma: '{base_branch}' dalı kart açıldıktan sonra değişmiş. ({error})"
         ) from error
     return git(["rev-parse", "--short", "HEAD"], repo)
+
+
+def is_ancestor(repo: Path, ancestor: str, descendant: str) -> bool:
+    try:
+        git(["merge-base", "--is-ancestor", ancestor, descendant], repo)
+    except GitError:
+        return False
+    return True
+
+
+def integrate_base(worktree: Path, base_branch: str) -> bool:
+    """Ana dalın son halini kartın kopyasına alır: test, birleşecek halin üstünde koşsun. İlerlediyse True.
+    Çakışırsa kopya eski haline döner, MergeConflict."""
+    before = git(["rev-parse", "HEAD"], worktree)
+    try:
+        git(["merge", "--no-edit", base_branch], worktree)
+    except GitError as error:
+        try:
+            git(["merge", "--abort"], worktree)
+        except GitError:
+            pass
+        raise MergeConflict(f"'{base_branch}' dalı kopyaya alınırken çakıştı. ({error})") from error
+    return git(["rev-parse", "HEAD"], worktree) != before
+
+
+def card_changes(worktree: Path, base_branch: str) -> list[tuple[str, str]]:
+    """Kartın kendi değişiklikleri [(durum, yol)]; ana daldan kopyaya alınanlar sayılmaz (üç nokta)."""
+    out = git(["diff", "--name-status", "--no-renames", f"{base_branch}...HEAD"], worktree)
+    rows = [line.split("\t", 1) for line in out.splitlines() if "\t" in line]
+    return [(status, path) for status, path in rows]
+
+
+def _link_modules(link: Path, modules: Path) -> bool:
+    """`link`'i `modules`'a bağlantı yapar (Windows junction, yönetici istemez). Başarılıysa True.
+    `os.rmdir` junction'da yalnız bağlantıyı siler, hedefe dokunmaz; gerçek klasörse boş değildir, reddeder."""
+    try:
+        if os.path.lexists(link) and Path(os.path.realpath(link)) != modules:
+            os.rmdir(link)
+        if not os.path.lexists(link):
+            if os.name == "nt":
+                subprocess.run(
+                    ["cmd", "/c", "mklink", "/J", str(link), str(modules)],
+                    check=True, capture_output=True, creationflags=_NO_WINDOW,
+                )
+            else:
+                os.symlink(modules, link)
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return True
+
+
+def typecheck_frontend(worktree: Path, repo: Path, timeout: float = 5 * 60) -> TestResult | None:
+    """Kopyada arayüz tip denetimi; arayüz değişikliği önceden denetimsiz birleşiyordu. Araç ya da klasör yoksa None.
+
+    Kopyada node_modules yok. TypeScript paketleri üst klasörlerde de aradığı için kopyaların ÜSTÜNE ana klasörün
+    node_modules'ına bağlantı konur: kopyanın dışında, `worktree remove` ve `git clean` ona hiç değmez.
+    tsconfig `paths` ile çözmek işe yaramadı (react/jsx-runtime çözülmüyor, sahte JSX hataları)."""
+    modules = (repo / "frontend" / "node_modules").resolve()
+    tsc = modules / "typescript" / "bin" / "tsc"
+    front = worktree / "frontend"
+    node = shutil.which("node")
+    if not node or not tsc.exists() or not front.is_dir() or not _link_modules(worktree.parent / "node_modules", modules):
+        return None
+    config = front / ".tsconfig.pano.json"
+    env_types = (repo / "frontend" / "next-env.d.ts").resolve()
+    config.write_text(
+        json.dumps(
+            {
+                "extends": "./tsconfig.json",
+                "compilerOptions": {"incremental": False, "plugins": []},
+                "include": ["**/*.ts", "**/*.tsx", *([str(env_types)] if env_types.exists() else [])],
+                "exclude": ["node_modules", ".next", "out"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    try:
+        return run_test(worktree, f'"{node}" "{tsc}" -p "{config}"', timeout)
+    finally:
+        config.unlink(missing_ok=True)
+
+
+def push(repo: Path, branch: str) -> None:
+    """Ana dalı uzak depoya gönderir. Asla zorlamaz: reddedilirse GitError, sonra yeniden denenir."""
+    git(["push", "origin", branch], repo, timeout=180)
 
 
 def remove_worktree(repo: Path, worktree: Path, *, force: bool = False) -> None:

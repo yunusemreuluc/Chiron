@@ -137,6 +137,30 @@ düz cümleler, tablo/kod bloğu/uzun yol listesi yok; ne yaptın, sonuç ne, Yu
 
 ORIGINS = ("telefon", "pano", "sohbet", "sohbet_tel")
 NOTES = {"telefon": SYSTEM_NOTE, "pano": PANO_NOTE, "sohbet": CHAT_NOTE, "sohbet_tel": CHAT_PHONE_NOTE}
+
+# Kendini geliştirme (2026-11-06, Yunus: "çok token yiyor sanki", ölçüldü: açılış bağlamı 53,5k, hiçbiri işe
+# yaramıyordu). Bu kaynak hafif oturumda koşar: MCP yok, kullanıcı ayarı (101 ajan, skill, global hafıza, Obsidian
+# hook'u) yok → açılış 20,7k. Bekçi `--settings` ile geldiği için durur (denendi). Bedel: oturum Gözetim'de görünmez,
+# kart panoda görünür; proje CLAUDE.md'si de yüklenmez, gereken kural görev metninde.
+GELISIM_ORIGIN = "gelisim"
+GELISIM_BUDGET_USD = "4"
+GELISIM_ARGS = [
+    "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}', "--setting-sources", "local",
+    "--model", "opus", "--effort", "high", "--max-budget-usd", GELISIM_BUDGET_USD,
+]
+GELISIM_NOTE = f"""\
+Bu iş Chiron'un kendini geliştirme döngüsünden geldi; Yunus başında değil. Soru sorma, onay isteme.
+- İşi uçtan uca kendin bitir; belirsizse makul varsayımla ilerle.
+- Geri alınamayan bir adım (toplu silme, üzerine yazma, ödeme, başkasına mesaj/yayın, git push, force push, \
+Drive/Etsy yüklemesi) gerekiyorsa o adımı YAPMA, onsuz bitir. "{APPROVAL_MARKER}" yazma.
+"""
+
+
+def note_for(origin: str) -> str:
+    return GELISIM_NOTE if origin == GELISIM_ORIGIN else NOTES[origin]
+
+
+
 # Sonucu telefona haber verilen kaynaklar (diğerleri PC'de, kartta / Komuta'da okunuyor).
 PHONE_ORIGINS = ("telefon", "sohbet_tel")
 MAX_TRAIL = 30  # iş başına saklanan araç adımı satırı (sohbette "ne yaptı" listesi)
@@ -473,7 +497,7 @@ class ClaudeJobs:
         add_dirs = [d for d in (add_dirs or []) if Path(d).is_dir()]
         if engine == "codex" and add_dirs:
             raise ValueError("Bu ajana görsel verilemiyor.")
-        if origin not in ORIGINS:
+        if origin not in ORIGINS and origin != GELISIM_ORIGIN:
             raise ValueError("Bilinmeyen iş kaynağı.")
         if cwd is not None and not Path(cwd).is_dir():
             raise ValueError(f"Çalışma klasörü yok: {cwd}")
@@ -664,11 +688,13 @@ class ClaudeJobs:
                 "--permission-mode",
                 job.mode if job.mode == "plan" else PERMISSION_MODE,
                 "--append-system-prompt",
-                NOTES[job.origin],
+                note_for(job.origin),
                 # Bekçi (adım 7): PreToolUse hook'u yalnız bu oturuma; global ayara dokunulmaz.
                 "--settings",
                 str(bekci.settings_path()),
             ]
+            if job.origin == GELISIM_ORIGIN:
+                args += GELISIM_ARGS
             # Başlarken oturum kimliği yalnız sürdürülen işte dolu (yenisinde olaylardan gelir).
             if job.session_id:
                 args += ["--resume", job.session_id]
@@ -752,7 +778,7 @@ class ClaudeJobs:
             task = job.task
             if job.engine != "claude":
                 # Codex/Gemini'de --append-system-prompt yok: kural notu görevin başına.
-                task = f"{NOTES[job.origin]}\n\n{job.task}"
+                task = f"{note_for(job.origin)}\n\n{job.task}"
             threading.Thread(target=_feed_stdin, args=(proc, task), daemon=True).start()
             reader = threading.Thread(
                 target=self._read_output, args=(job, proc, log_path, events, tail, texts), daemon=True

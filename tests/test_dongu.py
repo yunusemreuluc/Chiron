@@ -279,21 +279,30 @@ def test_gelisim_opens_card_when_idle_and_respects_interval(tmp_path, monkeypatc
     assert len(cards) == 2 and "Komuta'ya arama ekledim." in newest["detail"]  # önceki tekrar edilmesin
 
 
-def test_gelisim_waits_for_yunus_and_quota(tmp_path, monkeypatch):
+def test_gelisim_failed_card_is_retried_once_then_dropped_and_quota_waits(tmp_path, monkeypatch):
+    """Hatalı kart Yunus'u beklemez: bir kez yeniden denenir, sonra bırakılır, döngü sürer."""
     monkeypatch.setattr(dongu_mod, "GELISIM_ARALIK", 0)
     board, jobs, loop, clock = _gelisim_setup(tmp_path, monkeypatch)
     loop.set_gelisim(True)
-    for job in ("j1", "j2"):
-        loop.tick()
-        loop.tick()
-        jobs.jobs[job].update(status="failed", error="test kaldı")
-        clock.ts += 1
     loop.tick()
-    assert len(_gelisim_cards(board)) == 2 and "Onayını bekleyen 2" in loop.public()["neden"]
-    assert [n["durum"] for n in loop.take_news()] == ["hata", "hata"]
+    loop.tick()
+    first = _gelisim_cards(board)[0]["id"]
+    jobs.jobs["j1"].update(status="failed", error="test kaldı")
+    loop.tick()  # yeniden deneme: sessiz
+    assert _status(board, first) == "calisiyor" and loop.take_news() == []
+    jobs.jobs["j2"].update(status="failed", error="yine kaldı")
+    loop.tick()  # bırakıldı
+    assert _status(board, first) == "iptal"
+    assert [n["durum"] for n in loop.take_news()] == ["hata"]
+    clock.ts += 1
+    loop.tick()
+    assert len(_gelisim_cards(board)) == 2  # sıradakine geçti
 
-    for card in _gelisim_cards(board):
-        board.delete(card["id"])
+
+def test_gelisim_waits_for_quota(tmp_path, monkeypatch):
+    monkeypatch.setattr(dongu_mod, "GELISIM_ARALIK", 0)
+    board, jobs, loop, _ = _gelisim_setup(tmp_path, monkeypatch)
+    loop.set_gelisim(True)
     jobs.quota = {"ts": time.time(), "five_hour": {"used": 0.8, "resets_at": time.time() + 3600}}
     loop.tick()
     assert _gelisim_cards(board) == [] and "kota" in loop.public()["neden"]

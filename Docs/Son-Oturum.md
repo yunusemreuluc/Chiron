@@ -4,11 +4,11 @@ Claude Code oturumları arasındaki köprü. `.claude/hooks/session_start.py` he
 açılışta buradaki **en üstteki** `## Oturum:` bloğunu okuyup context'e enjekte
 ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 
-## Oturum: 2026-11-06 — K-016 kendini geliştirme: sesle medya kontrolü
+## Oturum: 2026-11-06 — Kendini geliştirme onaysız ve hafif; Obsidian tokenı ölçüldü
 
-- `control_media` ([[Medya-Kontrol]]): durdur/devam/sonraki/önceki/ne çalıyor; Windows medya oturumu API'si, sonuç geri okunur. Commit'siz, pano birleştirecek.
-- Sessiz deneme oturumunda uçtan uca ölçüldü (Spotify/YouTube'da gerçek başlık geçişi denenmedi). Deneme sırasında Yunus'un Chrome videosu duraklatılmış göründü: komut gönderilmedi, Yunus o an bilgisayar başındaydı ama deneme oturumunun etkisi kesin dışlanamadı.
-- Sıradaki aday: telefon yolunu (`desktop_control` kör medya tuşu) bu araca bağlamak.
+- Kök neden: onay bekleyen 2 kart döngüyü kilitliyordu (30.10–04.11 kart yok), her kart `Son-Oturum`a yazıp çakışıyordu. Şimdi test geçen `Gelişim:` kartı kendi birleşir ve gönderir; hassas dosyaya dokunan Yunus'u bekler. Ayrıntı [[Ajan-Ofisi]] § Onaysız birleştirme. K-014 (zamanlayıcı), K-015 (pencere) elle birleştirildi.
+- Token: kart açılışı 53,5k → 20,7k (hafif oturum), görev 7 not okutmuyor. Etkileşimli oturumlarda metin girdisinin ~%34'ü Obsidian'a bağlıydı (mesaj başına ~5k karakter hook + not okuma); vault `context-mode` session yapıldı, geri almak: `beyin_v3_cli preferences --context-mode turn`.
+- **Sırada:** ilk gerçek kartı izle (K-016 eski kuralla başladı); Gözetim hafif oturumu görmüyor, istenirse ayrı iş. Codex yok, çapraz inceleme yapılmadı.
 
 ## Oturum: 2026-11-05 (gece 3) — Gözetim: oturuma sor + Sonlandır (devam / geri al)
 

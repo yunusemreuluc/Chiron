@@ -23,6 +23,21 @@ tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 - **Kaynak:** https://learn.microsoft.com/en-us/uwp/api/windows.media.control.globalsystemmediatransportcontrolssession ·
   https://devblogs.microsoft.com/oldnewthing/20231108-00/?p=108980
 
+## 2026-11-04 — "Chrome'a geç", "bunu sola yasla"
+- **Ne yaptım:** PC'deki sesli Chiron'a `manage_window` aracı ([[Pencereler]], `actions/windows.py`): açık
+  pencereleri listeler, öne getirir, küçültür, tam ekran yapar, eski boyutuna alır, kapatır, ekranın sol/sağ yarısına
+  yaslar, masaüstünü gösterir. Ad verilmezse öndeki pencere; Chiron'un kendi penceresi hiç hedef olmaz.
+- **Neden daha iyi:** Uygulama açabiliyordum ama açık pencereye dokunamıyordum; sesle çalışırken Yunus'un en sık
+  fareye döndüğü an pencere değiştirmek ve yan yana dizmekti. Artık tek cümle, ve "yaptım" demem pencerenin durumunu
+  geri okuduktan sonra — kapanmayan (kaydetmeyi soran) pencereye "kapattım" demiyorum.
+- **Ne öğrendim:** Alt+Tab listesi resmi bir API değil; görünür + sahipsiz + tool window değil + DWM "cloaked" değil
+  filtresiyle yaklaşılıyor, yoksa askıdaki mağaza uygulamaları ve kabuk pencereleri listeye düşüyor. Ad eşleşmesinde
+  süreç adı başlıktan önce gelmeli ("chrome-notes.md - VS Code" Chrome isteğini çalmasın). 64 bit'te ctypes
+  imzaları verilmezse pencere tanıtıcıları int'e kırpılır. Yarım ekran için `rcWork` kullanılmalı (görev çubuğu
+  hariç, ikinci monitörde 0,0'dan başlamaz). Arka plan sürecinden öne getirme Windows kilidine takılabiliyor.
+- **Kaynak:** https://devblogs.microsoft.com/oldnewthing/20071008-00/?p=24863 ·
+  https://learn.microsoft.com/en-us/windows/win32/gdi/positioning-objects-on-a-multiple-display-setup
+
 ## 2026-11-04 — "10 dakika sonra çayı hatırlat"
 - **Ne yaptım:** `set_timer` aracı ([[Zamanlayici]], `actions/zamanlayici.py`): sesle zamanlayıcı/kısa hatırlatıcı
   kurar (dakika/saniye ya da "saat 15:30"), kalan süreyi söyler, ada göre iptal eder; dolunca main.py
