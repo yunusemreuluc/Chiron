@@ -16,4 +16,4 @@ Bağlı: [[Home]] · [[Arac-Tanimlari]] · [[Browser]]
 Pano kopyalama yardımcı fonksiyonu (`_copy_to_clipboard`) var ama `play_media` içinde
 kullanılmıyor — muhtemelen ileride/eski kod kalıntısı.
 
-Tool: `play_media` ([[Arac-Tanimlari]]).
+Tool: `play_media` ([[Arac-Tanimlari]]). Çalanı durdurmak ya da parça değiştirmek: [[Medya-Kontrol]].

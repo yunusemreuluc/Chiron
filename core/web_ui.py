@@ -75,6 +75,7 @@ _AUTOMATION_TOOLS = frozenset({
     "open_app",
     "browser_control",
     "play_media",
+    "control_media",
     "control_power",
     "toggle_webcam",
     "send_whatsapp_message",

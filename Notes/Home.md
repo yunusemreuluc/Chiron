@@ -53,6 +53,7 @@ Not bir kaynağı özetliyorsa dosya:satır referansı verir — detay gerekirse
 - [[Reminders]] — Microsoft To-Do (tarayıcı tabanlı)
 - [[Browser]] — URL açma, arama, YouTube ilk sonucu oynatma
 - [[Media]] — Spotify/YouTube'da müzik çalma
+- [[Medya-Kontrol]] — çalanı durdur/devam/sonraki/önceki, "ne çalıyor?"; sonuç oturumdan geri okunur
 - [[Shell]] — cmd.exe komut çalıştırma
 - [[Webcam]] — canlı webcam akışı (main.py, WebcamStreamer)
 - [[Screen-Vision]] — aktif pencere ekran görüntüsü + Gemini vision analizi

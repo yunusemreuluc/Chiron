@@ -8,6 +8,21 @@ Chiron'un kendini geliştirme döngüsünün (backend/core/dongu.py § Kendini g
 kartı en üste bir kayıt ekler: ne yaptı, neden daha iyi, ne öğrendi, kaynak. Sonraki kartlar bunu okuyup
 tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 
+## 2026-11-06 — "Müziği durdur", "sonraki şarkı", "ne çalıyor?"
+- **Ne yaptım:** PC'deki sesli Chiron'a `control_media` aracı ([[Medya-Kontrol]], `actions/medya_kontrol.py`): açık
+  medyayı durdurur, devam ettirir, sonraki/önceki parçaya geçer, ne çaldığını söyler; istenirse tek uygulamaya
+  ("Spotify'ı durdur").
+- **Neden daha iyi:** Müzik açabiliyor, sesini ayarlayabiliyordum ama çalanı durduramıyordum; "müziği durdur" boşa
+  düşüyordu. Artık tek cümle, ve "durdurdum" demem oturumun durumunu geri okuduktan sonra. Zaten duruyorsa komut
+  göndermiyorum, yani kör tuş gibi duran şeyi yanlışlıkla başlatmıyorum.
+- **Ne öğrendim:** `Windows.Media.Control` PowerShell 5.1'den bağımlılıksız kullanılabiliyor (`AsTask` köprüsü,
+  ~0,5 sn). PS 5.1'de `ConvertFrom-Json` diziyi tek nesne verir: `@()` iç içe dizi yapıp `-contains`'i sessizce
+  bozdu, üstelik `catch{}` da hatayı saklayabilirdi — sahte testler geçti, ancak gerçek deneme yakaladı. Kullanıcının
+  medyasına dokunmadan canlı deneme mümkün: sessiz WAV'lı kendi `MediaPlayer` oturumu (kalıp [[Medya-Kontrol]]'de).
+  Telefon yolu hâlâ kör medya tuşunda — sıradaki aday bu aracı oraya da bağlamak.
+- **Kaynak:** https://learn.microsoft.com/en-us/uwp/api/windows.media.control.globalsystemmediatransportcontrolssession ·
+  https://devblogs.microsoft.com/oldnewthing/20231108-00/?p=108980
+
 ## 2026-11-04 — "Chrome'a geç", "bunu sola yasla"
 - **Ne yaptım:** PC'deki sesli Chiron'a `manage_window` aracı ([[Pencereler]], `actions/windows.py`): açık
   pencereleri listeler, öne getirir, küçültür, tam ekran yapar, eski boyutuna alır, kapatır, ekranın sol/sağ yarısına
