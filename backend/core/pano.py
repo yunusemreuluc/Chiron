@@ -90,7 +90,11 @@ def auto_block_reason(test: dict[str, Any], hits: list[dict[str, Any]], changes:
     """Kart kendi kendine birleşemezse nedeni; birleşebilirse boş metin."""
     if not test.get("ok"):
         return "Geçen test sonucu yok."
-    risky = sorted({str(h.get("ad") or h.get("kural")) for h in hits if h.get("seviye") == "yuksek"})
+    # Yalnız birleşecek koddaki uyarı (`diff` katmanı: anahtar, kafes dosyası). Çalışırken komuta verilen uyarı kartın
+    # işini değerlendirmez: K-016 kendi deneme sürecini `Stop-Process -Force` ile kapatınca "toplu silme" sayılmıştı.
+    risky = sorted(
+        {str(h.get("ad") or h.get("kural")) for h in hits if h.get("seviye") == "yuksek" and h.get("katman") == "diff"}
+    )
     if risky:
         return f"Bekçi uyardı: {', '.join(risky)}."
     forbidden = [path for _, path in changes if AUTO_FORBIDDEN.match(path.replace("\\", "/"))]
@@ -520,8 +524,7 @@ class Pano:
             card = self._require(card_id)
             if card["status"] != "birlestir" or not card.get("worktree"):
                 return {"durum": "yok"}
-            if card.get("oto_engel"):
-                return {"durum": "engel", "neden": card["oto_engel"]}
+            was_blocked = bool(card.get("oto_engel"))
             worktree, repo, base = Path(card["worktree"]), Path(card["repo"]), card["base_branch"]
             test_cmd, test, hits = card["test_cmd"], dict(card.get("test") or {}), list(card.get("bekci") or [])
         try:
@@ -530,6 +533,8 @@ class Pano:
             if reason:
                 self._auto_note(card_id, oto_engel=reason)
                 return {"durum": "engel", "neden": reason}
+            if was_blocked:  # Engel kalktı: kural değişti ya da kart düzeldi.
+                self._auto_note(card_id, oto_engel="")
             moved = pano_git.integrate_base(worktree, base)
             result = None
             if moved:
