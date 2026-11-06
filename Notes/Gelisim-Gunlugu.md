@@ -8,6 +8,25 @@ Chiron'un kendini geliştirme döngüsünün (backend/core/dongu.py § Kendini g
 kartı en üste bir kayıt ekler: ne yaptı, neden daha iyi, ne öğrendi, kaynak. Sonraki kartlar bunu okuyup
 tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 
+## 2026-11-06 — Saatlik kopmada konuşma unutulmasın
+- **Ne yaptım:** Oturum artık sunucunun verdiği devam anahtarını istiyor ve saklıyor (`SessionResume`, `core/live_oturum.py`).
+  Kopunca yeni bağlantı aynı anahtarla açılıyor. SIFIRLA, ses seçimi ve ses değişimi yeni oturum istiyor; iki saattir anahtar
+  tazelenmediyse de eski konuşma geri gelmiyor. Değişiklik bağlantı başına çağrılan metotlarda, canlı yama ulaşıyor.
+- **Neden daha iyi:** Eskiden her kopmada modelin belleği sıfırlanıyor, yalnız diskteki kısa not taşınıyordu. Artık model
+  konuşmanın kendisini hatırlamalı. Anahtar reddedilirse üç hızlı başarısızlıktan sonra (mevcut yeniden denemelerle
+  ~6 sn, hesap) yeni oturum açılıyor, hata ekranına varmıyor. Bedel: bu birkaç saniye ve üç hata kaydı, bir kez.
+- **Ne öğrendim:** K-020'nin açık bıraktığı soruda güçlü kanıt var: sessizlik işe yarıyor gibi. Satır 08:12:32'de düştü, ondan
+  sonra 10:06'ya kadar hiç hareketsizlik kopması yok (öncesinde iki dakikada bir). Kesin değil, çünkü mikrofon durumu günlükte
+  yazmıyor; açıldıysa oturumu gerçek ses de tutmuş olabilir. 08:12:12'de açılan oturum 09:12:12'de,
+  tam 60 dakikada "1011 service unavailable" ile kapandı. Tek örnek; süre sınırı olduğu çıkarım, bu yüzden 1011'i "olağan"
+  saymadım, hata olarak yazılmaya devam ediyor. **Gerçek oturumla denemedim:** sunucunun değişen sistem komutuyla devamı kabul
+  edip etmediğini belge de söylemiyor (son konuşma notu ve saat her bağlantıda değişiyor). Doğrulama: "Konuşma kaldığı
+  yerden sürdürülüyor" satırı `✅ Bağlandı` ile sürüyor mu, "Devam anahtarı çalışmadı" satırı çıkıyor mu? Altı saniyeyi
+  aşan ağ kesintisi anahtarı bırakır, o durumda davranış eskisi gibi. Anahtarın geçerlilik süresini arama doğrulamadı
+  (Vertex belgesi 24 saat diyor, Gemini API için bulamadım); iki saat benim muhafazakâr seçimim.
+- **Kaynak:** `logs/chiron.log` · SDK `_live_converters.py`, `LiveServerSessionResumptionUpdate` ·
+  https://docs.cloud.google.com/vertex-ai/generative-ai/docs/live-api/start-manage-session
+
 ## 2026-11-06 — İki dakikada bir kopma düzeltmesi yeniden başlatma beklemesin
 - **Ne yaptım:** Sessizlik görevini `run()`dan `_send_realtime()`e taşıdım (`main.py`). `run()` süreç boyunca bitmiyor, canlı
   yama çalışan döngüsüne ulaşamıyor; `_send_realtime()` ise her bağlantıda yeniden çağrılıyor. İki alanı da aynı yerde

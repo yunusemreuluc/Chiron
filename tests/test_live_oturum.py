@@ -6,12 +6,17 @@ import time
 from pathlib import Path
 
 import pytest
-from google.genai import errors
+from google.genai import errors, types
+from google.genai._live_converters import _LiveConnectConfig_to_mldev
 
 from backend.core.canli_yukleme import _patch_function
 from core.live_oturum import (
     KEEPALIVE_SECONDS,
+    RESUME_MAX_AGE_SECONDS,
+    RESUME_MAX_FAILURES,
+    RESUME_PROOF_SECONDS,
     SILENCE_CHUNK,
+    SessionResume,
     is_expected_close,
     keep_session_alive,
 )
@@ -259,3 +264,164 @@ def test_canli_yama_yeni_govdeyi_eski_metoda_yerinde_uygular():
     yeni = _gonderim_metodu()
     assert _patch_function(_eski, yeni) is True
     assert _eski.__code__ is yeni.__code__
+
+
+class _Saat:
+    def __init__(self):
+        self.simdi = 1000.0
+
+    def __call__(self):
+        return self.simdi
+
+
+def _guncelleme(handle="anahtar-1", resumable=True):
+    return types.LiveServerSessionResumptionUpdate(new_handle=handle, resumable=resumable)
+
+
+def _anahtarli(saat=None):
+    saat = saat or _Saat()
+    devam = SessionResume(clock=saat)
+    devam.seen(_guncelleme())
+    return devam, saat
+
+
+def test_ilk_baglanti_anahtarsiz_acilir():
+    assert SessionResume().next_handle() is None
+
+
+def test_kopunca_ayni_konusma_surer():
+    devam, _ = _anahtarli()
+    assert devam.next_handle() == "anahtar-1"
+
+
+def test_en_yeni_anahtar_kullanilir():
+    devam, _ = _anahtarli()
+    devam.seen(_guncelleme("anahtar-2"))
+    assert devam.next_handle() == "anahtar-2"
+
+
+@pytest.mark.parametrize("guncelleme", [_guncelleme("", resumable=False), _guncelleme("x", resumable=False), None])
+def test_devam_edilemeyen_an_son_iyi_anahtari_silmez(guncelleme):
+    """Model konuşurken ya da araç çalışırken sunucu boş anahtar yollar."""
+    devam, _ = _anahtarli()
+    devam.seen(guncelleme)
+    assert devam.next_handle() == "anahtar-1"
+
+
+def test_sifirlama_eski_konusmaya_dondurmez():
+    devam, _ = _anahtarli()
+    devam.start_fresh()
+    assert devam.next_handle() is None
+    assert devam.next_handle() is None
+
+
+def test_sifirlama_sirasinda_gelen_guncelleme_eski_konusmayi_geri_getirmez():
+    """Alım görevi iptal edilirken araya güncelleme girebilir."""
+    devam, _ = _anahtarli()
+    devam.start_fresh()
+    devam.seen(_guncelleme("gec-gelen"))
+    assert devam.next_handle() is None
+
+
+def test_sifirlamadan_sonraki_konusma_yine_surer():
+    devam, _ = _anahtarli()
+    devam.start_fresh()
+    assert devam.next_handle() is None
+    devam.seen(_guncelleme("yeni-konusma"))
+    assert devam.next_handle() == "yeni-konusma"
+
+
+def test_cok_eski_konusma_geri_gelmez():
+    devam, saat = _anahtarli()
+    saat.simdi += RESUME_MAX_AGE_SECONDS + 1
+    assert devam.next_handle() is None
+
+
+def test_gecersiz_anahtar_chironu_acilmaz_birakmaz(caplog):
+    """Sunucu anahtarı hep reddederse hata ekranına varmadan yeni oturum açılmalı."""
+    devam, saat = _anahtarli()
+    with caplog.at_level(logging.WARNING, logger="chiron"):
+        for _ in range(RESUME_MAX_FAILURES):
+            assert devam.next_handle() == "anahtar-1"
+            saat.simdi += 2
+        assert devam.next_handle() is None
+    assert "yeni oturum" in caplog.text
+    assert devam.next_handle() is None
+
+
+def test_mesaj_alan_baglanti_basarisiz_sayilmaz():
+    devam, saat = _anahtarli()
+    for _ in range(RESUME_MAX_FAILURES + 2):
+        assert devam.next_handle() == "anahtar-1"
+        devam.seen(None)
+        saat.simdi += 2
+    assert devam.next_handle() == "anahtar-1"
+
+
+def test_uzun_yasayan_sessiz_baglanti_basarisiz_sayilmaz():
+    """Sessizlikle saatlerce duran oturumda sunucu hiç mesaj göndermeyebilir."""
+    devam, saat = _anahtarli()
+    for _ in range(RESUME_MAX_FAILURES + 2):
+        assert devam.next_handle() == "anahtar-1"
+        saat.simdi += RESUME_PROOF_SECONDS + 1
+    assert devam.next_handle() == "anahtar-1"
+
+
+def test_kisa_ag_kesintisi_konusmayi_silmez():
+    devam, saat = _anahtarli()
+    for _ in range(RESUME_MAX_FAILURES - 1):
+        assert devam.next_handle() == "anahtar-1"
+        saat.simdi += 2
+    assert devam.next_handle() == "anahtar-1"
+    devam.seen(None)
+    saat.simdi += 2
+    assert devam.next_handle() == "anahtar-1"
+
+
+def test_anahtarsiz_ve_anahtarli_ayar_sunucuya_gider():
+    """Anahtar yokken de alan gitmeli: sunucu devam anahtarını ancak bu alan varsa gönderir."""
+    def _kurulum(handle):
+        ayar = types.LiveConnectConfig(session_resumption=types.SessionResumptionConfig(handle=handle))
+        kurulum: dict = {}
+        _LiveConnectConfig_to_mldev(None, ayar, kurulum)
+        return kurulum["setup"]["sessionResumption"]
+
+    assert _kurulum(None) == {}
+    assert _kurulum("anahtar-1") == {"handle": "anahtar-1"}
+
+
+class _SifirlanacakNesne:
+    def __init__(self):
+        self._reset_event = asyncio.Event()
+        self.devam, _ = _anahtarli()
+
+    def _session_resume(self):
+        return self.devam
+
+
+def test_sifirla_dugmesi_ve_ses_degisimi_yeni_oturum_ister():
+    """Hepsi `_watch_reset`ten geçiyor; metot kaynaktan derlenip gerçekten çalıştırılıyor."""
+    class _ConversationReset(Exception):
+        pass
+
+    modul = ast.Module(body=[_chiron_metodu("_watch_reset")], type_ignores=[])
+    ortam = {"_ConversationReset": _ConversationReset}
+    exec(compile(modul, "main.py", "exec"), ortam)
+
+    async def _run():
+        nesne = _SifirlanacakNesne()
+        nesne._reset_event.set()
+        with pytest.raises(_ConversationReset):
+            await ortam["_watch_reset"](nesne)
+        return nesne
+
+    assert asyncio.run(_run()).devam.next_handle() is None
+
+
+def test_devam_kodu_canli_yamanin_ulasabildigi_yerde():
+    """run() süreç boyunca bitmiyor; bağlantı başına çağrılan metotlar yamayla yenilenir."""
+    assert "_session_resume" not in ast.unparse(_chiron_metodu("run"))
+    assert "self._session_resume().seen(response.session_resumption_update)" in ast.unparse(
+        _chiron_metodu("_receive_audio")
+    )
+    assert "session_resumption=types.SessionResumptionConfig(handle=self._session_resume().next_handle())" in MAIN_SOURCE
