@@ -398,7 +398,19 @@ class ChironLive:
     async def _watch_reset(self):
         await self._reset_event.wait()
         self._reset_event.clear()
+        # Sıfırlama, ses seçimi ve ses değişimi hep buradan geçer: eski konuşmaya dönülmesin.
+        self._session_resume().start_fresh()
         raise _ConversationReset()
+
+    def _session_resume(self):
+        """Devam anahtarı tutucusu. Canlı yamadan önce doğmuş nesnede `__init__` bunu kurmamıştır;
+        içe aktarma da çağrı anında: iki dosya birlikte yamalanırken sıra sorun olmasın."""
+        resume = getattr(self, "_resume", None)
+        if resume is None:
+            from core.live_oturum import SessionResume
+
+            resume = self._resume = SessionResume()
+        return resume
 
     def _on_voice_change(self, voice: str):
         """Ayarlar panelinden ses değiştirilince çağrılır — uygulamayı kapatıp açmaya
@@ -976,6 +988,8 @@ class ChironLive:
             input_audio_transcription={},
             system_instruction="\n".join(parts),
             thinking_config=thinking,
+            # Anahtarsız da istenir: sunucu devam anahtarını ancak bu alan varsa gönderir.
+            session_resumption=types.SessionResumptionConfig(handle=self._session_resume().next_handle()),
             tools=[{"function_declarations": TOOL_DECLARATIONS}],
             speech_config=types.SpeechConfig(
                 language_code="tr-TR",
@@ -1723,6 +1737,7 @@ class ChironLive:
         try:
             while True:
                 async for response in self.session.receive():
+                    self._session_resume().seen(response.session_resumption_update)
                     if response.data:
                         self.audio_in_queue.put_nowait(response.data)
 
