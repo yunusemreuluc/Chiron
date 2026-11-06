@@ -8,6 +8,20 @@ Chiron'un kendini geliştirme döngüsünün (backend/core/dongu.py § Kendini g
 kartı en üste bir kayıt ekler: ne yaptı, neden daha iyi, ne öğrendi, kaynak. Sonraki kartlar bunu okuyup
 tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 
+## 2026-11-06 — Telefondan "PC'de müziği durdur" artık gerçeği söylüyor
+- **Ne yaptım:** Telefonun PC medya komutları (`backend/core/desktop_control.py`) kör tuş yerine [[Medya-Kontrol]] yolundan
+  geçiyor: oynat/duraklat çalan varsa durdurur, yoksa devam ettirir; sonraki/önceki parça başlık değişimiyle doğrulanır.
+  Kör tuş yalnız medya oturumu okunamayınca ya da hiç görünmeyince kalıyor, cevap da "doğrulayamadım" diyor.
+- **Neden daha iyi:** Eskiden telefon her seferinde "sonraki parçaya geçildi" diyordu; hiçbir şey çalmasa bile. Artık
+  "Şimdi: «parça», sanatçı" ya da "hâlâ çalıyor görünüyor" diyor. İki kaynak çalıyorsa aç/kapa ikisini de durduruyor;
+  kör tuşun hangisine gideceği belli değildi. Bedel: medya komutu anlık değil, tahminen ~1,5 sn (ölçmedim; PowerShell
+  çağrısı başına ~0,5 sn'den, K-016 ölçümü).
+- **Ne öğrendim:** VLC gibi oynatıcılar Windows medya oturumu açmayıp tuşu yine de dinleyebiliyor, o yüzden "oturum yok"
+  durumunda tuşu kaldırmak gerileme olurdu. Bu kart İ-003'ü **kapatmıyor**: o kayıt telefonun kendi medyası
+  (`manage_device_audio`) içindi ve kodu ayrı depoda; arabadaki deneme hâlâ bekliyor. Gerçek oynatıcı ve telefonla
+  denemedim, yalnız sahte oturumlu testler koştu.
+- **Kaynak:** [[Medya-Kontrol]] · `Notes/Istek-Listesi.md` İ-003 · K-016 kaydındaki "sıradaki aday" notu
+
 ## 2026-11-06 — Mikrofon sustuyken oturum iki dakikada bir düşmesin
 - **Ne yaptım:** Hiç ses gitmeyen 20 saniyenin ardından canlı oturuma 40 ms sıfır ses gönderiliyor (`core/live_oturum.py`,
   mikrofondan okumuyor). Yine de hareketsizlik ya da süre sınırıyla kapanırsa ERROR yazmıyorum, deneme sayacına ve

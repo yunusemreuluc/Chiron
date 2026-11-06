@@ -42,7 +42,7 @@ kullanıcının kendi yazdığı metin, değiştirilmeden (`live/SystemPrompt.kt
 | `get_recent_notifications` | `ChironNotificationListener` | Bellekte, diske yazılmıyor |
 | `get_device_health` | `BatteryManager`, `ConnectivityManager` | Boşalma süresi tahmini uydurulmuyor |
 | `query_desktop_chiron` | PC `/api/remote/ask` | PC cevabı bekleyip metin döner (≤90 sn) |
-| `send_desktop_command` | PC `/api/remote/desktop` | Beyaz liste: lock, sleep, medya, pano. Kapatma YOK |
+| `send_desktop_command` | PC `/api/remote/desktop` | Beyaz liste: lock, sleep, medya (sonucu geri okur, [[Medya-Kontrol]]), pano. Kapatma YOK |
 | `save_quick_note` | telefon `notes.json` + PC `/api/remote/note` | Önce telefona yazılıyor |
 
 ## Doğrulananlar ve tuzaklar
