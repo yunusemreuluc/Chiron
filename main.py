@@ -411,9 +411,10 @@ class ChironLive:
         finally:
             renewal.cancel()
         self._reset_event.clear()
+        self._go_away_judge().closing_by_us()
         if self._renew_due:
             # Sıfırlama değil: anahtar korunur, konuşma kaldığı yerden sürer.
-            logger.info("[CHIRON] ♻️ Saatlik sınır yaklaşıyor, sessiz anda oturum yenileniyor.")
+            logger.info("[CHIRON] ♻️ Bağlantı sınırı yaklaşıyor, sessiz anda oturum yenileniyor.")
             raise PlannedRenewal()
         # Sıfırlama, ses seçimi ve ses değişimi hep buradan geçer: eski konuşmaya dönülmesin.
         self._session_resume().start_fresh()
@@ -424,6 +425,7 @@ class ChironLive:
 
         self._last_session_activity = time.monotonic()
         self._go_away = False
+        self._go_away_judge().connected()
         await wait_for_quiet_renewal(
             self._renewal_blocked,
             lambda: self._last_session_activity,
@@ -437,6 +439,21 @@ class ChironLive:
         with self._speaking_lock:
             speaking = self._is_speaking
         return speaking or self._paused or self._tool_call_pending or not self.audio_in_queue.empty()
+
+    def _go_away_judge(self):
+        """Kapanış bildirimi hakemi; `_session_resume` ile aynı sebepten çağrı anında kurulur."""
+        judge = getattr(self, "_go_away_judge_obj", None)
+        if judge is None:
+            from core.live_oturum import GoAwayJudge
+
+            judge = self._go_away_judge_obj = GoAwayJudge()
+        return judge
+
+    def _on_go_away(self, go_away) -> None:
+        leaving = self._go_away_judge().should_leave()
+        self._go_away = self._go_away or leaving
+        note = "" if leaving else " (bağlantı genç, yenilemiyorum)"
+        logger.info(f"[CHIRON] 🚪 Sunucu kapanacağını bildirdi, kalan: {go_away.time_left}{note}")
 
     def _session_resume(self):
         """Devam anahtarı tutucusu. Canlı yamadan önce doğmuş nesnede `__init__` bunu kurmamıştır;
@@ -1779,8 +1796,7 @@ class ChironLive:
                     if response.data or response.server_content or response.tool_call:
                         self._last_session_activity = time.monotonic()
                     if response.go_away:
-                        self._go_away = True
-                        logger.info(f"[CHIRON] 🚪 Sunucu kapanacağını bildirdi, kalan: {response.go_away.time_left}")
+                        self._on_go_away(response.go_away)
                     if response.data:
                         self.audio_in_queue.put_nowait(response.data)
 

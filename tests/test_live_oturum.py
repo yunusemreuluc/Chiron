@@ -19,6 +19,9 @@ from core.live_oturum import (
     RENEW_QUIET_SECONDS,
     RENEW_QUIET_SECONDS_GOING_AWAY,
     SILENCE_CHUNK,
+    GO_AWAY_PROOF_SECONDS,
+    GO_AWAY_TRUST_AFTER_SECONDS,
+    GoAwayJudge,
     PlannedRenewal,
     SessionResume,
     is_expected_close,
@@ -183,7 +186,9 @@ MAIN_SOURCE = (Path(__file__).resolve().parent.parent / "main.py").read_text(enc
 def _chiron_metodu(ad: str) -> ast.AsyncFunctionDef:
     tree = ast.parse(MAIN_SOURCE)
     sinif = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "ChironLive")
-    return next(n for n in sinif.body if isinstance(n, ast.AsyncFunctionDef) and n.name == ad)
+    return next(
+        n for n in sinif.body if isinstance(n, (ast.AsyncFunctionDef, ast.FunctionDef)) and n.name == ad
+    )
 
 
 class _CanliNesne:
@@ -399,12 +404,16 @@ class _SifirlanacakNesne:
     def __init__(self):
         self._reset_event = asyncio.Event()
         self.devam, _ = _anahtarli()
+        self.hakem = GoAwayJudge()
 
     async def _renew_when_quiet(self):
         await asyncio.Event().wait()
 
     def _session_resume(self):
         return self.devam
+
+    def _go_away_judge(self):
+        return self.hakem
 
 
 def test_sifirla_dugmesi_ve_ses_degisimi_yeni_oturum_ister():
@@ -483,6 +492,66 @@ def test_sunucu_kapanacagini_soylerse_kisa_sessizlik_yeter(monkeypatch):
     assert ani == 10 + RENEW_QUIET_SECONDS_GOING_AWAY
 
 
+def test_dokuzuncu_dakikadaki_bildirim_yenileme_baslatmaz():
+    """Günlükteki asıl durum: 9:00'da gelen "kalan: 50s" oturumu dokuz dakikada bir kesiyordu."""
+    saat = _Saat()
+    hakem = GoAwayJudge(clock=saat)
+    saat.simdi += 9 * 60
+    assert hakem.should_leave() is False
+
+
+def test_yasli_baglantida_bildirime_uyulur():
+    saat = _Saat()
+    hakem = GoAwayJudge(clock=saat)
+    saat.simdi += GO_AWAY_TRUST_AFTER_SECONDS
+    assert hakem.should_leave() is True
+
+
+def test_yok_sayilan_bildirimden_sonra_kopma_olursa_bildirime_guvenilir():
+    """Sunucu gerçekten keserse bir kez kopar, sonraki bağlantılarda eski davranışa dönülür."""
+    saat = _Saat()
+    hakem = GoAwayJudge(clock=saat)
+    saat.simdi += 9 * 60
+    hakem.should_leave()
+    saat.simdi += 53
+    hakem.connected()
+    saat.simdi += 9 * 60
+    assert hakem.should_leave() is True
+
+
+def test_bildirimden_sonra_baglanti_yasarsa_guven_olusmaz():
+    saat = _Saat()
+    hakem = GoAwayJudge(clock=saat)
+    saat.simdi += 9 * 60
+    hakem.should_leave()
+    saat.simdi += GO_AWAY_PROOF_SECONDS
+    hakem.connected()
+    saat.simdi += 9 * 60
+    assert hakem.should_leave() is False
+
+
+def test_baglantiyi_biz_kestiysek_guven_olusmaz():
+    """Bildirimin hemen ardından basılan SIFIRLA, sunucu sözünü tuttu sayılmamalı."""
+    saat = _Saat()
+    hakem = GoAwayJudge(clock=saat)
+    saat.simdi += 9 * 60
+    hakem.should_leave()
+    hakem.closing_by_us()
+    saat.simdi += 3
+    hakem.connected()
+    saat.simdi += 9 * 60
+    assert hakem.should_leave() is False
+
+
+def test_yeni_baglantida_yas_sifirlanir():
+    saat = _Saat()
+    hakem = GoAwayJudge(clock=saat)
+    saat.simdi += GO_AWAY_TRUST_AFTER_SECONDS
+    hakem.connected()
+    saat.simdi += 9 * 60
+    assert hakem.should_leave() is False
+
+
 def test_planli_yenileme_olagan_kapanis_sayilir():
     """Çalışan run() yamayla değişmiyor: sessiz yeniden bağlanma ancak bu dalla mümkün."""
     assert is_expected_close(PlannedRenewal())
@@ -519,6 +588,56 @@ def _beklemesiz(monkeypatch):
         return None
 
     monkeypatch.setattr("core.live_oturum.wait_for_quiet_renewal", _hemen)
+
+
+def _bildirim_ortami(saat):
+    govde = [_chiron_metodu("_on_go_away"), _chiron_metodu("_watch_reset")]
+    ortam = {
+        "_ConversationReset": type("_ConversationReset", (Exception,), {}),
+        "asyncio": asyncio,
+        "logger": logging.getLogger("test"),
+    }
+    exec(compile(ast.Module(body=govde, type_ignores=[]), "main.py", "exec"), ortam)
+    nesne = _SifirlanacakNesne()
+    nesne.hakem = GoAwayJudge(clock=saat)
+    nesne._go_away = False
+    return ortam, nesne
+
+
+def test_gelen_bildirim_hakeme_gore_bayrak_kaldirir():
+    """Alım döngüsünün çağırdığı asıl metot: genç bağlantıda bayrak kalkmaz, yaşlıda kalkar."""
+    saat = _Saat()
+
+    async def _run():
+        ortam, nesne = _bildirim_ortami(saat)
+        bildirim = types.LiveServerGoAway(time_left="50s")
+        saat.simdi += 9 * 60
+        ortam["_on_go_away"](nesne, bildirim)
+        genc = nesne._go_away
+        saat.simdi += GO_AWAY_TRUST_AFTER_SECONDS
+        ortam["_on_go_away"](nesne, bildirim)
+        return genc, nesne._go_away
+
+    assert asyncio.run(_run()) == (False, True)
+
+
+def test_sifirlama_yok_sayilan_bildirimi_kanit_yapmaz():
+    """Asıl `_watch_reset` üzerinden: kullanıcının sıfırlaması güveni açmaz."""
+    saat = _Saat()
+
+    async def _run():
+        ortam, nesne = _bildirim_ortami(saat)
+        saat.simdi += 9 * 60
+        ortam["_on_go_away"](nesne, types.LiveServerGoAway(time_left="50s"))
+        nesne._reset_event.set()
+        with pytest.raises(ortam["_ConversationReset"]):
+            await ortam["_watch_reset"](nesne)
+        saat.simdi += 3
+        nesne.hakem.connected()
+        saat.simdi += 9 * 60
+        return nesne.hakem.should_leave()
+
+    assert asyncio.run(_run()) is False
 
 
 def test_planli_yenileme_konusmayi_silmez(monkeypatch):

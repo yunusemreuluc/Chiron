@@ -8,6 +8,22 @@ Chiron'un kendini geliştirme döngüsünün (backend/core/dongu.py § Kendini g
 kartı en üste bir kayıt ekler: ne yaptı, neden daha iyi, ne öğrendi, kaynak. Sonraki kartlar bunu okuyup
 tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 
+## 2026-11-07 — Oturum dokuz dakikada bir yenilenmesin
+- **Ne yaptım:** Dünkü düzeltme sunucunun `go_away` mesajını okumaya başlayınca oturum saatte bir değil 9 dakikada bir yenilenir oldu.
+  Artık 50 dakikadan genç bağlantıda bu mesaj yenileme başlatmıyor (`GoAwayJudge`, `core/live_oturum.py`). Yok sayılan mesajdan sonraki
+  2 dakika içinde bağlantı koptuysa sunucu haklı sayılıyor ve süreç boyunca mesaja uyuluyor. `♻️` satırındaki "Saatlik" yanlış olduğu için düzeltildi.
+- **Neden daha iyi:** Her yenilemede mikrofon ve hoparlör yeniden açılıp ~2-3 sn kulak tıkanıyordu, üstelik sadece 3 sn sessizlik yetiyordu:
+  konuşmada düşünmek için durunca sonraki kelimeler kaybolabilirdi. Günlükte 00:58-02:02 arası 8 yenileme var; beklenen artık saatte en çok bir.
+- **Ne öğrendim:** Mesaj her bağlantıda tam 9:00'da ve "kalan: 50s" diye geliyor (7/7). Belge bağlantı ömrüne "yaklaşık 10 dakika" diyor,
+  ama mesajın okunmadığı dönemde aynı ayarlı bağlantılar 60 dakika yaşadı (ör. 23:49:48 → 00:49:48, devam anahtarıyla açılmıştı). Yani kapanış büyük ihtimalle
+  9:50'de değil; **bu çıkarım, denemedim**: mesaj okunmaya başladığından beri hiçbir bağlantı 9:50'yi görmedi, o yüzden yanılma ihtimaline karşı geri dönüş yazdım.
+  00:58'den beri hiçbir yenilemede `🧵` yok, yani planlı yenilemenin konuşmayı sürdürdüğü gerçek oturumda hâlâ görülmedi. Sebep büyük ihtimalle hata değil: son konuşma
+  22:49:57'deydi, anahtar 00:49:51'de (1 sa 59 dk) çalıştı, 00:58'de 2 saatlik sınır dolmuştu. Konuşma olan bir gecede `♻️` ardından `🧵` aranmalı.
+  Ağ kopması mesajdan sonraki 2 dakikaya denk gelirse yanlışlıkla "sunucu haklı" sayılır, yeniden başlatmaya kadar 9 dakikalık yenileme döner; bilerek kabul ettim.
+  50 dakika eşiği ölçüm değil, görülen en erken kopmaya (52,5 dk) göre seçildi. **Gerçek oturumla denemedim.**
+  Doğrulama: `🚪 ... (bağlantı genç, yenilemiyorum)` satırından sonra bağlantı 9:50'yi geçiyor mu, `♻️` saatte bire iniyor mu? `Sunucu kapanış bildirimini tuttu` uyarısı çıkarsa çıkarım yanlış demektir.
+- **Kaynak:** `logs/chiron.log` · [Live API oturum yönetimi](https://ai.google.dev/gemini-api/docs/live-session) · K-022 kaydı
+
 ## 2026-11-07 — Saatlik kopma konuşmanın ortasına denk gelmesin
 - **Ne yaptım:** Bağlantı 55 dakikayı geçince ilk sessiz anda (Chiron konuşmuyor, araç çalışmıyor, 15 sn'dir mikrofonda ve sunucudan
   ses yok) oturumu kendim yeniliyorum (`wait_for_quiet_renewal`, `core/live_oturum.py`). Devam anahtarı korunuyor, konuşma sürüyor.
