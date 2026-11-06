@@ -34,8 +34,16 @@ Bunlar sessizce yutulmaz, `restart` listesinde nedeniyle gelir:
 - `functools.wraps` kullanmayan bir dekoratörle sarılmış fonksiyon. Sarmalayıcıyı düşürmektense dokunulmaz.
 - Silinen ya da yeniden adlandırılan tanım bellekte durur (eski rota/araç ilk eşleşme olarak kalır).
 - tool_defs'in Gemini Live bildirimi yeni sesli oturumda geçerli olur.
+- Şu an dönen döngü (`while`/`async for` içeren, çerçevesi canlı fonksiyon): kod yamalanır, yeni çağrılar yeni
+  kodu alır ama süren çağrı eskiyle devam eder. Oturum döngüsü `ChironLive.run()` hiç bitmediği için onun
+  değişikliği ancak yeniden başlatmayla gelir. Döngüsüz fonksiyon uyarılmaz, kısa çağrı kendiliğinden biter.
+- Canlı nesnesi olan sınıfın `__init__`'i: kurulum yeniden çalışmaz, yeni öznitelikler var olan nesnede yoktur.
 
 ## Tuzaklar (ölçüldü)
+
+- **"Uygulandı" çalıştığı anlamına gelmez (2026-11-06).** Sessizlik düzeltmesi 02:09'da `ChironLive.run()` dahil
+  "uygulandı" (INFO) yazdı, oysa çalışan `run()` eski kaldı: yeni görevi hiç başlamadı, 1008 kopması 06:02'de
+  hâlâ sürüyordu. Artık bu durum `restart` listesine düşüyor.
 
 - **Bayt kod karşılaştırması işe yaramaz.** 3.11'de .pyc'den ve AST'den derlenen kod birebir aynı
   çıkmıyor. Değişmemiş 81 modülün 70'i "değişti" göründü. Karar AST tabanıyla verilir, taban son

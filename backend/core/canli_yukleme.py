@@ -22,12 +22,14 @@ Uygulanamayan değişiklikler sessizce yutulmaz: `restart` listesinde nedeniyle 
 Bilinçli sınırlar (yeniden başlatma ister): mevcut bir FastAPI uç noktasının imzası (parametreleri
 FastAPI kayıtta okuyor), değişen sınıf alanları (@dataclass/pydantic), üst düzey durum nesneleri
 (`x = Sinif()`), modül gövdesindeki if/try blokları, tool_defs'in Gemini Live'a giden bildirimi
-(yeni oturumda geçerli olur).
+(yeni oturumda geçerli olur), şu an dönmekte olan bir döngü (süren çağrı eski kodla devam eder),
+canlı nesnesi olan sınıfın `__init__`'i (kurulum yeniden çalışmaz).
 """
 
 from __future__ import annotations
 
 import ast
+import gc
 import logging
 import sys
 import threading
@@ -113,6 +115,37 @@ def _patch_function(old: types.FunctionType, new: types.FunctionType) -> bool:
     old.__annotations__ = new.__annotations__
     old.__doc__ = new.__doc__
     return True
+
+
+def _has_loop(node: ast.AST) -> bool:
+    """`while`/`async for` var mı: kısa çağrı kendiliğinden biter, döngü saatlerce eski kodla sürebilir."""
+    return any(isinstance(n, (ast.While, ast.AsyncFor)) for n in ast.walk(node))
+
+
+def _running_codes() -> set[types.CodeType]:
+    """Şu an çerçevesi olan kodlar: thread yığınları ile askıdaki coroutine/generator'lar."""
+    codes: set[types.CodeType] = set()
+    for frame in sys._current_frames().values():
+        while frame is not None:
+            codes.add(frame.f_code)
+            frame = frame.f_back
+    for obj in gc.get_objects():
+        kind = type(obj)  # isinstance değil: vekil nesnelerin __class__'ı kod çalıştırabilir
+        if kind is types.CoroutineType:
+            frame = obj.cr_frame
+        elif kind is types.GeneratorType:
+            frame = obj.gi_frame
+        elif kind is types.AsyncGeneratorType:
+            frame = obj.ag_frame
+        else:
+            continue
+        if frame is not None:
+            codes.add(frame.f_code)
+    return codes
+
+
+def _has_instance(cls: type) -> bool:
+    return any(cls in kind.__mro__ for kind in {type(obj) for obj in gc.get_objects()})
 
 
 def _rebind_closure(new: types.FunctionType, owner_cls: type | None, module_globals: dict) -> types.FunctionType:
@@ -250,6 +283,20 @@ class Patcher:
         self._flags = 0
         self._base: dict[str, ast.stmt] = {}
         self._failed: list[ast.stmt] = []
+        self._live_codes: set[types.CodeType] | None = None
+
+    def _note_stale_loop(self, node: ast.AST, old_fn: types.FunctionType | None, label: str,
+                         result: PatchResult) -> None:
+        """Yama yeni çağrılara işler; dönmekte olan döngü eski kodla sürer, "uygulandı" demek yetmez.
+
+        Tarama pahalı (tüm gc nesneleri), o yüzden yalnız döngülü tanım değişince ve dosya başına bir kez.
+        """
+        if old_fn is None or not _has_loop(node):
+            return
+        if self._live_codes is None:
+            self._live_codes = _running_codes()
+        if old_fn.__code__ in self._live_codes:
+            result.restart.append(f"{label}(): şu an çalışıyor, süren çağrı eski kodla devam eder")
 
     # Taban
     def known(self, module_name: str) -> bool:
@@ -287,6 +334,7 @@ class Patcher:
         self._flags = _future_flags(tree)
         self._base = old_nodes = self._nodes[name]
         self._failed = []
+        self._live_codes = None
         base_imports = self._imports.get(name, set())
         base_others = self._others.get(name, set())
         is_api = name.startswith("backend.api.")
@@ -382,6 +430,7 @@ class Patcher:
         ns: dict[str, Any] = {}
         exec(_compile([bare], str(path), self._flags), g, ns)
         new_fn = ns[node.name]
+        self._note_stale_loop(node, old_fn, node.name, result)
         if _patch_function(old_fn, new_fn):
             result.applied.append(f"{node.name}()")
         elif old is old_fn and not old_fn.__code__.co_freevars and not node.decorator_list:
@@ -430,6 +479,7 @@ class Patcher:
         new_ann = list(tmp_cls.__dict__.get("__annotations__", {}))
         if old_ann != new_ann:
             result.restart.append(f"{node.name}: sınıf alanları değişti")
+        methods = {n.name: n for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
         for attr, new_val in tmp_cls.__dict__.items():
             if attr in ("__dict__", "__weakref__", "__module__", "__qualname__", "__annotations__", "__doc__"):
                 continue
@@ -442,6 +492,10 @@ class Patcher:
                 continue
             new_fn = _innermost(new_val)
             if new_fn is not None:
+                if attr in methods:
+                    self._note_stale_loop(methods[attr], _innermost(old_val), label, result)
+                if attr == "__init__" and _has_instance(old_cls):
+                    result.restart.append(f"{label}(): var olan nesneler eski kurulumla duruyor")
                 self._patch_method(old_cls, attr, old_val, new_val, new_fn, g, result, label)
                 continue
             # Sınıf düzeyi değer (metasınıfın ürettiği __pydantic_*__ gibi dunder'lara dokunulmaz)
