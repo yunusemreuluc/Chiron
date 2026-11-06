@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import importlib
 import sys
 import textwrap
+import threading
 import uuid
 from pathlib import Path
 
@@ -95,6 +97,103 @@ def test_function_code_is_patched_in_place_and_state_survives(make_module):
     assert greet_ref("Yunus") == "selam Yunus"  # eski referans yeni kodu çalıştırır
     assert module.bump() == 11  # sayaç sıfırlanmadı (gövde yeniden çalışmadı)
     assert module._lock is lock
+
+
+def test_running_thread_loop_asks_for_restart_but_new_calls_get_new_code(make_module):
+    source = """
+        import threading
+
+        started = threading.Event()
+        stop = threading.Event()
+
+        def spin():
+            started.set()
+            while not stop.wait(0.01):
+                pass
+            return "eski"
+    """
+    module, update, _ = make_module(source)
+    thread = threading.Thread(target=module.spin, daemon=True)
+    thread.start()
+    assert module.started.wait(5)
+    try:
+        result = update(source.replace('"eski"', '"yeni"'))
+    finally:
+        module.stop.set()
+        thread.join(5)
+
+    assert "spin()" in result.applied
+    assert any(r.startswith("spin(): şu an çalışıyor") for r in result.restart), result
+    assert module.spin() == "yeni"
+
+
+def test_suspended_async_method_loop_asks_for_restart(make_module):
+    source = """
+        import asyncio
+
+        class Live:
+            async def run(self):
+                while True:
+                    await asyncio.sleep(3600)
+
+            async def idle(self):
+                while True:
+                    await asyncio.sleep(3600)
+    """
+    module, update, _ = make_module(source)
+
+    async def scenario():
+        task = asyncio.create_task(module.Live().run())
+        await asyncio.sleep(0)
+        result = update(source.replace("3600", "60"))
+        task.cancel()
+        return result
+
+    result = asyncio.run(scenario())
+
+    assert any(r.startswith("Live.run(): şu an çalışıyor") for r in result.restart), result
+    assert not any("Live.idle" in r for r in result.restart), result  # döngülü ama çalışmıyor
+
+
+def test_running_function_without_loop_is_not_flagged(make_module):
+    source = """
+        import threading
+
+        started = threading.Event()
+        stop = threading.Event()
+
+        def short():
+            started.set()
+            stop.wait(5)
+            return "eski"
+    """
+    module, update, _ = make_module(source)
+    thread = threading.Thread(target=module.short, daemon=True)
+    thread.start()
+    assert module.started.wait(5)
+    try:
+        result = update(source.replace('"eski"', '"yeni"'))
+    finally:
+        module.stop.set()
+        thread.join(5)
+
+    assert not result.restart, result
+
+
+def test_changed_init_asks_for_restart_only_with_live_instance(make_module):
+    module, update, _ = make_module(BASE)  # BASE'de `counter = Counter()` yaşıyor
+    result = update(BASE.replace("self.value = 10", "self.value = 10\n            self.extra = 1"))
+    assert any(r.startswith("Counter.__init__(): var olan nesneler") for r in result.restart), result
+    assert not hasattr(module.counter, "extra")
+    assert module.Counter().extra == 1
+
+    source = """
+        class Empty:
+            def __init__(self):
+                self.value = 1
+    """
+    _, update, _ = make_module(source)
+    assert not update(source.replace("= 1", "= 2")).restart
 
 
 def test_methods_on_existing_instance_and_new_method_with_super(make_module):

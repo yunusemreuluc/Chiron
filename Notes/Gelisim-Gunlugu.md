@@ -43,6 +43,24 @@ tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
   çıkarım). İ-003, İ-010, İ-011 ve İ-012'ye bu kartta dokunmadım, K-019'a göre ilk üçünün kalanı telefon deposunda.
 - **Kaynak:** `logs/chiron.log` · K-019 dalındaki kayıt ·
   https://discuss.ai.google.dev/t/gemini-3-8-live-1011-1008-session-drops-runaway-audio-and-output-transcription-with-unspoken-text/190881
+## 2026-11-06 — Canlı yama "uygulandı" deyip eski döngüyü çalıştırmasın
+- **Ne yaptım:** Canlı yama (`backend/core/canli_yukleme.py`) `while`/`async for` içeren bir fonksiyonu yamalarken o an
+  çalışan bir çerçevesi var mı diye bakıyor (thread yığınları + askıdaki coroutine'ler). Varsa kod yine yamalanıyor ama
+  "yeniden başlatma" listesine "şu an çalışıyor, süren çağrı eski kodla devam eder" düşüyor. Canlı nesnesi olan sınıfın
+  `__init__`'i değişince de aynısı: "var olan nesneler eski kurulumla duruyor". Mevcut kehribar bildirim yolu kullanılıyor.
+- **Neden daha iyi:** Sessizlik düzeltmesi 02:09'da `ChironLive.run()` dahil "uygulandı" (INFO) yazdı, oysa
+  çalışan `run()` hiç bitmediği için yeni görev başlamadı: 1008 kopması iki dakikada bir 06:02'ye kadar sürdü, "olağan
+  sebeple" satırı bir kez bile çıkmadı. Dört saat kimse bunun beklediğini bilmedi. Artık böyle bir yama uyarıyla bitiyor.
+  Bedel: döngülü tanım değişince dosya başına bir tüm-nesne taraması; 2 milyon nesnede 141 ms ölçtüm (yapay süreç,
+  Chiron'un gerçek nesne sayısını ölçmedim).
+- **Ne öğrendim:** Kopma düzeltmesi **hâlâ denenmedi**, Chiron yeniden başlayınca ilk kez çalışacak; "sessizlik
+  sayacı sıfırlıyor mu" sorusu açık. Kanıt günlükte: izde `run` satır 1880 (dosyada artık orası bir yorum, yani bellekteki
+  kod eski) ama `_receive_audio` satır 1712'ye kaymış (yeni kod); "Alım hatası" 02:11'de bitti çünkü o metot her bağlantıda yeniden çağrılıyor.
+  Yani `_watch_*` ve `_receive_audio` gibi bağlantı başına çağrılanlar da uyarı alır, sonraki bağlantıda kendiliğinden
+  düzelir; bildirimin "Yeniden başlatma ister" başlığı onlar için fazla sert, ayrıntı metni "süren çağrı eski kodla" diyor. Sınır: uyarı bir kez çıkar, aynı
+  fonksiyonun ikinci yamasında eski çerçeve yakalanmaz. Döngüsüz ama uzun süren çağrı da uyarılmaz. Yalnız birim testle
+  denedim, çalışan Chiron'da görmedim. İ-010, İ-011 ve İ-003'ün kalan kısmı telefon deposunda, bu karttan çözülemedi.
+- **Kaynak:** `logs/chiron.log` (02:09:21 yaması, 06:02 izi) · [[Canli-Yukleme]]
 
 ## 2026-11-06 — Telefondan "PC'de müziği durdur" artık gerçeği söylüyor
 - **Ne yaptım:** Telefonun PC medya komutları (`backend/core/desktop_control.py`) kör tuş yerine [[Medya-Kontrol]] yolundan
