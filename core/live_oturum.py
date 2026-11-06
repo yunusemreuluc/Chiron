@@ -6,13 +6,15 @@ ama her iki dakikada bir iki ERROR ve 60 satırlık iz yazıyor (2026-11-06'da 1
 mikrofonu yeniden açıyor ve canlı oturumun belleğini sıfırlıyordu: yeni oturuma yalnız
 diskteki son konuşma notu taşınıyor.
 
-Üç katman:
+Dört katman:
 - `keep_session_alive`: uzun süre hiçbir ses gitmediyse kısa bir SIFIR ses parçası
   gönderir. Mikrofondan tek bayt okumaz; susturulmuş mikrofon susturulmuş kalır.
 - `is_expected_close`: sessizlik sunucuyu yine de ikna etmezse (belgeli bir garanti
   değil), bu kapanış hata sayılmaz, sessizce yeniden bağlanılır.
 - `SessionResume`: kopan oturumun yerine açılan bağlantı sunucunun verdiği anahtarla
   aynı konuşmayı sürdürür.
+- `wait_for_quiet_renewal`: sunucu bağlantıyı 60. dakikada ne yapıyor olursak olalım kesiyor;
+  biz daha önce, kimse konuşmazken yeniliyoruz. Cümle ortasında kopma kalmıyor.
 """
 from __future__ import annotations
 
@@ -43,6 +45,22 @@ RESUME_PROOF_SECONDS = 30.0
 # Bu kadar başarısızlıktan sonra anahtar bırakılır. run() 3 denemeyi kullanıcıya göstermeden
 # yapıyor; yeni oturum dördüncüde açıldığı için geçersiz anahtar hata ekranına varmaz.
 RESUME_MAX_FAILURES = 3
+
+# Sunucu bağlantıyı tam 60. dakikada "1011 service unavailable" ile kesiyor (2026-11-06 günlüğü).
+# 55 dakikadan sonra ilk sessiz anda yenilenir; beş dakikada sessiz an bulunmazsa sunucu keser,
+# yani en kötü durum bugünkü davranıştır.
+RENEW_AFTER_SECONDS = 55 * 60.0
+RENEW_QUIET_SECONDS = 15.0
+# Sunucu "kapanıyorum" dediyse kalan süre kısa olabilir, uzun sessizlik beklenmez.
+RENEW_QUIET_SECONDS_GOING_AWAY = 3.0
+
+
+class PlannedRenewal(Exception):
+    """Oturum bizim isteğimizle yenileniyor. Mesajdaki işaret `is_expected_close`u tutturur:
+    run() canlı yamayla değişmiyor, bu yüzden hazır olağan kapanış dalından geçiyor."""
+
+    def __init__(self) -> None:
+        super().__init__("session duration limit: planned renewal before the server closes")
 
 
 class SessionResume:
@@ -120,6 +138,30 @@ def is_expected_close(exc: BaseException) -> bool:
         return bool(exc.exceptions) and all(is_expected_close(sub) for sub in exc.exceptions)
     message = str(exc).lower()
     return any(marker in message for marker in _EXPECTED_CLOSE_MARKERS)
+
+
+async def wait_for_quiet_renewal(
+    blocked: Callable[[], bool],
+    last_activity: Callable[[], float],
+    going_away: Callable[[], bool],
+    *,
+    clock: Callable[[], float] = time.monotonic,
+    tick: float = CHECK_SECONDS,
+) -> None:
+    """Oturumu yenilemek için doğru an gelince döner; iptale kadar bekler.
+
+    Doğru an: bağlantı yeterince yaşlı (ya da sunucu kapanacağını bildirdi), Chiron meşgul
+    değil ve bir süredir ne kullanıcıdan ne modelden ses var.
+    """
+    started = clock()
+    while True:
+        await asyncio.sleep(tick)
+        leaving = going_away()
+        if not leaving and clock() - started < RENEW_AFTER_SECONDS:
+            continue
+        quiet = RENEW_QUIET_SECONDS_GOING_AWAY if leaving else RENEW_QUIET_SECONDS
+        if not blocked() and clock() - last_activity() >= quiet:
+            return
 
 
 async def keep_session_alive(
