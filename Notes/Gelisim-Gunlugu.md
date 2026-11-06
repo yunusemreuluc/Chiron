@@ -8,6 +8,21 @@ Chiron'un kendini geliştirme döngüsünün (backend/core/dongu.py § Kendini g
 kartı en üste bir kayıt ekler: ne yaptı, neden daha iyi, ne öğrendi, kaynak. Sonraki kartlar bunu okuyup
 tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 
+## 2026-11-07 — Saatlik kopma konuşmanın ortasına denk gelmesin
+- **Ne yaptım:** Bağlantı 55 dakikayı geçince ilk sessiz anda (Chiron konuşmuyor, araç çalışmıyor, 15 sn'dir mikrofonda ve sunucudan
+  ses yok) oturumu kendim yeniliyorum (`wait_for_quiet_renewal`, `core/live_oturum.py`). Devam anahtarı korunuyor, konuşma sürüyor.
+  Sunucunun `go_away` mesajı da artık okunuyor: gelirse 3 sn sessizlik yetiyor, kalan süre günlüğe yazılıyor.
+- **Neden daha iyi:** Eskiden kopma sunucunun seçtiği anda oluyordu: cevap ya da cümle ortasında olabiliyor, ~3 sn kulak tıkanıyor,
+  ekranda "başlatılıyor" durumu ve "Chiron hazır" satırı görünüyor, günlüğe saatte iki ERROR ve 30+ satır iz yazılıyordu.
+  Artık kopma sessiz anda ve tek INFO satırıyla olmalı; ekran durumu değişmiyor. Sessiz an bulunamazsa sunucu keser, en kötü durum eskisi.
+- **Ne öğrendim:** `SessionResume` çalışıyor: yeniden başlatmadan sonraki ilk kopmada, 23:49:47'de "sürdürülüyor" ve `✅ Bağlandı` geldi.
+  Tek örnek. Ama canlı yamanın olduğu 10:13'ten 22:05'e kadarki kopmaların hiçbirinde o satır yok; yani yama kodu oraya vardı ama
+  devam çalışmadı, sebebini bulmadım. Yeni kod da aynı yolla gidiyor; günlükte `♻️` satırı görünmezse önce yeniden başlatma denenmeli.
+  Sınır kanıtı: 08:12-20:12 arası art arda 12 bağlantı tam 60 dakika, ama 20:12'deki 52,5 dakikada düştü; böyle erken kopmayı 55 dakika
+  kuralı yakalamaz. `go_away`'in gerçekten geldiğini bilmiyorum, günlükte hiç izi yok çünkü okunmuyordu. Ses eşiği (0.05) ölçüm değil,
+  tahmin. **Gerçek oturumla denemedim.** Doğrulama: `♻️` satırından sonra `🧵` ve `✅` geliyor mu, `Baglanti hatasi` saatliği bitti mi?
+- **Kaynak:** `logs/chiron.log` · SDK `types.py`, `LiveServerGoAway` · K-021 kaydı
+
 ## 2026-11-06 — Saatlik kopmada konuşma unutulmasın
 - **Ne yaptım:** Oturum artık sunucunun verdiği devam anahtarını istiyor ve saklıyor (`SessionResume`, `core/live_oturum.py`).
   Kopunca yeni bağlantı aynı anahtarla açılıyor. SIFIRLA, ses seçimi ve ses değişimi yeni oturum istiyor; iki saattir anahtar

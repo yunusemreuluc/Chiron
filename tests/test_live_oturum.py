@@ -15,10 +15,15 @@ from core.live_oturum import (
     RESUME_MAX_AGE_SECONDS,
     RESUME_MAX_FAILURES,
     RESUME_PROOF_SECONDS,
+    RENEW_AFTER_SECONDS,
+    RENEW_QUIET_SECONDS,
+    RENEW_QUIET_SECONDS_GOING_AWAY,
     SILENCE_CHUNK,
+    PlannedRenewal,
     SessionResume,
     is_expected_close,
     keep_session_alive,
+    wait_for_quiet_renewal,
 )
 
 
@@ -395,6 +400,9 @@ class _SifirlanacakNesne:
         self._reset_event = asyncio.Event()
         self.devam, _ = _anahtarli()
 
+    async def _renew_when_quiet(self):
+        await asyncio.Event().wait()
+
     def _session_resume(self):
         return self.devam
 
@@ -405,7 +413,7 @@ def test_sifirla_dugmesi_ve_ses_degisimi_yeni_oturum_ister():
         pass
 
     modul = ast.Module(body=[_chiron_metodu("_watch_reset")], type_ignores=[])
-    ortam = {"_ConversationReset": _ConversationReset}
+    ortam = {"_ConversationReset": _ConversationReset, "asyncio": asyncio}
     exec(compile(modul, "main.py", "exec"), ortam)
 
     async def _run():
@@ -425,3 +433,150 @@ def test_devam_kodu_canli_yamanin_ulasabildigi_yerde():
         _chiron_metodu("_receive_audio")
     )
     assert "session_resumption=types.SessionResumptionConfig(handle=self._session_resume().next_handle())" in MAIN_SOURCE
+
+
+# --- 60. dakikadan önce sessiz anda yenileme ---
+
+
+def _yenileme_ani(monkeypatch, saat, blocked, last_activity, going_away):
+    """Beklemeyi gerçek zaman harcamadan sürer: her turda saat bir saniye ilerler."""
+    baslangic = saat.simdi
+
+    async def _uyu(_sure):
+        saat.simdi += 1.0
+
+    async def _run():
+        monkeypatch.setattr("core.live_oturum.asyncio.sleep", _uyu)
+        try:
+            await wait_for_quiet_renewal(blocked, last_activity, going_away, clock=saat)
+        finally:
+            monkeypatch.undo()
+
+    asyncio.run(_run())
+    return saat.simdi - baslangic
+
+
+def test_yenileme_sure_dolmadan_baslamaz(monkeypatch):
+    saat = _Saat()
+    ani = _yenileme_ani(monkeypatch, saat, lambda: False, lambda: 0.0, lambda: False)
+    assert ani == RENEW_AFTER_SECONDS
+
+
+def test_yenileme_konusma_bitip_sessizlik_olana_kadar_bekler(monkeypatch):
+    saat = _Saat()
+    son_ses = saat.simdi + RENEW_AFTER_SECONDS + 100
+    ani = _yenileme_ani(monkeypatch, saat, lambda: False, lambda: son_ses, lambda: False)
+    assert ani == RENEW_AFTER_SECONDS + 100 + RENEW_QUIET_SECONDS
+
+
+def test_yenileme_chiron_mesgulken_baslamaz(monkeypatch):
+    saat = _Saat()
+    serbest = saat.simdi + RENEW_AFTER_SECONDS + 50
+    ani = _yenileme_ani(monkeypatch, saat, lambda: saat.simdi < serbest, lambda: 0.0, lambda: False)
+    assert ani == RENEW_AFTER_SECONDS + 50
+
+
+def test_sunucu_kapanacagini_soylerse_kisa_sessizlik_yeter(monkeypatch):
+    saat = _Saat()
+    son_ses = saat.simdi + 10
+    ani = _yenileme_ani(monkeypatch, saat, lambda: False, lambda: son_ses, lambda: True)
+    assert ani == 10 + RENEW_QUIET_SECONDS_GOING_AWAY
+
+
+def test_planli_yenileme_olagan_kapanis_sayilir():
+    """Çalışan run() yamayla değişmiyor: sessiz yeniden bağlanma ancak bu dalla mümkün."""
+    assert is_expected_close(PlannedRenewal())
+    assert is_expected_close(ExceptionGroup("g", [PlannedRenewal()]))
+    assert not is_expected_close(ExceptionGroup("g", [PlannedRenewal(), RuntimeError("mikrofon")]))
+
+
+def _izleme_ortami():
+    """`_watch_reset` ve `_renew_when_quiet` kaynaktan derlenip gerçekten çalıştırılıyor."""
+
+    class _ConversationReset(Exception):
+        pass
+
+    govde = [_chiron_metodu("_watch_reset"), _chiron_metodu("_renew_when_quiet")]
+    ortam = {
+        "_ConversationReset": _ConversationReset,
+        "asyncio": asyncio,
+        "logger": logging.getLogger("test"),
+        "time": time,
+    }
+    exec(compile(ast.Module(body=govde, type_ignores=[]), "main.py", "exec"), ortam)
+    return ortam
+
+
+class _AnindaYenilenen(_SifirlanacakNesne):
+    """Bekleme bitmiş: asıl `_renew_when_quiet` çalışır, hemen döner."""
+
+    def _renewal_blocked(self):
+        return False
+
+
+def _beklemesiz(monkeypatch):
+    async def _hemen(*_a, **_k):
+        return None
+
+    monkeypatch.setattr("core.live_oturum.wait_for_quiet_renewal", _hemen)
+
+
+def test_planli_yenileme_konusmayi_silmez(monkeypatch):
+    """Asıl fark: aynı olaydan geçen sıfırlama anahtarı siler, yenileme silmez."""
+    _beklemesiz(monkeypatch)
+    ortam = _izleme_ortami()
+
+    class _Nesne(_AnindaYenilenen):
+        def _renew_when_quiet(self):
+            return ortam["_renew_when_quiet"](self)
+
+    async def _run():
+        nesne = _Nesne()
+        nesne.devam.seen(types.LiveServerSessionResumptionUpdate(new_handle="anahtar", resumable=True))
+        with pytest.raises(PlannedRenewal):
+            await ortam["_watch_reset"](nesne)
+        return nesne
+
+    nesne = asyncio.run(_run())
+    assert nesne.devam.next_handle() == "anahtar"
+    assert not nesne._reset_event.is_set()
+
+
+def test_ayni_anda_gelen_sifirlama_yenilemenin_onune_gecer(monkeypatch):
+    """Sıfırlama sinyali varken bayrak kalkmaz: eski konuşma geri gelmesin."""
+    _beklemesiz(monkeypatch)
+    ortam = _izleme_ortami()
+
+    async def _run():
+        nesne = _AnindaYenilenen()
+        nesne._renew_due = False
+        nesne._reset_event.set()
+        await ortam["_renew_when_quiet"](nesne)
+        return nesne
+
+    assert asyncio.run(_run())._renew_due is False
+
+
+def test_yenileme_gorevi_baglanti_kapaninca_biter():
+    """Kalırsa her bağlantıda bir görev birikir ve yeni oturumu vaktinden önce keser."""
+    ortam = _izleme_ortami()
+
+    async def _run():
+        nesne = _SifirlanacakNesne()
+        oncesi = asyncio.all_tasks()
+        gorev = asyncio.create_task(ortam["_watch_reset"](nesne))
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+        gorev.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await gorev
+        await asyncio.sleep(0)
+        return asyncio.all_tasks() - oncesi
+
+    assert asyncio.run(_run()) == set()
+
+
+def test_yenileme_kodu_canli_yamanin_ulasabildigi_yerde():
+    assert "_renew_when_quiet" not in ast.unparse(_chiron_metodu("run"))
+    assert "self._renew_when_quiet()" in ast.unparse(_chiron_metodu("_watch_reset"))
+    assert "tg.create_task(self._watch_reset())" in MAIN_SOURCE

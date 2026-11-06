@@ -308,6 +308,9 @@ CHUNK_SIZE       = 1024
 # normalize edilen bir çubuk hiç kıpırdamıyor gibi görünüyor.
 _MIC_LEVEL_STRIDE = 8
 _MIC_LEVEL_FULL_SCALE = 9000.0
+# Bunun üstü "biri konuşuyor" sayılır (RMS ~450; eşik tahmin, ölçülmedi). Yalnız oturum yenileme
+# zamanlamasında kullanılıyor: oda gürültüsü aşarsa yenileme gecikir, sunucu keser, o kadar.
+_VOICE_ACTIVITY_LEVEL = 0.05
 
 # Muhakeme akışı: bir düşünce parçası bu uzunluğa ulaşıp cümle sonu
 # noktalamasıyla bittiğinde yayınlanır (bkz. ChironLive._flush_reasoning).
@@ -396,11 +399,44 @@ class ChironLive:
         self._loop.call_soon_threadsafe(self._reset_event.set)
 
     async def _watch_reset(self):
-        await self._reset_event.wait()
+        # Yenileme görevi burada başlıyor: run() süreç boyunca bitmediği için canlı yama oraya
+        # ulaşamıyor, bu metot ise her bağlantıda yeniden çağrılıyor. Çökerse yalnız kendisi
+        # ölür, oturum etkilenmez. İçe aktarma çağrı anında, bkz. `_session_resume`.
+        from core.live_oturum import PlannedRenewal
+
+        self._renew_due = False
+        renewal = asyncio.create_task(self._renew_when_quiet())
+        try:
+            await self._reset_event.wait()
+        finally:
+            renewal.cancel()
         self._reset_event.clear()
+        if self._renew_due:
+            # Sıfırlama değil: anahtar korunur, konuşma kaldığı yerden sürer.
+            logger.info("[CHIRON] ♻️ Saatlik sınır yaklaşıyor, sessiz anda oturum yenileniyor.")
+            raise PlannedRenewal()
         # Sıfırlama, ses seçimi ve ses değişimi hep buradan geçer: eski konuşmaya dönülmesin.
         self._session_resume().start_fresh()
         raise _ConversationReset()
+
+    async def _renew_when_quiet(self):
+        from core.live_oturum import wait_for_quiet_renewal
+
+        self._last_session_activity = time.monotonic()
+        self._go_away = False
+        await wait_for_quiet_renewal(
+            self._renewal_blocked,
+            lambda: self._last_session_activity,
+            lambda: self._go_away,
+        )
+        if not self._reset_event.is_set():  # gerçek sıfırlama araya girdiyse o kazanır
+            self._renew_due = True
+            self._reset_event.set()
+
+    def _renewal_blocked(self) -> bool:
+        with self._speaking_lock:
+            speaking = self._is_speaking
+        return speaking or self._paused or self._tool_call_pending or not self.audio_in_queue.empty()
 
     def _session_resume(self):
         """Devam anahtarı tutucusu. Canlı yamadan önce doğmuş nesnede `__init__` bunu kurmamıştır;
@@ -1684,6 +1720,8 @@ class ChironLive:
                 # mikrofon kapalıyken dalgalanan bir çubuk, kapalı olmadığını
                 # söylerdi.
                 level = self._mic_level(data) if listening else 0.0
+                if level >= _VOICE_ACTIVITY_LEVEL:
+                    self._last_session_activity = time.monotonic()
                 self.ui.update_mic_level(level)
                 speaking_overlay.push_mic(level)  # tepsi göstergesi: "dinliyor" evresinde dalgalanma
                 if listening:
@@ -1738,6 +1776,11 @@ class ChironLive:
             while True:
                 async for response in self.session.receive():
                     self._session_resume().seen(response.session_resumption_update)
+                    if response.data or response.server_content or response.tool_call:
+                        self._last_session_activity = time.monotonic()
+                    if response.go_away:
+                        self._go_away = True
+                        logger.info(f"[CHIRON] 🚪 Sunucu kapanacağını bildirdi, kalan: {response.go_away.time_left}")
                     if response.data:
                         self.audio_in_queue.put_nowait(response.data)
 
