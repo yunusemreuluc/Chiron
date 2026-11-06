@@ -23,7 +23,7 @@ oturumda tarayıcının adıyla görünür. Bulunamazsa açık olanları sayar, 
 Yeni bağımlılık yok: PowerShell 5.1 WinRT türlerini yüklüyor, `await` yerine `AsTask` köprüsü. Okuma ~0,3-0,5 sn,
 durdur/devam ~0,8 sn, başlık değişmeyen geçiş en çok ~3 sn (geri okuma bekler).
 
-**Neden medya tuşu değil:** `keybd_event` (telefon yolu, `backend/core/desktop_control.py`) kör bir aç/kapa — "durdur"
+**Neden medya tuşu değil:** `keybd_event` kör bir aç/kapa — "durdur"
 derken duran şeyi başlatabilir, sonucu okutmaz. Burada önce durum okunur, sonuç geri okunur: kabul edilmeyen ya da
 gerçekleşmeyen iş "yaptım" diye söylenmez; zaten duruyorsa komut gönderilmez.
 
@@ -32,7 +32,12 @@ Hedef ve komut betiğe gömülmez, ortam değişkeninden okunur. Chiron'un kendi
 
 **Sınırlar:** Uygulama bu API'ye oturum açmıyorsa görünmez. Tek video açıkken tarayıcı `next`'i reddedebilir; dürüst
 "kabul etmedi" döner. "Önceki" çoğu uygulamada parçayı başa sarar, başlık değişmez ve bu da söylenir. Aynı kimlikli
-iki oturum (nadir) ikisi birden komut alır. Telefon yolu hâlâ kör medya tuşunda; bu araca bağlamak ayrı iş.
+iki oturum (nadir) ikisi birden komut alır.
+
+**Telefon yolu (K-018):** telefonun `send_desktop_command` medya komutları (`backend/core/desktop_control.py`) da bu
+araçtan geçer: `media_play_pause` çalan varsa `pause`, yoksa `play` olur; başarı ve cümle buradan döner. Kör tuş yalnız
+oturumlar okunamıyorsa ya da hiç oturum yoksa (VLC gibi oturum açmayan oynatıcılar) gönderilir, cevap "doğrulayamadım"
+diye söyler. Telefonun KENDİ medyası (`manage_device_audio`, İ-003) ayrı depoda, bundan etkilenmez.
 
 **Tuzak (gerçek denemede yakalandı):** PowerShell 5.1'de `ConvertFrom-Json` JSON diziyi tek nesne olarak verir,
 `@(...)` iç içe dizi yapar ve `-contains` hiçbir şeyle eşleşmez; `| ForEach-Object { $_ }` ile açılmalı. Sahte

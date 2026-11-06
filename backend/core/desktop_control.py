@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import ctypes
 import logging
+import subprocess
 import threading
 
 logger = logging.getLogger("chiron.backend")
@@ -29,11 +30,42 @@ SLEEP_DELAY_SECONDS = 3.0
 
 ACTIONS = ("lock", "sleep", "media_play_pause", "media_next", "media_previous", "clipboard")
 
+# Komut -> (geri okunan yolun eylemi, yedek medya tuşu, tuşun adı). Aç/kapa eylemi duruma göre seçilir.
+_MEDIA = {
+    "media_play_pause": ("", VK_MEDIA_PLAY_PAUSE, "oynat/duraklat"),
+    "media_next": ("next", VK_MEDIA_NEXT_TRACK, "sonraki parça"),
+    "media_previous": ("previous", VK_MEDIA_PREV_TRACK, "önceki parça"),
+}
+
 
 def _press_media_key(vk: int) -> None:
     user32 = ctypes.windll.user32
     user32.keybd_event(vk, 0, 0, 0)
     user32.keybd_event(vk, 0, KEYEVENTF_KEYUP, 0)
+
+
+def _media_command(action: str) -> tuple[bool, str]:
+    """Medya komutunu durumu geri okuyan yoldan (`control_media`) yürütür; telefona gerçekten olanı söyler.
+
+    Kör tuş yalnız Windows'un medya oturumlarını göremediğimiz durumda kalır (VLC gibi oturum açmayan oynatıcılar
+    tuşu yine de dinler). O zaman da sonuç bilinmez, cevap da bunu açıkça söyler.
+    """
+    from actions import medya_kontrol as medya
+
+    verb, key, label = _MEDIA[action]
+    try:
+        sessions = medya.read_sessions()
+    except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+        logger.warning("Medya durumu okunamadı, tuşa düşülüyor: %s", error)
+        _press_media_key(key)
+        return True, f"PC'ye {label} tuşunu gönderdim ama medya durumunu okuyamadım, sonucu doğrulayamadım."
+    if not sessions:
+        _press_media_key(key)
+        return True, f"PC'de açık medya görünmüyor; {label} tuşunu yine de gönderdim, bir şey değişti mi bilmiyorum."
+    if not verb:
+        verb = "pause" if any(s["status"] == "Playing" for s in sessions) else "play"
+    result = medya.control_media(verb)
+    return result["success"], f"PC'de — {result['message']}"
 
 
 def _sleep_later() -> None:
@@ -57,15 +89,8 @@ def execute(action: str, text: str = "") -> tuple[bool, str]:
                 f"PC {int(SLEEP_DELAY_SECONDS)} saniye içinde uykuya geçiyor. "
                 "Uyurken telefondan ulaşılamaz."
             )
-        if action == "media_play_pause":
-            _press_media_key(VK_MEDIA_PLAY_PAUSE)
-            return True, "PC'de oynat/duraklat gönderildi."
-        if action == "media_next":
-            _press_media_key(VK_MEDIA_NEXT_TRACK)
-            return True, "PC'de sonraki parçaya geçildi."
-        if action == "media_previous":
-            _press_media_key(VK_MEDIA_PREV_TRACK)
-            return True, "PC'de önceki parçaya dönüldü."
+        if action in _MEDIA:
+            return _media_command(action)
         if action == "clipboard":
             if not text:
                 return False, "Panoya aktarılacak metin boş."

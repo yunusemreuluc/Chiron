@@ -8,8 +8,8 @@ Yol: Windows'un genel medya oturumu API'si (`Windows.Media.Control`, Win10 1809+
 kartının kullandığı kaynak. Yeni bağımlılık yok: PowerShell 5.1 WinRT türlerini doğrudan yükleyebiliyor, `await`
 yerine `AsTask` köprüsü kullanılıyor. Bir çağrı bu makinede ~0,5 sn.
 
-Neden medya tuşu değil: `keybd_event` (telefon yolu, `backend/core/desktop_control.py`) kör bir aç/kapa — sonucu
-okutmaz, "durdur" derken duran şeyi başlatabilir, hangi uygulamaya gideceği belli değildir. Burada önce durum
+Neden medya tuşu değil: `keybd_event` kör bir aç/kapa (telefon yolu `backend/core/desktop_control.py` de K-018'den
+beri buradan geçiyor, tuş yalnız oturum okunamayınca yedek) — sonucu okutmaz, "durdur" derken duran şeyi başlatabilir, hangi uygulamaya gideceği belli değildir. Burada önce durum
 okunur, komut doğru oturuma gider ve sonuç GERİ OKUNUR; "durdurdum" cümlesi yalnız oturum gerçekten durunca kurulur.
 
 Seçim Python'da (`choose`), PowerShell yalnız okur ve söyleneni uygular — seçim mantığı böylece testle sınanır.
