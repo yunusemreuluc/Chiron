@@ -1048,10 +1048,23 @@ class ChironLive:
         )
 
     async def _send_realtime(self):
-        while True:
-            msg = await self.out_queue.get()
-            await self.session.send_realtime_input(media=msg)
-            self._last_audio_sent = time.monotonic()
+        # Sessizlik görevi run()'da değil burada: run() süreç boyunca bitmediği için canlı
+        # yama çalışan döngüsüne ulaşamıyor, bu metot ise her bağlantıda yeniden çağrılıyor.
+        # İki alan da burada kuruluyor: yamadan önce doğmuş nesnede __init__ onları kurmadı.
+        self._last_audio_sent = time.monotonic()
+        self._tool_call_pending = False
+        keepalive = asyncio.create_task(keep_session_alive(
+            self._send_silence,
+            lambda: self._last_audio_sent,
+            self._keepalive_blocked,
+        ))
+        try:
+            while True:
+                msg = await self.out_queue.get()
+                await self.session.send_realtime_input(media=msg)
+                self._last_audio_sent = time.monotonic()
+        finally:
+            keepalive.cancel()
 
     async def _send_silence(self, chunk: bytes) -> None:
         await self.session.send_realtime_input(media={"data": chunk, "mime_type": "audio/pcm"})
@@ -1926,14 +1939,7 @@ class ChironLive:
                     if not quiet_reconnect:
                         self.ui.write_log("SYS: Chiron hazır. Dinliyorum...")
                     quiet_reconnect = False
-                    self._last_audio_sent = time.monotonic()
-                    self._tool_call_pending = False
 
-                    tg.create_task(keep_session_alive(
-                        self._send_silence,
-                        lambda: self._last_audio_sent,
-                        self._keepalive_blocked,
-                    ))
                     tg.create_task(self._send_realtime())
                     tg.create_task(self._listen_audio())
                     tg.create_task(self._receive_audio())

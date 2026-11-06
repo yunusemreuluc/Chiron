@@ -60,7 +60,12 @@ async def keep_session_alive(
     Sayaç mikrofon döngüsünden bağımsız: mikrofon okuması takılsa da oturum kapanmaz.
     `send` zamanı kendisi günceller, böylece başarısız gönderim "gitti" sayılmaz. Gönderim
     hatası yutulur: oturum ölmüşse gerçek sebebi alım görevi bildirir.
+
+    İlk başarılı gönderim bağlantı başına bir kez günlüğe yazılır: düzeltmenin gerçekten
+    devrede olduğu yalnız buradan görülür. Bu satırın ardından oturum yine iki dakikada
+    düşüyorsa sessizlik sunucunun sayacını sıfırlamıyor demektir.
     """
+    announced = False
     while True:
         await asyncio.sleep(tick)
         if blocked() or clock() - last_sent() < KEEPALIVE_SECONDS:
@@ -69,3 +74,7 @@ async def keep_session_alive(
             await send(SILENCE_CHUNK)
         except Exception:
             logger.debug("[CHIRON] Sessizlik gönderilemedi", exc_info=True)
+        else:
+            if not announced:
+                announced = True
+                logger.info("[CHIRON] 🤫 Ses gitmiyor: oturum sessizlikle ayakta tutuluyor.")
