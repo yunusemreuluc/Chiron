@@ -8,6 +8,23 @@ Chiron'un kendini geliştirme döngüsünün (backend/core/dongu.py § Kendini g
 kartı en üste bir kayıt ekler: ne yaptı, neden daha iyi, ne öğrendi, kaynak. Sonraki kartlar bunu okuyup
 tekrar etmez. Bağlı: [[Ajan-Ofisi]] · [[Istek-Listesi]]
 
+## 2026-11-06 — İki dakikada bir kopma düzeltmesi yeniden başlatma beklemesin
+- **Ne yaptım:** Sessizlik görevini `run()`dan `_send_realtime()`e taşıdım (`main.py`). `run()` süreç boyunca bitmiyor, canlı
+  yama çalışan döngüsüne ulaşamıyor; `_send_realtime()` ise her bağlantıda yeniden çağrılıyor. İki alanı da aynı yerde
+  kuruyorum, çünkü yamadan önce doğmuş nesnede `__init__` onları kurmamıştı; yoksa görev ilk kontrolde ölürdü. İlk
+  başarılı gönderim bağlantı başına bir kez günlüğe yazılıyor ("oturum sessizlikle ayakta tutuluyor").
+- **Neden daha iyi:** 02:09'daki düzeltme çalışan süreçte hiç devreye girmedi; hatanın izi 08:03'te hâlâ eski `run()`dan
+  geçiyor ve "olağan sebeple" satırı günlükte hiç yok. Son 300 hata kaydının 235'i bu kopma. Artık birleşmeden sonraki ilk yeni
+  bağlantıda (kopma sürüyorsa en geç iki dakika içinde), yeniden başlatmadan sessizlik başlar. Ayrıca sessizliğin işe yarayıp yaramadığı ilk kez günlükten okunabilir.
+- **Ne öğrendim:** Sessizliğin sunucu sayacını sıfırladığı **hâlâ doğrulanmadı**; arama da belge çıkarmadı, gerçek oturumla
+  denemedim. Yeni satırdan sonra kopma sürüyorsa sessizlik işe yaramıyor demektir. O durumda çalışan süreçte hata kaydı da
+  durmaz, çünkü sessiz yeniden bağlanma `run()`da ve yeniden başlatma ister. Canlı yamada yeni bir içe aktarma adı
+  eklemedim: iki dosya birlikte değişince sıra `main.py` önce gelirse ad bulunamayabilir (kodu okuyarak çıkarım, denemedim).
+  K-019 dalı birleşmemiş; muhtemel sebep birleşme kapısının yasakladığı `canli_yukleme.py`ye dokunması (günlükte kayıt yok,
+  çıkarım). İ-003, İ-010, İ-011 ve İ-012'ye bu kartta dokunmadım, K-019'a göre ilk üçünün kalanı telefon deposunda.
+- **Kaynak:** `logs/chiron.log` · K-019 dalındaki kayıt ·
+  https://discuss.ai.google.dev/t/gemini-3-8-live-1011-1008-session-drops-runaway-audio-and-output-transcription-with-unspoken-text/190881
+
 ## 2026-11-06 — Telefondan "PC'de müziği durdur" artık gerçeği söylüyor
 - **Ne yaptım:** Telefonun PC medya komutları (`backend/core/desktop_control.py`) kör tuş yerine [[Medya-Kontrol]] yolundan
   geçiyor: oynat/duraklat çalan varsa durdurur, yoksa devam ettirir; sonraki/önceki parça başlık değişimiyle doğrulanır.
