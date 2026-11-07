@@ -39,7 +39,7 @@ from core.audio_devices import (
 from core.live_oturum import is_expected_close, keep_session_alive
 from core.logging_setup import setup_logging
 from core.tool_registry import register_tool, dispatch_tool
-from actions.tool_result import fail, ok
+from actions.tool_result import fail, ok, with_fallback_hint
 from app_config import SPEAKING_STYLE, assistant_name, current_voice, get_app_config_value, save_app_config, voice_for
 from memory.memory_manager import load_memory, update_memory, format_memory_for_prompt
 from memory import son_konusma
@@ -69,6 +69,7 @@ from actions import zamanlayici  # @register_tool yan etkisi + _watch_timers
 from actions.ocr import HAS_EASYOCR, lines_to_text
 from actions.screen_vision import analyze_screen  # noqa: F401
 from actions.screen_control import intervene_screen  # noqa: F401
+from actions.ekran_gosterge import clear_screen_marks, explain_on_screen, show_on_screen  # noqa: F401
 from actions.screen_monitor import (
     check_for_issue,
     get_active_window_title,
@@ -77,6 +78,7 @@ from actions.screen_monitor import (
 from actions.ambient_context import describe_context, get_context  # noqa: F401 — @register_tool yan etkisi için
 from actions.ambient_context import _idle_seconds
 from actions.auto_fix import apply_plan, get_auto_fix_mode, plan_fix, set_auto_fix  # noqa: F401
+from core import otomatik_tepsi
 from core.speaking_overlay import overlay as speaking_overlay
 from actions.object_recognition import describe_object_for_learning
 # Yerel görü (YOLO-World, EasyOCR) ayrı alt süreçte: kullanınca açılır, 2 dk boşta
@@ -92,6 +94,7 @@ from actions.gemini_automation import gemini_desktop_task  # noqa: F401 — @reg
 from actions.video_analysis import analyze_video  # noqa: F401
 from actions.ekran_icerigi import analyze_open_content, build_like_analyzed  # noqa: F401 — @register_tool yan etkisi için
 from actions import arastirma_panosu  # noqa: F401 — research_board / show_research_board / cancel_research
+from actions.ogrenme import learn_how  # noqa: F401
 from actions.youtube_stats import get_youtube_channel_report  # noqa: F401
 from memory.memory_manager import delete_memory  # noqa: F401 — @register_tool yan etkisi için
 from memory.activity_log import log_event, get_daily_activity  # noqa: F401 — @register_tool yan etkisi için
@@ -1094,7 +1097,7 @@ class ChironLive:
         log_event("tool", f"{name}: {result.get('message', '')}", tool_name=name)
         return types.FunctionResponse(
             id=fc.id, name=name,
-            response=result
+            response=with_fallback_hint(result)
         )
 
     async def _send_realtime(self):
@@ -1833,6 +1836,7 @@ class ChironLive:
                                 in_buf.append(txt)
                                 self.ui.mark_user_activity(True)
                                 speaking_overlay.mark_user()
+                                otomatik_tepsi.on_user_speech(" ".join(in_buf))
 
                         if sc.turn_complete:
                             # Yarım kalan düşünce varsa tur bitmeden yayınla —

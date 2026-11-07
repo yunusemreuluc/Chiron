@@ -33,6 +33,7 @@ import threading
 import time
 from pathlib import Path
 
+from core import otomatik_tepsi
 from core.speaking_overlay import overlay as speaking_overlay
 
 # Chromium, kullanıcı sayfaya dokunmadan ses çalmayı engeller. Chiron'un ses
@@ -644,12 +645,14 @@ class TrayController:
             icon.stop()
 
     def _restore(self, *_args) -> None:
+        otomatik_tepsi.hold_for(otomatik_tepsi.HOLD_AFTER_OPEN)  # kendi açtı: konuşunca hemen kaçmasın
         self._clear_icon()
         speaking_overlay.set_enabled(False)
         self._window.show()
 
     def bring_forward(self) -> None:
         """Araştırma panosu "göster" denince (2026-11-01): tepsideyse geri getirir, simge durumundaysa açar."""
+        otomatik_tepsi.hold_for(otomatik_tepsi.HOLD_AFTER_BOARD)
         if self._icon is not None:
             self._restore()
             return

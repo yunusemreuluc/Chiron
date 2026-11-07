@@ -22,3 +22,19 @@ def ok(message: str, **data) -> dict:
 
 def fail(message: str, **data) -> dict:
     return {"success": False, "message": message, "data": data}
+
+
+# Yunus 2026-11-07: "bilmiyorum demesin". Karar sınavında prompt kuralı yetmedi: model araç hata dönünce "yapamam" deyip
+# bırakıyor, hatta hata dönen aracı "araştırıyorum" diye anlatıyordu. Model kararı verirken en çok araç sonucuna bakıyor.
+FALLBACK_HINT = (
+    "Bu yol olmadı. 'Yapamam' deyip bırakma, çalışıyormuş gibi de anlatma: aynı işi yapacak BAŞKA aracı şimdi çağır "
+    "(bilmiyorsan learn_how; PC'de iş, dosya, dönüştürme için delegate_to_pc ya da shell_run). Sebep güvenlik, onay, oyun "
+    "ya da kullanıcıdan eksik bilgiyse zorlama, kullanıcıya söyle. Hepsi olmazsa neyi denediğini dürüstçe söyle."
+)
+
+
+def with_fallback_hint(result: dict) -> dict:
+    """Başarısız araç sonucuna sonraki adımı ekler. Başarılı sonuca ve yeni sözlük dışına dokunmaz."""
+    if not isinstance(result, dict) or result.get("success", True):
+        return result
+    return {**result, "next_step": FALLBACK_HINT}
