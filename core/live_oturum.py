@@ -6,7 +6,7 @@ ama her iki dakikada bir iki ERROR ve 60 satırlık iz yazıyor (2026-11-06'da 1
 mikrofonu yeniden açıyor ve canlı oturumun belleğini sıfırlıyordu: yeni oturuma yalnız
 diskteki son konuşma notu taşınıyor.
 
-Dört katman:
+Beş katman:
 - `keep_session_alive`: uzun süre hiçbir ses gitmediyse kısa bir SIFIR ses parçası
   gönderir. Mikrofondan tek bayt okumaz; susturulmuş mikrofon susturulmuş kalır.
 - `is_expected_close`: sessizlik sunucuyu yine de ikna etmezse (belgeli bir garanti
@@ -15,6 +15,8 @@ Dört katman:
   aynı konuşmayı sürdürür.
 - `wait_for_quiet_renewal`: sunucu bağlantıyı 60. dakikada ne yapıyor olursak olalım kesiyor;
   biz daha önce, kimse konuşmazken yeniliyoruz. Cümle ortasında kopma kalmıyor.
+- `GoAwayJudge`: sunucunun her bağlantıda 9. dakikada yolladığı "kapanıyorum" mesajı yüzünden
+  dokuz dakikada bir yenilenmeyelim; mesaj gerçek çıkarsa bunu görüp ona uyalım.
 """
 from __future__ import annotations
 
@@ -53,6 +55,14 @@ RENEW_AFTER_SECONDS = 55 * 60.0
 RENEW_QUIET_SECONDS = 15.0
 # Sunucu "kapanıyorum" dediyse kalan süre kısa olabilir, uzun sessizlik beklenmez.
 RENEW_QUIET_SECONDS_GOING_AWAY = 3.0
+
+# `go_away` her bağlantının tam 9:00'unda geliyor, "kalan: 50s" diyor (2026-11-07: 7/7), belge de
+# "yaklaşık 10 dakika" yazıyor. Ama mesaj okunmazken aynı bağlantılar 60 dakika yaşadı; demek ki
+# 9. dakikadaki mesaja uymak bir kapanıştan kaçmıyor, dokuz dakikada bir kulak tıkıyor.
+# 50 dk: görülen en erken gerçek kopma 52,5 dakikaydı; bundan yaşlı bağlantıda mesaja uyulur.
+GO_AWAY_TRUST_AFTER_SECONDS = 50 * 60.0
+# Yok sayılan mesajdan sonra bu süre içinde yeni bağlantı açıldıysa sunucu haklıymış demektir.
+GO_AWAY_PROOF_SECONDS = 120.0
 
 
 class PlannedRenewal(Exception):
@@ -126,6 +136,41 @@ class SessionResume:
         self._alive = False
         logger.info("[CHIRON] 🧵 Konuşma kaldığı yerden sürdürülüyor.")
         return self._handle
+
+
+class GoAwayJudge:
+    """Sunucunun "kapanıyorum" mesajına uyulup uyulmayacağına karar verir.
+
+    Genç bağlantıda mesaj yok sayılır. Sunucu sözünü tutup bağlantıyı gerçekten keserse bu
+    süreç boyunca mesaja hep uyulur: en kötü durum tek kopma, sonra yenilemeli eski davranış.
+    """
+
+    def __init__(self, clock: Callable[[], float] = time.monotonic) -> None:
+        self._clock = clock
+        self._connected_at = clock()
+        self._ignored_at: float | None = None
+        self._trusted = False
+
+    def connected(self) -> None:
+        """Yeni bağlantı açıldı. Az önce yok sayılan mesaj varsa eski bağlantıyı sunucu kesmiştir."""
+        now = self._clock()
+        if self._ignored_at is not None and now - self._ignored_at < GO_AWAY_PROOF_SECONDS:
+            self._trusted = True
+            logger.warning("[CHIRON] Sunucu kapanış bildirimini tuttu; artık bildirime uyulacak.")
+        self._ignored_at = None
+        self._connected_at = now
+
+    def closing_by_us(self) -> None:
+        """Bağlantıyı biz kesiyoruz (yenileme, sıfırlama): sunucunun sözünü tuttuğuna kanıt değil."""
+        self._ignored_at = None
+
+    def should_leave(self) -> bool:
+        """Mesaj geldi: yenilemeye geçilsin mi?"""
+        now = self._clock()
+        if self._trusted or now - self._connected_at >= GO_AWAY_TRUST_AFTER_SECONDS:
+            return True
+        self._ignored_at = now
+        return False
 
 
 def is_expected_close(exc: BaseException) -> bool:
