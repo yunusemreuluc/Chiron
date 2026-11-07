@@ -9,6 +9,11 @@ durumu tek satırda özetle. Biten konuyu `## Kapanmış` altına taşı.
 
 ## Açık
 
+### Ekran rehberi + Unity — Chiron üniversitede göstersin
+**Durum:** 2026-11-07 ilk aşama ve 41 Unity dersi push edildi, Word'de halka doğru. Sırada gerçek Unity Editor'da isabet ölçümü (UIA az öğe verebilir) ve ders kodlarını derlemek; ardından adım adım öğretme, Ctrl+Alt bas-konuş.
+
+Ayrıntı [[Ekran-Rehberi]], [[Ogrenme]], `Docs/Son-Oturum.md`.
+
 ### Gözetim — bütün Claude oturumları tek ekranda
 **Durum:** 2026-11-04 yörünge + Gözetim + yörünge ekleri + Chiron'dan onay (hook settings.json'da) yazıldı, uçtan uca test edildi, commit'li (ab9b29f, push yok); açık: Chiron yeniden başlatılıp gerçekte denenmeli (hook beklerken terminal sorusu görünüyor mu); telefon özeti 2026-11-05 yapıldı (GozetimScreen, commit'siz) — açıklanamayan 'izin' kararı loga bakılarak izlenecek
 

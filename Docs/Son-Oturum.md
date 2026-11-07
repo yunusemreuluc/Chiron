@@ -4,6 +4,12 @@ Claude Code oturumları arasındaki köprü. `.claude/hooks/session_start.py` he
 açılışta buradaki **en üstteki** `## Oturum:` bloğunu okuyup context'e enjekte
 ediyor — biçimi bozma, parser bu iki başlığa bakıyor.
 
+## Oturum: 2026-11-07 — Ekran rehberi, "bilmiyorum demesin", Unity ön öğrenme
+
+- Amaç (Yunus): üniversitede Unity ile oyun yapacak, bulamadığını Chiron göstersin. D · Kabarcık seçildi: `show_on_screen` / `explain_on_screen` / `clear_screen_marks` ([[Ekran-Rehberi]]), `learn_how` ([[Ogrenme]]), konuşunca ve gösterirken otomatik tepsi (`core/otomatik_tepsi.py`). `scripts/unity_on_ogrenme.py` ile 41 Unity dersi kayıtta (`%LOCALAPPDATA%\Chiron\ogrenilen\bilgi.json`, 6000.6.4f1). Hepsi push edildi; 596/596.
+- Word'de gerçek deneme: halka doğru yere oturdu (ekran görüntüsü), kare 4 ms, varış 1 sn. "Takılı kalma" düzeltmesi (tıklama her kipte kaldırır ve modele haber olur, `WindowWatch`, arkadaki pencerede arama) test edildi ama gerçek tıklamayla denenmedi. Düzeltmeden sonra Chiron yeniden başlatıldı mı bilinmiyor; `Mark` alanları değiştiği için canlı yama yetmez, başlatılmadıysa önce başlat.
+- **Sırada:** Yunus Unity'de boş proje açacak. En büyük risk: Unity Editor arayüzünü kendi çiziyor, UIA az öğe verebilir, halka Gemini görüntüsüne düşer (yavaş, yaklaşık, 429 görüldü). Gerçek Editor'da "GameObject", "Add Component" ölç; tutmazsa Unity içine öğe konumlarını veren eklenti dene. Derslerdeki C# kodları Unity'de derlenmedi, aynı projede derle. Açık küçükler: yol kapanınca Chiron başka yolu denemek yerine soruyor; bazı Unity soruları ("ateş nasıl edilir") kayıttaki derse eşleşmiyor; yeni mobil APK kurulmadı (`SystemPrompt` kuralı push'ta); sesli Chiron'da karar sınavı yapılmadı, yalnız metin API.
+
 ## Oturum: 2026-11-06 — Kendini geliştirme onaysız ve hafif; Obsidian tokenı ölçüldü
 
 - Kök neden: onay bekleyen 2 kart döngüyü kilitliyordu (30.10–04.11 kart yok), her kart `Son-Oturum`a yazıp çakışıyordu. Şimdi test geçen `Gelişim:` kartı kendi birleşir ve gönderir; hassas dosyaya dokunan Yunus'u bekler. Ayrıntı [[Ajan-Ofisi]] § Onaysız birleştirme. K-014 (zamanlayıcı), K-015 (pencere) elle birleştirildi.
