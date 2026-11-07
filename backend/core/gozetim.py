@@ -276,9 +276,22 @@ DEV_NAMES = {
     "node.exe", "python.exe", "pythonw.exe", "deno.exe", "bun.exe", "esbuild.exe", "ruby.exe",
     "java.exe", "dotnet.exe", "go.exe", "cargo.exe", "php.exe", "uvicorn.exe", "npm.exe",
 }
+# Derleme bitince arka planda bekleyip boşta kalınca kendi kapananlar: sahipsiz ve port tutmaları normal,
+# Sonlandır uyarısı her derlemeden sonra çıkıyordu (2026-11-07). CPU yakarlarsa yine listelenir.
+BUILD_DAEMONS = (
+    "org.gradle.launcher.daemon.bootstrap.GradleDaemon",
+    "org.jetbrains.kotlin.daemon.KotlinCompileDaemon",
+)
 CPU_LINE = 50.0  # bir çekirdeğin %50'si
 CPU_HOLD_S = 120.0
 SCAN_EVERY_S = 5.0
+
+
+def _is_build_daemon(proc: Any) -> bool:
+    try:
+        return any(marker in part for part in proc.cmdline() for marker in BUILD_DAEMONS)
+    except Exception:
+        return False
 
 
 class RunawayWatch:
@@ -353,7 +366,8 @@ class RunawayWatch:
                                     if c.status == psutil.CONN_LISTEN and c.laddr})
                 except Exception:
                     ports = []
-                if ports:
+                build_daemon = bool(ports) and _is_build_daemon(proc)
+                if ports and not build_daemon:
                     # Dev sunucusu (sahipli ya da değil): yörüngede oturumunun uydusu olur (orbit_view).
                     listeners.append({"pid": pid, "name": info.get("name"), "ports": ports,
                                       "cwd": _safe(lambda: proc.cwd())})
@@ -373,7 +387,7 @@ class RunawayWatch:
                 else:
                     self._over_since.pop(pid, None)
                 burning = pid in self._over_since and now - self._over_since[pid] >= CPU_HOLD_S
-                if not burning and not ports:
+                if not burning and (not ports or build_daemon):
                     continue
                 try:
                     cmd = " ".join(proc.cmdline())
