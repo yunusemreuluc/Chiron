@@ -75,6 +75,20 @@ def test_remember_replaces_same_question(env):
     assert [i["answer"] for i in items] == ["Yeni cevap."]
 
 
+def test_turkish_suffixes_still_match():
+    assert og.similarity("Unity'de karakter nasıl zıplatılır", "Unity'de karakteri nasıl zıplatırım") >= og.SAME_QUESTION
+
+
+def test_different_unity_topics_do_not_match():
+    assert og.similarity("Unity'de karakter nasıl zıplatılır", "Unity'de ses nasıl eklenir") < og.SAME_QUESTION
+
+
+def test_keep_days_outlives_default_freshness(env):
+    old = time.time() - (og.FRESH_DAYS + 30) * 86400
+    og.remember({**lesson(question="Unity'de karakter nasıl zıplatılır", app="Unity", at=old), "keep_days": 365})
+    assert og.recall("Unity'de karakter nasıl zıplatılır", "Unity") is not None
+
+
 # ── temizlik ─────────────────────────────────────────────────────────────────
 def test_clean_drops_unknown_fields_and_bad_urls():
     out = og.clean_lesson({
@@ -89,6 +103,27 @@ def test_clean_drops_unknown_fields_and_bad_urls():
 def test_clean_limits_length_and_steps():
     out = og.clean_lesson({"answer": "x" * 5000, "steps": [{"do": f"adım {i}"} for i in range(40)]})
     assert len(out["answer"]) <= og.LIMITS["answer"] and len(out["steps"]) == og.MAX_STEPS
+
+
+def test_code_keeps_its_lines_and_is_limited():
+    code = "void Update()\n{\n    Jump();\n}"
+    out = og.clean_lesson({"answer": "a", "steps": [{"do": "Betik yaz", "code": code}]})
+    assert out["steps"][0]["code"] == code
+    assert code in og.lesson_message(out)
+    long = og.clean_lesson({"answer": "a", "steps": [{"do": "x", "code": "y" * 9000}]})
+    assert len(long["steps"][0]["code"]) == og.MAX_CODE
+
+
+def test_research_uses_context_when_given(monkeypatch):
+    seen = {}
+
+    def fake(job_id, topic, focus, progress, prompt=None, emit=True):
+        seen["prompt"], seen["emit"] = prompt, emit
+        return '{"answer": "a", "steps": [], "confidence": "orta", "sources": []}'
+
+    monkeypatch.setattr(motor, "_run_claude", fake)
+    og._research({"id": "x", "question": "soru", "app": "Unity", "context": "Unity 6 sürümü"})
+    assert "Unity 6 sürümü" in seen["prompt"] and seen["emit"] is False
 
 
 def test_low_confidence_is_said():

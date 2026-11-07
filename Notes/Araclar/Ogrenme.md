@@ -58,6 +58,19 @@ denemeden "yapamam" dedi. Metin API'si canlı ses modeli değil: sonuç yol gös
 Prompt kuralı tek başına yetmedi (ikinci turda da aynı). Kalıcı çözüm kodda: `tool_result.with_fallback_hint` başarısız
 her araç sonucuna `next_step` ekliyor (`main.py _execute_tool`), araç açıklamaları da seçimi ayırıyor.
 
+## Ön öğrenme: Unity
+
+Yunus: "Üniversitede oyun yapacağım, yapmak istediklerimi bulamayabilirim, o bana göstersin diye şimdiden Unity
+öğrenebilir." `scripts/unity_on_ogrenme.py` temel konulardan bir ders listesini kurulu sürüme göre (Unity 6, 6000.6.4f1)
+araştırıp kayda yazar; `learn_how` oradan aramadan cevaplar. Yeniden çalıştırılabilir, bilineni atlar, her ders Claude kullanım
+sınırından yer. Dersler 365 gün geçerli (`keep_days`). Liste "herşey" değil: listede olmayan soru yine canlı araştırılır,
+sonra o da kayda girer.
+
+**Eşleşme:** Türkçe ekler yüzünden kelimeler ilk beş harfle karşılaştırılıyor; kaba ama "zıplatma" ile "zıplatırım" tutuyor.
+
+**Unity Editor'da gösterme:** Unity kendi arayüzünü çizdiği için Windows öğe listesinde muhtemelen az şey verir, halka görüntüden
+bulmaya düşer: daha yavaş, yaklaşık. Bu henüz gerçek Editor'da ölçülmedi.
+
 ## Telefon
 
 Telefonda bu araç yok: `SystemPrompt.kt` kuralı bilinmeyeni `delegate_to_claude` ile PC'ye verir, sonuç `[CLAUDE İŞİ]`
