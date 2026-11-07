@@ -240,11 +240,13 @@ def _claude_exe() -> str | None:
     return find_claude_exe()
 
 
-def _run_claude(board_id: str, topic: str, focus: str, progress: dict[str, Any]) -> str:
+def _run_claude(board_id: str, topic: str, focus: str, progress: dict[str, Any], prompt: str | None = None,
+                emit: bool = True) -> str:
+    """`prompt` + `emit=False`: aynı motor panosuz (actions/ogrenme.py); ilerleme kartı açılmaz."""
     exe = _claude_exe()
     if not exe:
         raise RuntimeError("Claude bulunamadı, araştırma yapılamıyor.")
-    prompt = PROMPT.format(topic=topic, focus=f"Özellikle: {focus}" if focus else "")
+    prompt = prompt or PROMPT.format(topic=topic, focus=f"Özellikle: {focus}" if focus else "")
     args = [
         exe, "-p", "--model", MODEL,
         # Yalnız web: dosya/kabuk aracı yok — çıktı web içeriğinden besleniyor, araç kapısı dar tutulur.
@@ -287,7 +289,8 @@ def _run_claude(board_id: str, topic: str, focus: str, progress: dict[str, Any])
                             progress["reads"] += 1
                             site = urlparse(str(tool_input.get("url") or "")).netloc.removeprefix("www.")
                             progress["step"] = _text(f"Okuyor: {site}", "label")
-                        _emit_progress(board_id, topic, progress)
+                        if emit:
+                            _emit_progress(board_id, topic, progress)
             elif kind == "result":
                 result_text = str(event.get("result") or "")
                 if event.get("is_error") or event.get("subtype") != "success":

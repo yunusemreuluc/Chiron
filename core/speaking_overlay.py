@@ -110,6 +110,7 @@ class SpeakingOverlay:
         self._tool_at = 0.0
         self._style = ""
         self._style_at = 0.0
+        self._suppressed = False
 
     # ── Dışarıdan çağrılanlar (herhangi bir thread'den güvenli) ────────────
 
@@ -155,6 +156,16 @@ class SpeakingOverlay:
         if self._last_spoke and now - self._last_spoke < LINGER_SECONDS:
             return "bitti", 0.0
         return "", 0.0
+
+    def set_suppressed(self, suppressed: bool) -> None:
+        """Ekran rehberi kabarcığı uçururken köşedeki kapanır: aynı kabarcık iki yerde görünmesin."""
+        with self._lock:
+            self._suppressed = bool(suppressed)
+
+    def activity(self) -> tuple[str, float]:
+        """(evre, seviye) — ekran rehberi halkası da sesle dalgalansın diye."""
+        with self._lock:
+            return self._phase()
 
     def push_caption(self, text: str) -> None:
         """Chiron'un o an söylediği metin (çıkış transkripti, main.py) — kayan kart bunu gösterir."""
@@ -211,7 +222,7 @@ class SpeakingOverlay:
             with self._lock:
                 phase, level = self._phase()
                 self._level *= 0.85  # yeni parça gelmezse sön
-                return self._enabled, phase, level, self._caption
+                return self._enabled and not self._suppressed, phase, level, self._caption
 
         try:
             tray_indicator.run(state, self._style_name, lambda: self._stop.is_set() or not self._enabled)

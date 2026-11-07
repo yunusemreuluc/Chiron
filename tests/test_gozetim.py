@@ -173,6 +173,69 @@ def test_runaway_end_refuses_unlisted_or_reused_pid():
     assert ok is False and "başka bir süreç" in why
 
 
+class FakeProc:
+    """Sahibi ölmüş, port tutan bir geliştirme süreci."""
+
+    def __init__(self, pid: int, cmd: list[str], cpu: float = 0.0, port: int = 5000):
+        import os
+        import psutil
+
+        self.info = {"pid": pid, "name": "java.exe", "ppid": 0, "create_time": 10.0}
+        self._cmd, self._cpu, self._port = cmd, cpu, port
+        self._user = psutil.Process(os.getpid()).username()
+
+    def create_time(self):
+        return 10.0
+
+    def cpu_percent(self, _=None):
+        return self._cpu
+
+    def username(self):
+        return self._user
+
+    def cmdline(self):
+        return self._cmd
+
+    def cwd(self):
+        return "C:/x"
+
+    def net_connections(self, kind="inet"):
+        import psutil
+        from types import SimpleNamespace
+
+        return [SimpleNamespace(status=psutil.CONN_LISTEN, laddr=SimpleNamespace(port=self._port))]
+
+
+GRADLE = ["java.exe", "-cp", "gradle.jar", "org.gradle.launcher.daemon.bootstrap.GradleDaemon", "8.11.1"]
+KOTLIN = ["java", "-cp", "k.jar", "org.jetbrains.kotlin.daemon.KotlinCompileDaemon"]
+SERVER = ["java.exe", "-jar", "sunucu.jar"]
+
+
+def scan_twice(monkeypatch, procs, hold: bool = False):
+    import psutil
+
+    monkeypatch.setattr(psutil, "process_iter", lambda attrs=None: list(procs))
+    w = gozetim.RunawayWatch()
+    w._scan(1000.0)  # ilk tarama yalnız CPU tabanı alır
+    if hold:
+        w._scan(1001.0)
+        w._scan(1001.0 + gozetim.CPU_HOLD_S)
+    else:
+        w._scan(1001.0)
+    return w
+
+
+def test_idle_build_daemons_are_not_runaways(monkeypatch):
+    w = scan_twice(monkeypatch, [FakeProc(90001, GRADLE), FakeProc(90002, KOTLIN), FakeProc(90003, SERVER)])
+    assert [x["pid"] for x in w._items] == [90003]
+    assert [x["pid"] for x in w._listeners] == [90003]
+
+
+def test_burning_build_daemon_is_still_listed(monkeypatch):
+    w = scan_twice(monkeypatch, [FakeProc(90001, GRADLE, cpu=99.0)], hold=True)
+    assert [(x["pid"], x["kind"]) for x in w._items] == [(90001, "yakiyor")]
+
+
 def test_phone_view_trims_and_keeps_queue():
     full = {
         "now": 100.0,
